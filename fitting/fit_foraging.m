@@ -2,8 +2,8 @@
 % Emma Scholey 9 Jun 2022
 clearvars
 close all;
-addpath(genpath('~/Dropbox/foraging-project/code'))
-model_table = readtable('~/Dropbox/foraging-project/details/input_model_table.xlsx');
+addpath(genpath('~/Dropbox/foraging/code'))
+model_table = readtable('~/Dropbox/foraging/details/input_model_table.xlsx');
 
 model = 25;
 
@@ -535,7 +535,7 @@ for i= 1:size(sim_params,1)
     ax = nexttile;
     plot(sim_params(i,:), fit_params(i,:), 'o', 'markersize', 8, 'linewidth', 1)
     corrcoef(sim_params(i,:),fit_params(i,:))
-    corr(sim_params(i,:)',fit_params(i,:)', 'Type', 'Spearman')
+    %corr(sim_params(i,:)',fit_params(i,:)', 'Type', 'Spearman')
     title(sprintf('%s', names{i}))
     xlabel(sprintf('simulated %s', symbols{i}))
     ylabel(sprintf('fit %s', symbols{i}))

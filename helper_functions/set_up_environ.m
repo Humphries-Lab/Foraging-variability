@@ -3,7 +3,7 @@
 % task parameters
 environ.travel_time = 6; % delay between patches
 environ.time_step = 1;  % T, seconds to update time_in_block and time_in_patch
-environ.block_time = 600;  % changing this affects fitting, so remember to change it back if playing around with simulations
+environ.block_time = 1200;  % changing this affects fitting, so remember to change it back if playing around with simulations
 patch_yields = [32.5, 45, 57.5]; % S in LeHeron paper
 
 for j=1:length(patch_yields)

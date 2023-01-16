@@ -51,4 +51,3 @@ if ~ismember(model, [1, 2]) % if not an MVT model
 
 end
 end
-

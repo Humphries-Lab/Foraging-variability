@@ -1,19 +1,20 @@
+
 %% Script to run foraging simulations (MVT or R-learning model)
 % Emma Scholey
 
 %% Set up
 clear
-addpath(genpath('~/Dropbox/foraging-project/code'))
+addpath(genpath('~/Dropbox/foraging/code'))
 
 set_up_environ % generic script to set up foraging environment according to LeHeron et al (2020)
 
 % model type - see table for model number to choose
 save_data = 0;
-n_sim = 40; % how many runs
+n_sim = 100; % how many runs
 num_models = 26;
 model = 25;
 
-model_table = readtable('~/Dropbox/foraging-project/details/input_model_table.xlsx');
+model_table = readtable('~/Dropbox/foraging/details/input_model_table.xlsx');
 
 T_behaviour = cell(num_models,1);
 gT_behaviour = cell(num_models,1);
@@ -27,23 +28,23 @@ environ_type = {'rich', 'poor'};
 %% run model
 for model = model
     % tidy up first
-    close all
+    %close all
     vars = {'sim_stats','sim_data','sim_Q_stay','sim_Q_leave'};
     clear(vars{:})
 
     clear params
     % agent parameters - currently fitting rich and poor blocks separately
-    params{1} = [1, 0.0003, 0.2]; % [alpha_Q, alpha_rho, beta] - rich block
-    params{2} = [1, 0.0003, 0.2]; % [alpha_Q, alpha_rho, beta] - poor block
+    params{1} = [0.4, 0.1, 5]; % [alpha_Q, alpha_rho, beta] - rich block
+    params{2} = [0.4, 0.1, 5]; % [alpha_Q, alpha_rho, beta] - poor block
 
     %% optional - simulate real data for model validation
 
-    load(sprintf('~/Dropbox/foraging-project/results/M%d/fitting_results_rich.mat', model)) % load best fit parameters from real data
-    params{1} = minNLL_params_fitted;
-    load(sprintf('~/Dropbox/foraging-project/results/M%d/fitting_results_poor.mat', model)) % load best fit parameters from real data
-    params{2} = minNLL_params_fitted;
-
-    n_sim = size(minNLL_params_fitted,1); % simulate each person
+%     load(sprintf('~/Dropbox/foraging-project/results/M%d/fitting_results_rich.mat', model)) % load best fit parameters from real data
+%     params{1} = minNLL_params_fitted;
+%     load(sprintf('~/Dropbox/foraging-project/results/M%d/fitting_results_poor.mat', model)) % load best fit parameters from real data
+%     params{2} = minNLL_params_fitted;
+% 
+%     n_sim = size(minNLL_params_fitted,1); % simulate each person
 
     %% Run
     for n = 1:n_sim
@@ -59,11 +60,11 @@ for model = model
                 if strcmp(model_table.policy{model}, 'on')
                     % simulate main task
                     [sim_data.(environ_type{block}){n}, Q_stay_table.(environ_type{block}){n}, Q_leave_table.(environ_type{block}){n}] = ...
-                        simulate_RL_on_policy(params{block}(n,:), environ, block, model_table, model);
+                        simulate_RL_on_policy(params{block}, environ, block, model_table, model);
                 elseif strcmp(model_table.policy{model}, 'off')
                     % simulate main task
                     [sim_data.(environ_type{block}){n}, Q_stay_table.(environ_type{block}){n}, Q_leave_table.(environ_type{block}){n}] = ...
-                        simulate_RL_off_policy(params{block}(n,:), environ, block, model_table, model);
+                        simulate_RL_off_policy(params{block}, environ, block, model_table, model);
                 end
 
                 [sim_stats.(environ_type{block}){n}, sum_reward.(environ_type{block}){n}, sim_Q_stay.(environ_type{block}){n}, sim_Q_leave.(environ_type{block}){n}] = ...
@@ -73,9 +74,9 @@ for model = model
     end
 
     %% save runs and statistics to file
-    if save_data == 1
-        save(sprintf('~/Dropbox/foraging-project/data/sim_data/M%d.mat', model), 'sim_*')
-    end
+%     if save_data == 1
+%         save(sprintf('~/Dropbox/foraging-project/data/sim_data/M%d.mat', model), 'sim_*')
+%     end
 
     %% store leaving stats for all runs in table
 
@@ -113,11 +114,11 @@ for model = model
     mean_reward = mean(T_reward); % [rich poor]
 
     %% plot agent behaviour over single run
-    check_run = 30; % choose which run to plot
-    data = sim_data.poor{check_run};
-    %data = data(data.patch_number > 10, :);
-    plot_example_run(data, model)
-    %print(sprintf('~/Dropbox/foraging-project/results/M%d/M%d_example_run', model, model), '-dpng')
+%     check_run = 30; % choose which run to plot
+%     data = sim_data.poor{check_run};
+%     %data = data(data.patch_number > 10, :);
+%     plot_example_run(data, model)
+%     %print(sprintf('~/Dropbox/foraging-project/results/M%d/M%d_example_run', model, model), '-dpng')
 
     %% store multiple model tests in one table
     all_models_mean_reward{model} = mean_reward;
@@ -130,9 +131,9 @@ for model = model
 end
 
 %% save all model data together
-if save_data == 1
-    save('~/Dropbox/foraging-project/data/sim_data/all_models.mat','all_models_*')
-end
+% if save_data == 1
+%     save('~/Dropbox/foraging-project/data/sim_data/all_models.mat','all_models_*')
+% end
 %% plot patch leaving times
-load('~/Dropbox/foraging-project/data/raw_data/summary/young_variables/subMean_young.mat')
+load('~/Dropbox/foraging/raw_data/summary/young_variables/subMean_young.mat')
 plot_leaving_stats_line(all_models_gT_behaviour{model}, subMean_young)

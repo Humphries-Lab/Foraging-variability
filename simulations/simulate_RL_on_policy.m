@@ -113,11 +113,13 @@ for ii = 1:environ.block_time
                 case 'godlike'
                     next_patch = patch_order(patch_number+1);  % knows what the next patch is
                 case 'stochastic'
-                    if rand < 0.1 % for some % of the time, choose randomly
-                        next_patch = randi([1 3]);
-                    else % else assume most frequent patch
-                        next_patch = mode(patch_order(1:patch_number));
-                    end
+%                     if rand < 0.1 % for some % of the time, choose randomly
+%                         next_patch = randi([1 3]);
+%                     else % else assume most frequent patch
+%                         next_patch = mode(patch_order(1:patch_number));
+%                     end
+                next_patch = mode(patch_order(1:patch_number));
+
             end
         end
 

@@ -1,4 +1,4 @@
-function plot_Q(gT_Q_stay_model, gT_Q_leave_model, model)
+%% plotQFunction - THIS NEEDS WORK
 
 fig = figure;
 if max(gT_Q_leave_model.state) > 1 % if model with states for Q leave, include 2 more subplots for Q leave

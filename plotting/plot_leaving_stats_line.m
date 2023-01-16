@@ -1,6 +1,6 @@
 function plot_leaving_stats_line(gT_model, subMean_young)
 
-close all
+%close all
 % set up colours
 c = [0.6353    0.0784    0.1843; 0    0.4471    0.7412]; % [rich, poor]
 

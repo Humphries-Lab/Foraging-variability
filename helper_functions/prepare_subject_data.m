@@ -1,9 +1,9 @@
 function [Data, patch_order] = prepare_subject_data(subj, env, environ, r)
 
-addpath(genpath('~/Dropbox/foraging-project/data'))
+addpath(genpath('~/Dropbox/foraging/data'))
 
 %% build the foraging table from their MAIN session
-load ~/Dropbox/foraging-project/data/raw_data/summary/young_variables/t_young.mat
+load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
 
 group = {'Young_HC_ReDo/yc%g_forage.mat', subj};
 
