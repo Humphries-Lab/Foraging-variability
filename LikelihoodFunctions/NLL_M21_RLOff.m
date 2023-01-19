@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_M25_RLOn(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_M21_RLOff(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -61,6 +61,14 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % what is the next state? 
         Q(ii+1,:) = [QLeave(1), QStay(T+1,PatchType)]; % s'
 
+        RPE(ii) = Reward(ii)/maxR - Rho(ii) + max(Q(ii+1, :)) - Q(ii, Action(ii));
+
+        % update estimate of average RR
+        Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii);
+
+        % update Q table for staying
+        QStay(T,PatchType) = QStay(T,PatchType) + AlphaQ * RPE(ii);
+
         PAction(ii+1,:) = CorrectedSoftmax(Q(ii+1, :), Beta); % function to calculate PAction based on softmax, but correcting for Infs/NaNs that can arise from extreme parameter values 
         PSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
 
@@ -83,14 +91,6 @@ for ii = 1:BlockTime-1 % for each second in the environment
             LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
         end
 
-        RPE(ii) = Reward(ii)/maxR - Rho(ii) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii));
-
-        % update estimate of average RR
-        Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii);
-
-        % update Q table for staying
-        QStay(T,PatchType) = QStay(T,PatchType) + AlphaQ * RPE(ii);
-
         T = T+Env.TimeStep; % time in patch increases
         NumObservations = NumObservations+1;
 
@@ -108,7 +108,7 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % update 
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
-        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
+        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + max(Q(ii+1, :)) - Q(ii, Action(ii)); % calculate RPE for this state
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii); % update estimate of average RR
         QLeave(t) = QLeave(t) + AlphaQ * RPE(ii); % update Q-leave table based on individual states
 

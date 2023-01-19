@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_M25_RLOn(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_M5_RLOn(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -70,14 +70,8 @@ for ii = 1:BlockTime-1 % for each second in the environment
         if Action(ii+1) == Leave
             t = 1; % if next action is leave, then reset travel time counter
 
-            % what does agent think the NEXT patch is? - stochastic patch prediction
-            if NextPatch(PatchNumber) == 0 % if no existing prediction for next patch
-                if rand < 0.1 % for some % of the time, choose randomly
-                    NextPatch(PatchNumber) = randi([1 3]);
-                else % else assume most frequent patch based on those previously experienced
-                    NextPatch(PatchNumber) = mode(PatchOrder(1:PatchNumber));
-                end
-            end
+            % what does agent think the NEXT patch is? 
+            NextPatch(PatchNumber) = PatchType; % assume next patch will be same as previous patch
 
             LeavingTime(PatchNumber,1) = T; % log the patch leaving time
             LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate

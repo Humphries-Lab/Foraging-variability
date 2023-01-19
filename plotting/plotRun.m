@@ -1,7 +1,6 @@
-%% figure - example run
+function plotRun(model)
+% figure - example run
 
-clear 
-model = 25; 
 SetUpEnviron
 load(sprintf('~/Dropbox/foraging/outputs/M%d/SimulationResults.mat', model))
 

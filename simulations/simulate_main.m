@@ -12,7 +12,7 @@ set_up_environ % generic script to set up foraging environment according to LeHe
 save_data = 0;
 n_sim = 100; % how many runs
 num_models = 26;
-model = 25;
+model = 2;
 
 model_table = readtable('~/Dropbox/foraging/details/input_model_table.xlsx');
 

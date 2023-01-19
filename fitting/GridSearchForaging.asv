@@ -12,9 +12,8 @@ for iAlphaPatch = 1:nAlpha
     for iAlphaRho = 1:nAlpha
         for iBeta = 1:nBeta
             params = [AlphaPatchGrid(iAlphaPatch,iAlphaRho,iBeta),AlphaRhoGrid(iAlphaPatch,iAlphaRho,iBeta), BetaGrid(iAlphaPatch,iAlphaRho,iBeta)];  % get the current set of initial search parameters
-           
-            [SubjNLLEval(iAlphaPatch,iAlphaRho,iBeta)] = NLL_M2_MVT_RW(params, Env, SubjData);            
-            %[SubjNLLEval(iAlphaPatch,iAlphaRho,iBeta)] = NLL_M5_RLOn(params, Env, SubjData);            
+            
+            [SubjNLLEval(iAlphaPatch,iAlphaRho,iBeta)] = NLL_M5_RLOn(params, Env, SubjData);            
             %[SubjNLLEval(iAlphaPatch,iAlphaRho,iBeta)] = NLL_M21_RLOff(params, Env, SubjData);
             %[SubjNLLEval(iAlphaPatch,iAlphaRho,iBeta)] = NLL_M25_RLOn(params, Env, SubjData);
 

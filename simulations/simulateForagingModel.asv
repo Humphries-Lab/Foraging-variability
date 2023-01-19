@@ -3,21 +3,21 @@
 %% Set up
 clear
 addpath(genpath('~/Dropbox/foraging/code'))
-model = 2; % model type - see model table to check number to choose
+model = 5; % model type - see model table to check number to choose
 
 NSim = 40; % how many runs
 
 % environment parameters
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 % agent parameters - currently fitting rich and poor blocks separately
-params = [0.5, 0.1, 20]; % [alpha_Q, alpha_rho, beta] - rich block
+params = [0.38, 0.02, 5]; % [alpha_Q, alpha_rho, beta] - rich block
 
 SimData = cell(NSim,1);
 %% Run
 for n = 1:NSim
     n
     for Block = 1:2 % for each environment: [rich, poor]
-        out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
+        out = simulateM2_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM5_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM21_RLOff(params, Block, Env); % change this depending on model to test
         %out = simulateM25_RLOn(params, Block, Env); % change this depending on model to test
@@ -39,5 +39,3 @@ RewardMean = squeeze(mean(TotalReward))';
 save(sprintf('~/Dropbox/foraging/outputs/M%d/SimulationResults.mat', model), 'RewardMean', "LTMean", "LTSEM", "LRRMean", "LRRSEM", "out", "NSim")
 
 plotLeavingTimes(model)
-
-%plotRun(model) % for MVT model only, to check running as expected

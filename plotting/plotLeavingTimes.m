@@ -1,8 +1,6 @@
+function plotLeavingTimes(model)
 %% figure - plotLeavingTimes
 
-clear
-%close all
-model = 25; % specify model
 load('~/Dropbox/foraging/raw_data/summary/young_variables/subMean_young.mat') % load real data
 
 %%Sub-plot
