@@ -52,7 +52,7 @@ for m = model
 
 end
 
-leg = legend('Poor environment', 'Rich environment');
+leg = legend('Rich environment', 'Poor environment');
 leg.Layout.Tile = 'north';
 subtitle(t, sprintf('Error bars show 95%% CI. NSim = %d', NSim))
 

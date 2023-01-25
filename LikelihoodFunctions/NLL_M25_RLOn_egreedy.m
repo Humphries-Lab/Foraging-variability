@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_M5_RLOn(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_M25_RLOn_egreedy(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -8,7 +8,7 @@ BlockTime = size(Action, 1);
 % reinforcement learning parameters
 AlphaQ = params(1); % Q learning rate
 AlphaRho = params(2); % average RR learning rate
-Beta = params(3); % softmax temperature
+epsilon = params(3); % softmax temperature
 
 % initialise variables
 Q = zeros(BlockTime,2); % [Q(leave), Q(stay)]
@@ -39,8 +39,6 @@ LogLikelihood = 0;
 PatchNumber = 0; % start outside the patch
 Arrive = 1; % start by arriving at new patch
 
-maxR = max(max(Env.R)); % what's the max possible reward, for normalisation 
-
 % run model
 for ii = 1:BlockTime-1 % for each second in the environment
 
@@ -61,23 +59,40 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % what is the next state? 
         Q(ii+1,:) = [QLeave(1), QStay(T+1,PatchType)]; % s'
 
-        PAction(ii+1,:) = CorrectedSoftmax(Q(ii+1, :), Beta); % function to calculate PAction based on softmax, but correcting for Infs/NaNs that can arise from extreme parameter values 
-        PSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
+        GreedyAction = find(Q(ii+1,:)==max(Q(ii+1,:)));
+        ExploreAction = find(Q(ii+1,:)~=max(Q(ii+1,:)));
+        if sum(Q(ii+1,:)) == 0 % if Q values haven't been learned yet, then assume stay is the greedy action 
+            GreedyAction = 2;
+            ExploreAction = 1; 
+        end 
 
+        PAction(ii+1, GreedyAction) = (1-epsilon) + (epsilon/(size(PAction,2)));
+        PAction(ii+1, ExploreAction) = (epsilon/(size(Action,2)));
+
+        PSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
+        if PSelected == 0
+            PSelected = eps(0); % do this to avoid log(0)
+        end 
         LogLikelihood = LogLikelihood + log(PSelected); % update log likelihood
 
         % if the next action is to leave 
         if Action(ii+1) == Leave
             t = 1; % if next action is leave, then reset travel time counter
 
-            % what does agent think the NEXT patch is? 
-            NextPatch(PatchNumber) = PatchType; % assume next patch will be same as previous patch
+            % what does agent think the NEXT patch is? - stochastic patch prediction
+            if NextPatch(PatchNumber) == 0 % if no existing prediction for next patch
+                if rand < 0.1 % for some % of the time, choose randomly
+                    NextPatch(PatchNumber) = randi([1 3]);
+                else % else assume most frequent patch based on those previously experienced
+                    NextPatch(PatchNumber) = mode(PatchOrder(1:PatchNumber));
+                end
+            end
 
             LeavingTime(PatchNumber,1) = T; % log the patch leaving time
             LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
         end
 
-        RPE(ii) = Reward(ii)/maxR - Rho(ii) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii));
+        RPE(ii) = Reward(ii) - Rho(ii) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii));
 
         % update estimate of average RR
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii);
@@ -102,7 +117,7 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % update 
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
-        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
+        RPE(ii) = (Reward(ii) - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii); % update estimate of average RR
         QLeave(t) = QLeave(t) + AlphaQ * RPE(ii); % update Q-leave table based on individual states
 

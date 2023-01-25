@@ -4,7 +4,7 @@ clear
 close all;
 addpath(genpath('~/Dropbox/foraging/code'))
 
-model = 2;
+model = 5;
 
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
@@ -61,7 +61,7 @@ plotMarginalLikelihoods(NLLEval, AlphaVector,BetaVector)
 nStarts = 50; % how many starting points to avoid local minima
 
 names = {'rich', 'poor'};
-
+%numParams = 2;
 minNLL = zeros([numSubjects, numBlocks]);
 minNLLFitParams = zeros([numSubjects, numParams, numBlocks]);
 %minNLLFitParamsSE = zeros([numSubjects, numParams, numBlocks]);
@@ -70,20 +70,23 @@ NLLEval = cell([numSubjects, 1]);
 
 BIC = zeros([numSubjects, numBlocks]);
 AIC = zeros([numSubjects, numBlocks]);
-maxAlpha = [upperBounds(1) upperBounds(2)]; % what range of starting values should we look over for Alphas (this setting is more important for model fitting)
+maxAlpha = [1 1]; % set max alpha to the range defined by best parameter fits (only need to recover parameters within this range)
 % just set to maximum range (0-1)
 
 for block = 1:numBlocks
     for k = 1:numSubjects
         k
-        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha);
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM1_MVT_RWRho(Data{k}{block},Env, nStarts, maxAlpha);        
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM5_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
-        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM21_RLOff(Data{k}{block},Env, nStarts, maxAlpha);
+        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM21_RLOff(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn_egreedy(Data{k}{block},Env, nStarts, maxAlpha);      
     end
-    save_name = sprintf('~/Dropbox/foraging/outputs/M%d/fitting_results_%s', model, names{block});
-    save(save_name, 'AIC', 'BIC', 'minNLL', 'minNLLFitParams', 'FitParams')
 end
+
+save_name = sprintf('~/Dropbox/foraging/outputs/M%d/fitting_results', model);
+save(save_name, 'AIC', 'BIC', 'minNLL', 'minNLLFitParams', 'FitParams')
 
 % plots
 
@@ -97,20 +100,26 @@ plotBestParams(minNLLFitParams) % plot best parameters across subjects for each 
 Block = 1;
 
 nSim = 250; % number of iterations
-maxAlpha = [0.85 0.5]; % set max alpha to the range defined by best parameter fits (only need to recover parameters within this range)
-
+maxAlpha = [0.2 0.2]; % set max alpha to the range defined by best parameter fits (only need to recover parameters within this range)
+%numParams = 2; 
 SimParams = zeros(numParams, nSim);
 FitParams = zeros(numParams, nSim);
 
 for ii = 1:nSim
     ii
     TestParams = [0.001+rand(1,1)*(maxAlpha(1)-0.001), 0.001+rand(1,1)*(maxAlpha(2)-0.001), exprnd(10)]; % randomly select parameters each time
+    %TestParams = [0.001+rand(1,1)*(maxAlpha(2)-0.001), exprnd(2)]; % randomly select parameters each time
+    %TestParams = [0.001+rand(1,1)*(maxAlpha(1)-0.001), 0.001+rand(1,1)*(maxAlpha(2)-0.001), rand]; % randomly select parameters each time
 
     % simulate data
-    out = simulateM2_MVT_RW(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM1_MVT_RWRho(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM2_MVT_RW(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM5_RLOn(TestParams, Block, Env); % change this depending on model to test
-    %out = simulateM21_RLOff(TestParams, Block, Env); % change this depending on model to test
+    out = simulateM21_RLOff(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM25_RLOn(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM25_RLOn_egreedy(TestParams, Block, Env); % change this depending on model to test
+
+    maxLT(ii) = max(out.LeavingTime); % log the longest state for recovery diagnoses
 
     SimData.Action = out.Action;
     SimData.PatchOrder = Env.PatchOrder{Block};
@@ -119,10 +128,12 @@ for ii = 1:nSim
     end
     % recover data
     nStarts = 5; % how many starting locations to begin fitting (avoid local minima)
-    [~, minNLLFitParams, ~, ~, SimFitParams] = fitM2_MVT_RW(SimData,Env, nStarts, maxAlpha);
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM1_MVT_RWRho(SimData,Env, nStarts, maxAlpha);    
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM2_MVT_RW(SimData,Env, nStarts, maxAlpha);
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM5_RLOn(SimData,Env, nStarts, maxAlpha);
-    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM21_RLOff(SimData,Env, nStarts, maxAlpha);
+    [~, minNLLFitParams, ~, ~, SimFitParams] = fitM21_RLOff(SimData,Env, nStarts, maxAlpha);
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn(SimData,Env, nStarts, maxAlpha);
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn_egreedy(SimData,Env, nStarts, maxAlpha);
 
     for iParam = 1:numParams
         SimParams(iParam,ii) = TestParams(iParam);
@@ -133,48 +144,35 @@ end
 plotParamRecovery(SimParams, FitParams) %  compute and plot correlations between simulated/fit parameters, and between fit parameters (trade-off)
 
 %% Checks for parameter recovery - extreme states
-for ii = 1:nSim
-    max_Q_length(ii) = max(sum(Q_stay{ii} ~= 0));
-end
-
-residuals_alpha_patch = sqrt((FitParams(1,:) - SimParams(1,:)).^2);
-residuals_alpha_rho = sqrt((FitParams(2,:) - SimParams(2,:)).^2);
-residuals_beta = sqrt((FitParams(3,:) - SimParams(3,:)).^2);
+residualsAlphaPatch = sqrt((FitParams(1,:) - SimParams(1,:)).^2);
+residualsAlphaRho = sqrt((FitParams(2,:) - SimParams(2,:)).^2);
+residualsBeta = sqrt((FitParams(3,:) - SimParams(3,:)).^2);
 
 % lower distance should correlate with shorter Q length
-corrcoef(log(max_Q_length), log(residuals_alpha_patch))
-corr(max_Q_length', residuals_alpha_patch', 'Type', 'Spearman')
+corrcoef(log(maxLT), log(residualsAlphaPatch))
 
-corrcoef(log(max_Q_length), log(residuals_alpha_rho))
-corr(max_Q_length', residuals_alpha_rho', 'Type', 'Spearman')
+corrcoef(log(maxLT), log(residualsAlphaRho))
 
-corrcoef(log(max_Q_length), log(residuals_beta))
-corr(max_Q_length', residuals_beta', 'Type', 'Spearman')
+corrcoef(log(maxLT), log(residualsBeta))
 
 figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 ax = nexttile;
-plot(log(residuals_alpha_patch), log(max_Q_length), 'o', 'markersize', 8, 'linewidth', 1)
+plot(residualsAlphaPatch,maxLT, 'o', 'markersize', 8, 'linewidth', 1)
 title('alpha patch fit residuals vs max Q stay length (Extreme states)')
 xlabel('alpha patch residuals')
 ylabel('Length of extreme state')
-set(ax,'xscale' ,'log')
-set(ax,'yscale' ,'log')
 
 ax = nexttile;
-plot(log(residuals_alpha_rho), log(max_Q_length), 'o', 'markersize', 8, 'linewidth', 1)
+plot(residualsAlphaRho, maxLT, 'o', 'markersize', 8, 'linewidth', 1)
 title('alpha rho fit residuals vs max Q stay length (Extreme states)')
 xlabel('alpha rho residuals')
 ylabel('Length of extreme state')
-set(ax,'xscale' ,'log')
-set(ax,'yscale' ,'log')
 
 ax = nexttile;
-plot(log(residuals_beta), log(max_Q_length), 'o', 'markersize', 8, 'linewidth', 1)
+plot(residualsBeta, maxLT, 'o', 'markersize', 8, 'linewidth', 1)
 title('beta fit residuals vs max Q stay length (Extreme states)')
 xlabel('beta residuals')
 ylabel('Length of extreme state')
-set(ax,'xscale' ,'log')
-set(ax,'yscale' ,'log')
 
 %% checks - simulation and fitting scripts end up with the same outputs
 Block = 1;

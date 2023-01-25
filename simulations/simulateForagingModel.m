@@ -3,24 +3,27 @@
 %% Set up
 clear
 addpath(genpath('~/Dropbox/foraging/code'))
-model = 2; % model type - see model table to check number to choose
+model = 1; % model type - see model table to check number to choose
 
 NSim = 40; % how many runs
 
 % environment parameters
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
-% agent parameters - currently fitting rich and poor blocks separately
-params = [0.5, 0.1, 20]; % [alpha_Q, alpha_rho, beta] - rich block
 
+blockParams = [0.05    0.0005    2; 0.05   0.0005    2]; %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
+%blockParams = [0.0004, 0.18; 0.0004, 0.22]; %[parameters for rich block; parameters for poor block]
 SimData = cell(NSim,1);
 %% Run
 for n = 1:NSim
     n
     for Block = 1:2 % for each environment: [rich, poor]
-        out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
+        params = blockParams(Block,:); 
+        %out = simulateM1_MVT_RWRho(params, Block, Env); % change this depending on model to test
+        %out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
         %out = simulateM5_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM21_RLOff(params, Block, Env); % change this depending on model to test
         %out = simulateM25_RLOn(params, Block, Env); % change this depending on model to test
+        out = simulateM25_RLOn_egreedy(params, Block, Env); % change this depending on model to test
 
          SimData{n}{Block} = out;
          [LT(n,:,Block), LRR(n,:,Block), TotalReward(n,:,Block)] = summariseForaging(out); % get averages for each NSim
@@ -40,4 +43,9 @@ save(sprintf('~/Dropbox/foraging/outputs/M%d/SimulationResults.mat', model), 'Re
 
 plotLeavingTimes(model)
 
-%plotRun(model) % for MVT model only, to check running as expected
+plotRun(model, SimData{1}{1}) % plot reward rates over the block - rich
+title('rich environment')
+plotRun(model, SimData{1}{2}) % poor
+title('poor environment')
+
+%plotQ(model) % For RL Models only 

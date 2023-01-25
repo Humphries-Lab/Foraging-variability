@@ -3,6 +3,7 @@ function plotParamRecovery(SimParams, FitParams)
 %% plot correlation - simulated value versus actual value
 
 ParamNames = {'AlphaPatch-Q', 'AlphaRho', 'InverseTemp'};
+%ParamNames = {'AlphaRho', 'InverseTemp'};
 figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
 % for each parameter, plot sim vs fit 
@@ -14,7 +15,7 @@ for i= 1:size(SimParams,1)
     else
     corrcoef(SimParams(i,:),FitParams(i,:))
     end
-    %corr(SimParams(i,:)',FitParams(i,:)', 'Type', 'Spearman')
+    corr(SimParams(i,:)',FitParams(i,:)', 'Type', 'Spearman')
     title(ParamNames{i})
     xlabel(sprintf('Simulated %s', ParamNames{i}))
     ylabel(sprintf('Fit %s', ParamNames{i}))

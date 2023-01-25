@@ -1,4 +1,4 @@
-function [minNLL, minNLLFitParams, BIC, AIC, FitParams, NLLEval, StartParams] = fitM2_MVT_RW(SubjData, Env, nStarts, maxAlpha)
+function [minNLL, minNLLFitParams, BIC, AIC, FitParams, NLLEval, StartParams] = fitM25_RLOn_egreedy(SubjData, Env, nStarts, maxAlpha)
 
 % fmincon options
 lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
@@ -9,14 +9,16 @@ numParams = length(lowerBounds);
 FitParams = zeros([nStarts, numParams]);
 StartParams = zeros([nStarts, numParams]);
 NLLEval = zeros([nStarts,1]);
+hessian = zeros([numParams, numParams, nStarts]);
 
 %% Run fitting
-f = @(x)NLL_M2_MVT_RW(x, Env, SubjData);
+f = @(x)NLL_M25_RLOn_egreedy(x, Env, SubjData);
 
 parfor ii = 1:nStarts
-    params0 = [0.5+rand(1,1)*(maxAlpha(1)-0.5), 0.001+rand(1,1)*(maxAlpha(2)-0.001), exprnd(2)]; % choose start parameters
+    %params0 = [0.001+rand(1,1)*(maxAlpha(1)-0.001), 0.001+rand(1,1)*(maxAlpha(2)-0.001), exprnd(1)]; % choose start parameters
+    params0 = [0.001+rand(1,1)*(maxAlpha(1)-0.001), 0.001+rand(1,1)*(maxAlpha(2)-0.001), rand]; % choose start parameters
     StartParams(ii, :) = params0;
-    [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lowerBounds,upperBounds, [], options);
+    [FitParams(ii,:),NLLEval(ii), ~, ~, ~, ~, hessian(:,:,ii)] = fmincon(f,params0,[],[],[],[],lowerBounds,upperBounds, [], options);
 end
 
 %% Find the best fitting parameter values 
@@ -36,7 +38,7 @@ minNLLFitParams = FitParams(ix(1),:);
 % minNLLFitParamsSE = tmp;
 
 %% Calculate BIC/AIC
-[~, out] = NLL_M2_MVT_RW([0 0 1], Env, SubjData); % get the number of data points that were fit to (parameter values don't matter here)
+[~, out] = NLL_M25_RLOn_egreedy([0 0 1], Env, SubjData); % get the number of data points that were fit to (parameter values don't matter here)
 
 % BIC and AIC
 BIC = numParams * log(out.NumObservations) + 2*minNLL;

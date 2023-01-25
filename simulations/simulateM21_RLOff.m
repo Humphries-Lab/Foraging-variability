@@ -111,8 +111,8 @@ end
 % store variables 
 out.QStay = QStay(1:max(sum(QStay~=0)), :); % limit Q_stay tables - find longest column
 out.QLeave = QLeave(1:Env.TravelTime);
-out.Rho = Rho(1:Env.BlockTime);
-out.PAction = PAction(1:Env.BlockTime);
+out.Rho = Rho(1:Env.BlockTime)*maxR;
+out.PAction = PAction(1:Env.BlockTime,:);
 out.Action = Action(1:Env.BlockTime);
 out.Q = Q(1:Env.BlockTime,:);
 out.Reward = Reward(1:Env.BlockTime);

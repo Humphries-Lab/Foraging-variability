@@ -122,7 +122,7 @@ NegLogLikelihood = -LogLikelihood;
 out.QStay = QStay(1:max(sum(QStay~=0)), :); % limit Q_stay tables - find longest column
 out.QLeave = QLeave(1:Env.TravelTime);
 out.Rho = Rho(1:BlockTime);
-out.PAction = PAction(1:BlockTime);
+out.PAction = PAction(1:BlockTime,:);
 out.Action = Action(1:BlockTime);
 out.Q = Q(1:BlockTime,:);
 out.Reward = Reward(1:BlockTime);
