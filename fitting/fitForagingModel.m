@@ -4,7 +4,7 @@ clear
 close all;
 addpath(genpath('~/Dropbox/foraging/code'))
 
-model = 5;
+model = 25;
 
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
@@ -79,8 +79,8 @@ for block = 1:numBlocks
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM1_MVT_RWRho(Data{k}{block},Env, nStarts, maxAlpha);        
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM5_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
-        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM21_RLOff(Data{k}{block},Env, nStarts, maxAlpha);
-        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM21_RLOff(Data{k}{block},Env, nStarts, maxAlpha);
+        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn_egreedy(Data{k}{block},Env, nStarts, maxAlpha);      
     end
 end
@@ -115,8 +115,8 @@ for ii = 1:nSim
     %out = simulateM1_MVT_RWRho(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM2_MVT_RW(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM5_RLOn(TestParams, Block, Env); % change this depending on model to test
-    out = simulateM21_RLOff(TestParams, Block, Env); % change this depending on model to test
-    %out = simulateM25_RLOn(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM21_RLOff(TestParams, Block, Env); % change this depending on model to test
+    out = simulateM25_RLOn(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM25_RLOn_egreedy(TestParams, Block, Env); % change this depending on model to test
 
     maxLT(ii) = max(out.LeavingTime); % log the longest state for recovery diagnoses
@@ -131,8 +131,8 @@ for ii = 1:nSim
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM1_MVT_RWRho(SimData,Env, nStarts, maxAlpha);    
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM2_MVT_RW(SimData,Env, nStarts, maxAlpha);
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM5_RLOn(SimData,Env, nStarts, maxAlpha);
-    [~, minNLLFitParams, ~, ~, SimFitParams] = fitM21_RLOff(SimData,Env, nStarts, maxAlpha);
-    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn(SimData,Env, nStarts, maxAlpha);
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM21_RLOff(SimData,Env, nStarts, maxAlpha);
+    [~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn(SimData,Env, nStarts, maxAlpha);
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn_egreedy(SimData,Env, nStarts, maxAlpha);
 
     for iParam = 1:numParams

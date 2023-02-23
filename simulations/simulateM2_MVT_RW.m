@@ -49,8 +49,8 @@ for ii = 1:Env.BlockTime % for each second in the environment
         Reward(ii) = Env.R(T,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
         
-        PatchRPE(ii) = PatchRR(ii) - EstimatedPatchRR(ii);
-        RhoRPE(ii) = PatchRR(ii) - Rho(ii);
+        PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
+        RhoRPE(ii) = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
@@ -85,8 +85,8 @@ for ii = 1:Env.BlockTime % for each second in the environment
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
        
-        PatchRPE(ii) = PatchRR(ii) - EstimatedPatchRR(ii);
-        RhoRPE(ii) = PatchRR(ii) - Rho(ii);
+        PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
+        RhoRPE(ii) = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);

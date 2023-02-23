@@ -5,15 +5,14 @@ clear
 addpath(genpath('~/Dropbox/foraging/code'))
 model = 25; % model type - see model table to check number to choose
 
-NSim = 39; % how many runs
+NSim = 40; % how many runs
 
 % environment parameters
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 
 % simulate fresh
-% richParams = [0.1    0.5    2];
-% poorParams = [0.05   0.0005    2];
-% blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
+%blockParams = [0.05    0.0005    2; 0.05   0.0005    2]; %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
+%blockParams = [0.0004, 0.18; 0.0004, 0.22]; %[parameters for rich block; parameters for poor block]
 
 % simulate after model fitting - using best fit parameters 
 load(sprintf('~/Dropbox/foraging/outputs/M%d/fitting_results', model), 'minNLLFitParams');
@@ -24,7 +23,7 @@ SimData = cell(NSim,1);
 for n = 1:NSim
     n
     for Block = 1:2 % for each environment: [rich, poor]
-        params = blockParams(n,:,Block); 
+        params = blockParams(Block,:); 
         %out = simulateM1_MVT_RWRho(params, Block, Env); % change this depending on model to test
         %out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
         %out = simulateM5_RLOn(params, Block, Env); % change this depending on model to test

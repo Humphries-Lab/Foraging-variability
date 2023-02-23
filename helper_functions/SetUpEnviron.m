@@ -3,7 +3,7 @@
 % task parameters
 Env.TravelTime = 6; % delay between patches
 Env.TimeStep = 1;  % T, seconds to update time_in_block and time_in_patch
-Env.BlockTime = 1200;  % changing this affects fitting, so remember to change it back if playing around with simulations
+Env.BlockTime = 600;  % changing this affects fitting, so remember to change it back if playing around with simulations
 Env.InitialYield = [32.5, 45, 57.5]; % S in LeHeron paper
 
 for j=1:length(Env.InitialYield) % for each yield type
