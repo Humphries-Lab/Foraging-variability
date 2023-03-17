@@ -2,8 +2,9 @@
 
 %% Set up
 clear
+close all
 addpath(genpath('~/Dropbox/foraging/code'))
-model = 25; % model type - see model table to check number to choose
+model = 26; % model type - see model table to check number to choose
 
 NSim = 39; % how many runs
 
@@ -27,10 +28,12 @@ for n = 1:NSim
         params = blockParams(n,:,Block); 
         %out = simulateM1_MVT_RWRho(params, Block, Env); % change this depending on model to test
         %out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
+        %out = simulateM3_RLOn(params, Block, Env); % change this depending on model to test
+        %out = simulateM4_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM5_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM21_RLOff(params, Block, Env); % change this depending on model to test
-        out = simulateM25_RLOn(params, Block, Env); % change this depending on model to test
-        %out = simulateM25_RLOn_egreedy(params, Block, Env); % change this depending on model to test
+        %out = simulateM25_RLOn(params, Block, Env); % change this depending on model to test
+        out = simulateM26_RLOn(params, Block, Env); % change this depending on model to test
 
          SimData{n}{Block} = out;
          [LT(n,:,Block), LRR(n,:,Block), TotalReward(n,:,Block)] = summariseForaging(out); % get averages for each NSim

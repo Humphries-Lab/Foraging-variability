@@ -4,7 +4,7 @@ clear
 close all;
 addpath(genpath('~/Dropbox/foraging/code'))
 
-model = 25;
+model = 4;
 
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
@@ -76,12 +76,14 @@ maxAlpha = [1 1]; % set max alpha to the range defined by best parameter fits (o
 for block = 1:numBlocks
     for k = 1:numSubjects
         k
-        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM1_MVT_RWRho(Data{k}{block},Env, nStarts, maxAlpha);        
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM1_MVT_RWRho(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha);
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM3_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
+        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM4_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM5_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM21_RLOff(Data{k}{block},Env, nStarts, maxAlpha);
-        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
-        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn_egreedy(Data{k}{block},Env, nStarts, maxAlpha);      
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM26_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
     end
 end
 
@@ -100,7 +102,7 @@ plotBestParams(minNLLFitParams) % plot best parameters across subjects for each 
 Block = 1;
 
 nSim = 250; % number of iterations
-maxAlpha = [0.2 0.2]; % set max alpha to the range defined by best parameter fits (only need to recover parameters within this range)
+maxAlpha = [0.4 0.4]; % set max alpha to the range defined by best parameter fits (only need to recover parameters within this range)
 %numParams = 2; 
 SimParams = zeros(numParams, nSim);
 FitParams = zeros(numParams, nSim);
@@ -114,26 +116,30 @@ for ii = 1:nSim
     % simulate data
     %out = simulateM1_MVT_RWRho(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM2_MVT_RW(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM3_RLOn(TestParams, Block, Env); % change this depending on model to test
+    out = simulateM4_RLOn(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM5_RLOn(TestParams, Block, Env); % change this depending on model to test
     %out = simulateM21_RLOff(TestParams, Block, Env); % change this depending on model to test
-    out = simulateM25_RLOn(TestParams, Block, Env); % change this depending on model to test
-    %out = simulateM25_RLOn_egreedy(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM25_RLOn(TestParams, Block, Env); % change this depending on model to test
+    %out = simulateM26_RLOn(TestParams, Block, Env); % change this depending on model to test
 
     maxLT(ii) = max(out.LeavingTime); % log the longest state for recovery diagnoses
 
     SimData.Action = out.Action;
     SimData.PatchOrder = Env.PatchOrder{Block};
-    if model > 3 % for every model apart from MVT 
+    if model > 4 % for every model apart from MVT 
         SimData.NextPatch = out.NextPatch;
     end
     % recover data
     nStarts = 5; % how many starting locations to begin fitting (avoid local minima)
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM1_MVT_RWRho(SimData,Env, nStarts, maxAlpha);    
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM2_MVT_RW(SimData,Env, nStarts, maxAlpha);
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM3_RLOn(SimData,Env, nStarts, maxAlpha);
+    [~, minNLLFitParams, ~, ~, SimFitParams] = fitM4_RLOn(SimData,Env, nStarts, maxAlpha);
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM5_RLOn(SimData,Env, nStarts, maxAlpha);
     %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM21_RLOff(SimData,Env, nStarts, maxAlpha);
-    [~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn(SimData,Env, nStarts, maxAlpha);
-    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn_egreedy(SimData,Env, nStarts, maxAlpha);
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM25_RLOn(SimData,Env, nStarts, maxAlpha);
+    %[~, minNLLFitParams, ~, ~, SimFitParams] = fitM26_RLOn(SimData,Env, nStarts, maxAlpha);
 
     for iParam = 1:numParams
         SimParams(iParam,ii) = TestParams(iParam);
