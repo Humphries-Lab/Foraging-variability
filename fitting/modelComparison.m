@@ -43,3 +43,15 @@ bar(mean(models_AIC,2))
 xticklabels(model)
 ylabel('AIC')
 title('AIC comparison of models (rich and poor)')
+
+figure
+t = tiledlayout('flow', 'TileSpacing', 'Compact');
+title(t,'AIC comparison of models for each participant');
+ylabel(t, 'AIC')
+
+for subj = 1:size(ppts_AIC, 1)
+    nexttile
+    bar(squeeze(ppts_AIC(subj,:,:)));
+end
+
+sum(squeeze(ppts_AIC)'==min(squeeze(ppts_AIC)'),2)

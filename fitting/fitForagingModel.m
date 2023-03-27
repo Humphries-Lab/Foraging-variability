@@ -4,7 +4,7 @@ clear
 close all;
 addpath(genpath('~/Dropbox/foraging/code'))
 
-model = 4;
+model = 3;
 
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
@@ -78,8 +78,8 @@ for block = 1:numBlocks
         k
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM1_MVT_RWRho(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha);
-        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM3_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
-        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM4_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
+        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM3_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
+        %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM4_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM5_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM21_RLOff(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM25_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
