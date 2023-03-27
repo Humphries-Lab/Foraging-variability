@@ -4,21 +4,21 @@
 clear
 close all
 addpath(genpath('~/Dropbox/foraging/code'))
-model = 26; % model type - see model table to check number to choose
+model = 2; % model type - see model table to check number to choose
 
-NSim = 39; % how many runs
+NSim = 100; % how many runs
 
 % environment parameters
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 
 % simulate fresh
-% richParams = [0.1    0.5    2];
-% poorParams = [0.05   0.0005    2];
-% blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
+ richParams = [1    0.0004    9];
+ poorParams = [1   0.0004    12];
+ blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
 
 % simulate after model fitting - using best fit parameters 
-load(sprintf('~/Dropbox/foraging/outputs/M%d/fitting_results', model), 'minNLLFitParams');
-blockParams = minNLLFitParams; 
+%load(sprintf('~/Dropbox/foraging/outputs/M%d/fitting_results', model), 'minNLLFitParams');
+%blockParams = minNLLFitParams; 
 
 SimData = cell(NSim,1);
 %% Run
@@ -27,13 +27,13 @@ for n = 1:NSim
     for Block = 1:2 % for each environment: [rich, poor]
         params = blockParams(n,:,Block); 
         %out = simulateM1_MVT_RWRho(params, Block, Env); % change this depending on model to test
-        %out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
+        out = simulateM2_MVT_RW(params, Block, Env); % change this depending on model to test
         %out = simulateM3_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM4_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM5_RLOn(params, Block, Env); % change this depending on model to test
         %out = simulateM21_RLOff(params, Block, Env); % change this depending on model to test
         %out = simulateM25_RLOn(params, Block, Env); % change this depending on model to test
-        out = simulateM26_RLOn(params, Block, Env); % change this depending on model to test
+        %out = simulateM26_RLOn(params, Block, Env); % change this depending on model to test
 
          SimData{n}{Block} = out;
          [LT(n,:,Block), LRR(n,:,Block), TotalReward(n,:,Block)] = summariseForaging(out); % get averages for each NSim
