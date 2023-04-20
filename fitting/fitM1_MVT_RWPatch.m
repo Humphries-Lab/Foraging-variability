@@ -1,12 +1,10 @@
-function [minNLL, minNLLFitParams, BIC, AIC, FitParams, NLLEval, StartParams] = fitM2_MVT_RW(SubjData, Env, nStarts, maxAlpha)
+function [minNLL, minNLLFitParams, BIC, AIC, FitParams, NLLEval, StartParams] = fitM1_MVT_RWPatch(SubjData, Env, nStarts, maxAlpha)
 
 % fmincon options
-%lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
-%upperBounds = [1,1,100];  % arbitrary upper bound on beta to stop pathological behaviour
-lowerBounds = [0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,100];  % arbitrary upper bound on beta to stop pathological behaviour
-%lowerBounds = [0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
-%upperBounds = [1];  % arbitrary upper bound on beta to stop pathological behaviour
+%lowerBounds = [0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
+%upperBounds = [1,100];  % arbitrary upper bound on beta to stop pathological behaviour
+lowerBounds = [0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
+upperBounds = [1];  % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
 numParams = length(lowerBounds); 
 
@@ -15,10 +13,10 @@ StartParams = zeros([nStarts, numParams]);
 NLLEval = zeros([nStarts,1]);
 
 %% Run fitting
-f = @(x)NLL_M2_MVT_RW(x, Env, SubjData);
+f = @(x)NLL_M1_MVT_RWPatch(x, Env, SubjData);
 
 parfor ii = 1:nStarts
-    params0 = [rand rand]; % choose start parameters
+    params0 = [rand]; % choose start parameters
     StartParams(ii, :) = params0;
     [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lowerBounds,upperBounds, [], options);
 end
@@ -40,10 +38,10 @@ minNLLFitParams = FitParams(ix(1),:);
 % minNLLFitParamsSE = tmp;
 
 %% Calculate BIC/AIC
-[~, out] = NLL_M2_MVT_RW([0 0], Env, SubjData); % get the number of data points that were fit to (parameter values don't matter here)
+sum(SubjData == 2); % get the number of data points that were fit to (equivalent to how many stay states there are e.g. states in the patch where they decide whether to stay or leave)
 
 % BIC and AIC
-BIC = numParams * log(out.NumObservations) + 2*minNLL;
-AIC = 2/out.NumObservations * minNLL + 2 * numParams/out.NumObservations;
+BIC = numParams * log(numObv) + 2*minNLL;
+AIC = 2/numObv * minNLL + 2 * numParams/numObv;
 end
 

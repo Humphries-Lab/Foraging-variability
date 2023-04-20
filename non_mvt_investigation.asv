@@ -1,0 +1,19 @@
+%% plots to show what results we have for MVT (non) model 
+
+close all
+% plot distribution of alpha rho
+figure; 
+%boxchart(squeeze(minNLLFitParams(:,1,:)))
+scatter(1:9squeeze(minNLLFitParams(:,1,:)))
+
+title('Best fit parameter values for alpha patchRR')
+xlabel('Environment'); xticklabels({'Rich', 'Poor'});
+ylabel('Alpha patch RR value')
+
+% plot distribution of beta
+figure; 
+boxchart(squeeze(minNLLFitParams(:,2,:)))
+title('Best fit parameter values for beta')
+xlabel('Environment'); xticklabels({'Rich', 'Poor'});
+ylabel('Beta value')
+

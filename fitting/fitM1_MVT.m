@@ -1,10 +1,10 @@
-function [minNLL, minNLLFitParams, BIC, AIC, FitParams, NLLEval, StartParams] = fitM2_MVT_RW(SubjData, Env, nStarts, maxAlpha)
+function [minNLL, minNLLFitParams, BIC, AIC, FitParams, NLLEval, StartParams] = fitM1_MVT(SubjData, Env, nStarts, maxAlpha, block)
 
 % fmincon options
 %lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
 %upperBounds = [1,1,100];  % arbitrary upper bound on beta to stop pathological behaviour
 lowerBounds = [0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,100];  % arbitrary upper bound on beta to stop pathological behaviour
+upperBounds = [1,1];  % arbitrary upper bound on beta to stop pathological behaviour
 %lowerBounds = [0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
 %upperBounds = [1];  % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
@@ -15,7 +15,7 @@ StartParams = zeros([nStarts, numParams]);
 NLLEval = zeros([nStarts,1]);
 
 %% Run fitting
-f = @(x)NLL_M2_MVT_RW(x, Env, SubjData);
+f = @(x)NLL_M1_MVT(x, Env, SubjData, block);
 
 parfor ii = 1:nStarts
     params0 = [rand rand]; % choose start parameters
@@ -40,7 +40,7 @@ minNLLFitParams = FitParams(ix(1),:);
 % minNLLFitParamsSE = tmp;
 
 %% Calculate BIC/AIC
-[~, out] = NLL_M2_MVT_RW([0 0], Env, SubjData); % get the number of data points that were fit to (parameter values don't matter here)
+[~, out] = NLL_M1_MVT([0 0], Env, SubjData, block); % get the number of data points that were fit to (parameter values don't matter here)
 
 % BIC and AIC
 BIC = numParams * log(out.NumObservations) + 2*minNLL;

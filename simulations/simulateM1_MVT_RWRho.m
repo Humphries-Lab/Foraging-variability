@@ -3,7 +3,9 @@ function [out] = simulateM1_MVT_RWRho(params, Block, Env)
 PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
 % reinforcement learning parameters
-AlphaRho = params(1); % average RR learning rate
+%AlphaRho = params(1); % average RR learning rate
+AlphaRho = 0; 
+AlphaPatch = params(1);
 Beta = params(2); % softmax temperature
 
 % initialise variables

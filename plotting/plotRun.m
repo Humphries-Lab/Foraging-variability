@@ -4,7 +4,7 @@ function plotRun(model, ExampleRun)
 SetUpEnviron
 
 figure
-plot(1:Env.BlockTime, ExampleRun.PatchRR, 'LineWidth', 1) % plot patch reward rate
+plot(1:Env.BlockTime, ExampleRun.EstimatedPatchRR, 'LineWidth', 1) % plot patch reward rate
 hold on
 plot(1:Env.BlockTime, ExampleRun.Rho, 'LineWidth', 1) % plot estimated average RR
 legend('Patch RR', '\rho: Estimated average RR', 'FontSize', 16, 'FontName', 'Helvetica')
