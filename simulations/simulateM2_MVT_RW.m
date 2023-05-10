@@ -15,6 +15,7 @@ PatchRR = zeros(Env.BlockTime+1,1); % the reward rate in each state in the block
 PatchRPE = zeros(Env.BlockTime+1,1); % reward prediction error
 RhoRPE = zeros(Env.BlockTime+1,1); % reward prediction error
 Rho = zeros(Env.BlockTime+1, 1); % estimated averageRR
+Rho(1) = Env.OptimalAverageRR{Block};
 EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % estimated patchRR
 
 % initialise values - these will depend on model type
@@ -47,7 +48,7 @@ for ii = 1:Env.BlockTime % for each second in the environment
 
         % observe reward in current state
         Reward(ii) = Env.R(T,PatchType); % reward depends on time in patch and patch type
-        PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
+        PatchRR(ii) = Env.RR(T,PatchType);
         
         PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
         RhoRPE(ii) = Reward(ii) - Rho(ii);
@@ -56,9 +57,12 @@ for ii = 1:Env.BlockTime % for each second in the environment
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
         Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
 
+        %PAction(ii + 1,:) = CorrectedSoftmax([Rho(ii+1), EstimatedPatchRR(ii+1)], Beta);
         PAction(ii + 1,:) = exp([Rho(ii+1) EstimatedPatchRR(ii+1)] * Beta) ./ sum(exp(Beta*[Rho(ii+1) EstimatedPatchRR(ii+1)])); % probability of next action 
          % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
         Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;    
+        PAction(ii+1,:)
+        test = p_leave_softmax(EstimatedPatchRR(ii+1), Beta)
 
         % if the next action is to leave 
         if Action(ii+1) == Leave
