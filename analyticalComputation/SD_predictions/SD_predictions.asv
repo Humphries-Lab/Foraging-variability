@@ -1,5 +1,5 @@
 %% analysis of SDs of leaving times for Le Heron data 
-% Emma Scholey 4 May 2023
+% Emma Scholey 11 May 2023
 clear
 close all;
 
@@ -26,7 +26,7 @@ end
 
 % between environments 
 
-real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
+real_change_in_SD_between_environments = mean(abs(SD_LT(:,:,2) - SD_LT(:,:,1))); % poor - rich
 % our results agree in that there is higher SD in poor environment compared
 % to rich, but differences in real SDs are much smaller than analytical SDs
 % could this be related to noisier SDs in participants, which mask any
@@ -36,7 +36,7 @@ real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % po
 
 % within environments 
 
-real_change_in_SD_within_rich = mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))';
+real_change_in_SD_within_rich = mean(abs(SD_LT(:,:,1)) - mean(SD_LT(:,:,1)))';
 
 real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
 
@@ -51,7 +51,6 @@ real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
 %% test simulated data 
 
 % load simulated data 
-%
 load M2_SimulationResults.mat
 
 %load M2_SimulationResults_2400s.mat % simulated longer time in each block (2400s) using current best fit estimates

@@ -26,7 +26,7 @@ end
 
 % between environments 
 
-real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
+real_change_in_SD_between_environments = mean(abs(SD_LT(:,:,2) - SD_LT(:,:,1))); % poor - rich
 % our results agree in that there is higher SD in poor environment compared
 % to rich, but differences in real SDs are much smaller than analytical SDs
 % could this be related to noisier SDs in participants, which mask any
@@ -36,7 +36,11 @@ real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % po
 
 % within environments 
 
-real_change_in_SD_within_rich = mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))';
+real_change_in_SD_within_rich = abs(mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))');
+
+mean(abs(SD_LT(:,3,2) - SD_LT(:,1,2)))
+mean(abs(SD_LT(:,2,2) - SD_LT(:,1,2)))
+mean(abs(SD_LT(:,3,2) - SD_LT(:,2,2)))
 
 real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
 
