@@ -6,14 +6,14 @@ Leave = 1;
 Stay = 2;
 
 LT = SubjLT.leaveT(SubjLT.env == block); % pull out leaving times
-LT = round(LT); % round to nearest integer (state precision)
+LT = round(LT/Env.TimeStep)*Env.TimeStep; % round to nearest timestep (state precision)
 
 PatchOrder = SubjLT.patch(SubjLT.env == block); % pull out patch order
-tmp = repelem(PatchOrder, LT+Env.TravelTime); % create patch order for each state, for calculating reward later
+tmp = repelem(PatchOrder, (LT+Env.TravelTime)/Env.TimeStep); % create patch order for each state (depending on timestep), for calculating reward later
 
 % transform leaving times into stay/leave actions for each state
 for ii = 1:length(LT)
-    a{ii} = repelem([Stay Leave], [LT(ii) Env.TravelTime]);
+    a{ii} = repelem([Stay Leave], [LT(ii) Env.TravelTime]/Env.TimeStep);
 end
 
 A = cat(2, a{:})'; % concatenate all patches into one long block

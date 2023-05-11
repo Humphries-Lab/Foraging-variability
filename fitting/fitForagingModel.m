@@ -58,10 +58,10 @@ plotMarginalLikelihoods(NLLEval, AlphaVector,BetaVector)
 
 
 %% fitting for each person in group with different starting points
-nStarts = 50; % how many starting points to avoid local minima
+nStarts = 100; % how many starting points to avoid local minima
 
 names = {'rich', 'poor'};
-numParams = 2;
+numParams = 1;
 minNLL = zeros([numSubjects, numBlocks]);
 minNLLFitParams = zeros([numSubjects, numParams, numBlocks]);
 %minNLLFitParamsSE = zeros([numSubjects, numParams, numBlocks]);
@@ -77,7 +77,7 @@ for block = 1:numBlocks
     for k = 1:numSubjects
         k
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM1_MVT(Data{k}{block},Env, nStarts, maxAlpha, block);
-        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha, block);
+        [minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM2_MVT_RW(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM3_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM4_RLOn(Data{k}{block},Env, nStarts, maxAlpha);
         %[minNLL(k,block), minNLLFitParams(k,:,block), BIC(k,block), AIC(k,block), FitParams{k}{block}, NLLEval{k}{block}] = fitM5_RLOn(Data{k}{block},Env, nStarts, maxAlpha);

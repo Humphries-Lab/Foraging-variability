@@ -7,7 +7,7 @@ addpath(genpath('~/Dropbox/foraging/code'))
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
 
-%% analysis of real subject data 
+% analysis of real subject data 
 % get their data
 subj = [1:23 25:40];
 
@@ -19,7 +19,7 @@ numBlocks = size(blockNames, 2);
 load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
 group = {'Young_HC_ReDo/yc%g_forage.mat', subj};
 
-% calculate each subject's variances in leaving times in rich vs poor
+%% calculate each subject's variances in leaving times in rich vs poor
 % environments 
 
 distrLT = zeros([numSubjects, 2]); % each row is subject variance, each column is rich vs poor block
@@ -92,3 +92,49 @@ ylabel('Frequency of observations')
 [h p] = ttest(distrLT(:,1), distrLT(:,2)) % no significant difference in std between rich and poor blocks
 mean(distrLT(:,1))
 mean(distrLT(:,2))
+
+
+%% per-patch, per-environment SD 
+% test model predictions 
+
+SD_LT = zeros([numSubjects, 3, 2]); % each row is subject SD, each column patch type, 3d is block type
+for iSubj = 1:numSubjects % for each subject
+    for iPatch = 1:3
+        for iBlock = 1:2
+            SD_LT(iSubj,iPatch,iBlock) = std(t_young.leaveT(t_young.subj == iSubj & t_young.env == iBlock & t_young.patch == iPatch));
+        end
+    end
+end
+
+
+% between environments 
+
+real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
+% our results agree in that there is higher SD in poor environment compared
+% to rich, but differences in real SDs are much smaller than analytical SDs
+% and don't see increase in SD differences as patch yield increases
+% e.g. (0.5, 0.03 0.22) compared to (4.5, 7, 9)  
+
+x = categorical({'low', 'medium', 'high'});
+x = reordercats(x, {'low', 'medium', 'high'});
+
+figure
+plot(x, real_change_in_SD_between_environments)
+hold on
+plot(x, change_in_SD_between_environments)
+xlabel('Patch yield')
+ylabel('Difference in SDs between environments')
+legend({'Participant SDs', 'Analytical SDs'}, 'Location', 'northwest')
+
+% within environments 
+
+real_change_in_SD_within_rich = mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))';
+
+real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
+
+% difference between low and high yield patches in rich environment is
+% 0.556, and in poor environment is 0.26. This is compared to between
+% environment differences of max 0.51 (for low yield patches)
+
+%much higher difference between medium and high yield patches in poor
+%environment - SD difference = 0.66. 

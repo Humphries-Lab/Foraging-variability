@@ -25,8 +25,12 @@ ylabel('Alpha rho value', 'FontSize', 14)
 
 % plot distribution of beta
 figure; 
-boxchart(squeeze(minNLLFitParams(:,2,:)))
+boxchart(squeeze(minNLLFitParams(:,1,:)))
 title('Best fit parameter values for beta', 'FontSize', 18)
 xlabel('Environment', 'FontSize', 14); xticklabels({'Rich', 'Poor'});
 ylabel('Beta value', 'FontSize', 14)
+ylim([0 2.5])
+
+%% time-step investigations 
+
 
