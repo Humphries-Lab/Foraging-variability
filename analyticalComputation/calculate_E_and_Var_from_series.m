@@ -77,6 +77,7 @@ for iB = 1:numel(beta)
 
         E_leave(iB,iR) = sum(t_series.*f_leave);
         VAR_leave(iB,iR) = sum((t_series - E_leave(iB,iR)).^2 .* f_leave); 
+        
     end
 end
 

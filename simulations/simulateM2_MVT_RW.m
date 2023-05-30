@@ -60,7 +60,9 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         tmp = p_leave_softmax(PatchRR(ii), Beta);
         PAction(ii+1,:) = [tmp, 1-tmp];
         % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
-        Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;    
+        Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;  
+
+        %p_leave_egreedy
         
         % if the next action is to leave 
         if Action(ii+1) == Leave

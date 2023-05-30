@@ -26,7 +26,7 @@ end
 
 % between environments 
 
-real_change_in_SD_between_environments = mean(abs(SD_LT(:,:,2) - SD_LT(:,:,1))); % poor - rich
+real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
 % our results agree in that there is higher SD in poor environment compared
 % to rich, but differences in real SDs are much smaller than analytical SDs
 % could this be related to noisier SDs in participants, which mask any
@@ -36,11 +36,11 @@ real_change_in_SD_between_environments = mean(abs(SD_LT(:,:,2) - SD_LT(:,:,1)));
 
 % within environments 
 
-real_change_in_SD_within_rich = abs(mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))');
+real_change_in_SD_within_rich = mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))';
 
-mean(abs(SD_LT(:,3,2) - SD_LT(:,1,2)))
-mean(abs(SD_LT(:,2,2) - SD_LT(:,1,2)))
-mean(abs(SD_LT(:,3,2) - SD_LT(:,2,2)))
+mean(SD_LT(:,3,2) - SD_LT(:,1,2))
+mean(SD_LT(:,2,2) - SD_LT(:,1,2))
+mean(SD_LT(:,3,2) - SD_LT(:,2,2))
 
 real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
 
@@ -89,3 +89,83 @@ sim_change_in_SD_within_poor = mean(simSD_LT(:,:,2)) - mean(simSD_LT(:,:,2))';
 % but lower differences in SD between patches within poor environment,
 % compared to between environments - contradicting analytical results but
 % matching with real participant data
+
+%% test simulated range of beta 
+% analytical prediction that increase in beta leads to higher SD 
+
+clear
+close all
+addpath(genpath('~/Dropbox/foraging/code'))
+model = 2; % model type - see model table to check number to choose
+
+NSim = 39; % how many runs
+% environment parameters
+SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
+
+% simulate range of betas 
+beta = logspace(-3,0);
+
+SimData = cell(NSim,1);
+
+% initialise
+numBlocks = 2;
+numPatches = 3;
+
+%% Run
+
+simSD_LT = zeros([numel(SimData), 3, 2]); % each row is subject SD, each column patch type, 3d is block type
+
+for iB = 1:numel(beta)
+    for n = 1:NSim
+        n
+        for Block = 1:2 % for each environment: [rich, poor]
+            out = simulateM2_MVT_RW(beta(iB), Block, Env); % change this depending on model to test
+            SimData{iB}{n}{Block} = out;
+        end
+    end
+end
+
+
+for iB = 1:numel(beta)
+    for iPatch = 1:numPatches
+        for iBlock = 1:numBlocks
+            for iSim = 1:NSim % for each simulation (participant best fit)
+                PatchIndex = SimData{iB}{iSim}{iBlock}.PatchOrder == iPatch;
+                simSD_LT(iB,iSim,iPatch,iBlock) = std(SimData{iB}{iSim}{iBlock}.LeavingTime(PatchIndex));
+            end
+        end
+    end
+end
+
+mean_simSD_LT = squeeze(mean(simSD_LT,2));
+
+% what is the range of participant fit betas 
+load M2_fitting_results_separate_230511.mat
+min_beta = min(minNLLFitParams);
+max_beta = max(minNLLFitParams);
+
+figure 
+
+x_max = max_beta(:,:,1);
+x_min = min_beta(:,:,1);
+
+semilogx(beta, mean_simSD_LT(:,:,1))
+xlabel('simulated beta (higher = exploit)')
+ylabel('Mean SD of leaving times (s)')
+title('rich environment')
+patch([x_min,x_min,x_max, x_max, x_min ], [7 1 1 7 7], 'red', 'FaceAlpha', 0.1)
+legend({'low yield', 'medium yield', 'high yield', 'participant fits'}, 'Location', 'northwest')
+
+figure 
+
+x_max = max_beta(:,:,2);
+x_min = min_beta(:,:,2);
+
+semilogx(beta, mean_simSD_LT(:,:,2))
+xlabel('simulated beta (higher = exploit)')
+ylabel('Mean SD of leaving times (s)')
+patch([x_min,x_min,x_max, x_max, x_min ], [7 1 1 7 7], 'red', 'FaceAlpha', 0.1)
+legend({'low yield', 'medium yield', 'high yield', 'participant fits'}, 'Location', 'northwest')
+title('poor environment')
+
+
