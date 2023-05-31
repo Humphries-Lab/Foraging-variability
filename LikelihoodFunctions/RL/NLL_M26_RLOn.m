@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_M25_RLOn(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_M26_RLOn(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -26,7 +26,7 @@ end
 % initialise values - these will depend on model type
 PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
 QStay = zeros(BlockTime,3); % Q-table for staying - Q per patch type - 'multiple' patch sequences
-QLeave = zeros(Env.TravelTime+1,1); % Q-table for leaving - all seconds in leave states are represented - 'separate' leave sequence
+QLeave = 0; % Q-table for leaving - all seconds in leave states are represented - 'separate' leave sequence
 
 % initialise possible actions
 Leave = 1;
@@ -58,15 +58,10 @@ for ii = 1:BlockTime-1 % for each second in the environment
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
 
         % what is the next state? 
-        Q(ii+1,:) = [QLeave(1), QStay(T+1,PatchType)]; % s'
+        Q(ii+1,:) = [QLeave, QStay(T+1,PatchType)]; % s'
 
-        PAction(ii+1,Stay) = softmaxStay(Beta, Q(ii+1, Stay), Q(ii+1,Leave)); % function to calculate PAction based on softmax
-        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
+        PAction(ii+1,:) = CorrectedSoftmax(Q(ii+1,:), Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
-        % get rid of non-finite values for pSelected before updating likelihood
-        if pSelected == 0
-            pSelected = eps(0);
-        end
         LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
 
         % if the next action is to leave 
@@ -98,7 +93,7 @@ for ii = 1:BlockTime-1 % for each second in the environment
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; 
-        Q(ii+1,:) = [QLeave(t+1), QStay(1,NextPatch(PatchNumber))]; % what are Q value's for next state? 
+        Q(ii+1,:) = [QLeave, QStay(1,NextPatch(PatchNumber))]; % what are Q value's for next state? 
 
         if t == Env.TravelTime % if on the last second of travelling
             PAction(ii+1,:) = [0 1]; % force staying on next action
@@ -112,7 +107,7 @@ for ii = 1:BlockTime-1 % for each second in the environment
         PatchRR(ii) = 0; % patch reward rate;
         RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii); % update estimate of average RR
-        QLeave(t) = QLeave(t) + AlphaQ * RPE(ii); % update Q-leave table based on individual states
+        QLeave = QLeave + AlphaQ * RPE(ii); % update Q-leave table based on individual states
 
         t = t+1; % increase time spent travelling
     end
@@ -122,7 +117,7 @@ NegLogLikelihood = -LogLikelihood;
 
 % store variables 
 out.QStay = QStay(1:max(sum(QStay~=0)), :); % limit Q_stay tables - find longest column
-out.QLeave = QLeave(1:Env.TravelTime);
+out.QLeave = QLeave;
 out.Rho = Rho(1:BlockTime);
 out.PAction = PAction(1:BlockTime,:);
 out.Action = Action(1:BlockTime);

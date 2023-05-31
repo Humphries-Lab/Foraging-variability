@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_M21_RLOff(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_M4_RLOn(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -17,16 +17,11 @@ Reward = zeros(BlockTime,1); % the reward earned in each state in the block
 PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block 
 RPE = zeros(BlockTime,1); % reward prediction error
 Rho = zeros(BlockTime, 1); % estimated averageRR
-if SubjData.NextPatch == 0 % if no existing Next Patch predictions (i.e. not using simulated data) 
-    NextPatch = zeros(BlockTime,1); % start from scratch 
-else % otherwise, use the simulated data to ensure we correctly recover next patch predictions 
-    NextPatch = SubjData.NextPatch; % take existing next patch predictions from simulated data
-end
 
 % initialise values - these will depend on model type
 PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
-QStay = zeros(BlockTime,3); % Q-table for staying - Q per patch type - 'multiple' patch sequences
-QLeave = zeros(Env.TravelTime+1,1); % Q-table for leaving - all seconds in leave states are represented - 'separate' leave sequence
+QStay = zeros(BlockTime,1); % Q-table for staying - single patch sequences
+QLeave = 0; % Q-table for leaving - all seconds in leave states are represented - 'stateless' leave sequence
 
 % initialise possible actions
 Leave = 1;
@@ -50,7 +45,6 @@ for ii = 1:BlockTime-1 % for each second in the environment
             PatchNumber = PatchNumber + 1; % patch number increases
             PatchType = PatchOrder(PatchNumber); % select patch type
             Arrive = 0; % no longer arriving
-            Q(ii,Stay) = QStay(T, PatchType); % change value of first state based on what the patch actually is
         end
 
         % observe reward in current state
@@ -58,47 +52,33 @@ for ii = 1:BlockTime-1 % for each second in the environment
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
 
         % what is the next state? 
-        Q(ii+1,:) = [QLeave(1), QStay(T+1,PatchType)]; % s'
+        Q(ii+1,:) = [QLeave, QStay(T+1)]; % s'
 
-        RPE(ii) = Reward(ii)/maxR - Rho(ii) + max(Q(ii+1, :)) - Q(ii, Action(ii));
-
-        % update estimate of average RR
-        Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii);
-
-        % update Q table for staying
-        QStay(T,PatchType) = QStay(T,PatchType) + AlphaQ * RPE(ii);
-
-        PAction(ii+1,Stay) = softmaxStay(Beta, Q(ii+1, Stay), Q(ii+1,Leave)); % function to calculate PAction based on softmax
-        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
+        PAction(ii+1,:) = CorrectedSoftmax(Q(ii+1,:), Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
-        % get rid of non-finite values for pSelected before updating likelihood
-        if pSelected == 0
-            pSelected = eps(0);
-        end
         LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
 
         % if the next action is to leave 
         if Action(ii+1) == Leave
             t = 1; % if next action is leave, then reset travel time counter
 
-            % what does agent think the NEXT patch is? - stochastic patch prediction
-            if NextPatch(PatchNumber) == 0 % if no existing prediction for next patch
-                if rand < 0.1 % for some % of the time, choose randomly
-                    NextPatch(PatchNumber) = randi([1 3]);
-                else % else assume most frequent patch based on those previously experienced
-                    NextPatch(PatchNumber) = mode(PatchOrder(1:PatchNumber));
-                end
-            end
-
             LeavingTime(PatchNumber,1) = T; % log the patch leaving time
             LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
         end
+
+        RPE(ii) = Reward(ii)/maxR - Rho(ii) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii));
+
+        % update estimate of average RR
+        Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii);
+
+        % update Q table for staying
+        QStay(T) = QStay(T) + AlphaQ * RPE(ii);
 
         T = T+Env.TimeStep; % time in patch increases
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; 
-        Q(ii+1,:) = [QLeave(t+1), QStay(1,NextPatch(PatchNumber))]; % what are Q value's for next state? 
+        Q(ii+1,:) = [QLeave, QStay(1)]; % what are Q value's for next state? 
 
         if t == Env.TravelTime % if on the last second of travelling
             PAction(ii+1,:) = [0 1]; % force staying on next action
@@ -110,9 +90,9 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % update 
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
-        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + max(Q(ii+1, :)) - Q(ii, Action(ii)); % calculate RPE for this state
+        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii); % update estimate of average RR
-        QLeave(t) = QLeave(t) + AlphaQ * RPE(ii); % update Q-leave table based on individual states
+        QLeave = QLeave + AlphaQ * RPE(ii); % update Q-leave table based on individual states
 
         t = t+1; % increase time spent travelling
     end
@@ -121,8 +101,8 @@ end
 NegLogLikelihood = -LogLikelihood;
 
 % store variables 
-out.QStay = QStay(1:max(sum(QStay~=0)), :); % limit Q_stay tables - find longest column
-out.QLeave = QLeave(1:Env.TravelTime);
+out.QStay = QStay(1:max(sum(QStay~=0))); % limit Q_stay tables - find longest column
+out.QLeave = QLeave;
 out.Rho = Rho(1:BlockTime);
 out.PAction = PAction(1:BlockTime,:);
 out.Action = Action(1:BlockTime);
@@ -133,5 +113,4 @@ out.RPE = RPE(1:BlockTime);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
-out.NextPatch = NextPatch(1:length(LeavingTime));
 end

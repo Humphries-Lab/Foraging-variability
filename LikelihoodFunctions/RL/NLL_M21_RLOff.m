@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_M5_RLOn(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_M21_RLOff(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -32,7 +32,6 @@ QLeave = zeros(Env.TravelTime+1,1); % Q-table for leaving - all seconds in leave
 Leave = 1;
 Stay = 2;
 
-
 LogLikelihood = 0; 
 
 % set the first actions for the first patch
@@ -61,33 +60,34 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % what is the next state? 
         Q(ii+1,:) = [QLeave(1), QStay(T+1,PatchType)]; % s'
 
-        PAction(ii+1,Stay) = softmaxStay(Beta, Q(ii+1, Stay), Q(ii+1,Leave)); % function to calculate PAction based on softmax
-        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
-        pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
-        % get rid of non-finite values for pSelected before updating likelihood
-        if pSelected == 0
-            pSelected = eps(0);
-        end
-        LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
-
-        % if the next action is to leave 
-        if Action(ii+1) == Leave
-            t = 1; % if next action is leave, then reset travel time counter
-
-            % what does agent think the NEXT patch is? 
-            NextPatch(PatchNumber) = PatchType; % assume next patch will be same as previous patch
-
-            LeavingTime(PatchNumber,1) = T; % log the patch leaving time
-            LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
-        end
-
-        RPE(ii) = Reward(ii)/maxR - Rho(ii) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii));
+        RPE(ii) = Reward(ii)/maxR - Rho(ii) + max(Q(ii+1, :)) - Q(ii, Action(ii));
 
         % update estimate of average RR
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii);
 
         % update Q table for staying
         QStay(T,PatchType) = QStay(T,PatchType) + AlphaQ * RPE(ii);
+
+        PAction(ii+1,:) = CorrectedSoftmax(Q(ii+1,:), Beta);
+        pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
+        LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
+
+        % if the next action is to leave 
+        if Action(ii+1) == Leave
+            t = 1; % if next action is leave, then reset travel time counter
+
+            % what does agent think the NEXT patch is? - stochastic patch prediction
+            if NextPatch(PatchNumber) == 0 % if no existing prediction for next patch
+                if rand < 0.1 % for some % of the time, choose randomly
+                    NextPatch(PatchNumber) = randi([1 3]);
+                else % else assume most frequent patch based on those previously experienced
+                    NextPatch(PatchNumber) = mode(PatchOrder(1:PatchNumber));
+                end
+            end
+
+            LeavingTime(PatchNumber,1) = T; % log the patch leaving time
+            LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
+        end
 
         T = T+Env.TimeStep; % time in patch increases
 
@@ -105,7 +105,7 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % update 
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
-        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
+        RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + max(Q(ii+1, :)) - Q(ii, Action(ii)); % calculate RPE for this state
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii); % update estimate of average RR
         QLeave(t) = QLeave(t) + AlphaQ * RPE(ii); % update Q-leave table based on individual states
 
