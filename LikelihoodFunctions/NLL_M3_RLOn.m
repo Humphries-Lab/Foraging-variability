@@ -27,7 +27,6 @@ QLeave = zeros(Env.TravelTime+1,1); % Q-table for leaving - all seconds in leave
 Leave = 1;
 Stay = 2;
 
-NumObservations = 0; % how many PActions do subjects make (excluding forced leave and arrival states)
 LogLikelihood = 0; 
 
 % set the first actions for the first patch
@@ -55,10 +54,16 @@ for ii = 1:BlockTime-1 % for each second in the environment
         % what is the next state? 
         Q(ii+1,:) = [QLeave(1), QStay(T+1)]; % s'
 
-        PAction(ii+1,:) = CorrectedSoftmax(Q(ii+1, :), Beta); % function to calculate PAction based on softmax, but correcting for Infs/NaNs that can arise from extreme parameter values 
-        PSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
+        PAction(ii+1,Stay) = softmaxStay(Beta, Q(ii+1, Stay), Q(ii+1,Leave)); % function to calculate PAction based on softmax
+        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
+        pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
+        % get rid of non-finite values for pSelected before updating likelihood
+        
+        if pSelected == 0
+            pSelected = eps(0);
+        end
 
-        LogLikelihood = LogLikelihood + log(PSelected); % update log likelihood
+        LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
 
         % if the next action is to leave 
         if Action(ii+1) == Leave
@@ -77,7 +82,6 @@ for ii = 1:BlockTime-1 % for each second in the environment
         QStay(T) = QStay(T) + AlphaQ * RPE(ii);
 
         T = T+Env.TimeStep; % time in patch increases
-        NumObservations = NumObservations+1;
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; 
@@ -113,7 +117,6 @@ out.Q = Q(1:BlockTime,:);
 out.Reward = Reward(1:BlockTime);
 out.PatchRR = PatchRR(1:BlockTime);
 out.RPE = RPE(1:BlockTime);
-out.NumObservations = NumObservations;
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

@@ -1,19 +1,5 @@
 %% model comparison of foraging
 % Emma Scholeyl, 17 March 2023
-clearvars
-close all;
-addpath(genpath('~/Dropbox/foraging/code'))
-model_table = readtable('~/Dropbox/foraging/details/input_model_table.xlsx');
-
-model = [3 4 25 26];
-Block = 1; % rich = 1, poor = 2
-block_names = {'rich', 'poor'};
-numParams  = 3;
-
-% fmincon options
-lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,1,100];  % arbitrary upper bound on beta to stop pathological behaviour
-options = optimoptions('fmincon','Display','none'); % don't display
 
 
 %% AIC/BIC

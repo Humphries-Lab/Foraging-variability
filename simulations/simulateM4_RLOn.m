@@ -1,4 +1,20 @@
 function [out] = simulateM4_RLOn(params, Block, Env)
+
+% simulateM4_RLOn simulates an agent completing the Le Heron milk foraging 
+% task according to params
+
+% out = simulateM4_RLOn(PARAMS, BLOCK, ENV) simulates data given params:
+% Alpha Patch/Q - learning rate for the patch reward rate (MVT models) or Q
+% values (R-learning models) 
+% Alpha Rho - learning rate for the average reward rate (rho) 
+% Beta - softmax temperature (explore/exploit)
+
+% Block determines whether agent is in rich or poor bloc k
+% Env determines the parameters of the task
+
+% Emma S 15/05/23
+
+
 %% Set up
 PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
@@ -25,8 +41,6 @@ QLeave = 0; % Q-table for leaving - all seconds in leave states are represented 
 Leave = 1;
 Stay = 2;
 
-NumObservations = 0; % how many updates to parameters (excluding leave states and arrival states) 
-
 % set the first actions for the first patch
 PatchNumber = 0; % start outside the patch
 Arrive = 1; % start by arriving at new patch
@@ -50,11 +64,12 @@ for ii = 1:Env.BlockTime % for each second in the environment
         Reward(ii) = Env.R(T,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
 
-        % what is the next state? 
-        Q(ii+1,:) = [QLeave, QStay(T+1)]; % s'
+        % what is the next state, s'? 
+        Q(ii+1,:) = [QLeave, QStay(T+1)];
 
-        PAction(ii + 1,:) = exp(Q(ii+1, :) * Beta) ./ sum(exp(Beta*Q(ii+1, :))); % probability of next action 
-         % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
+        PAction(ii+1,Stay) = softmaxStay(Beta, Q(ii+1, Stay), Q(ii+1,Leave)); % function to calculate PAction based on softmax
+        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
+        % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
         Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;    
 
         % if the next action is to leave 
@@ -73,11 +88,11 @@ for ii = 1:Env.BlockTime % for each second in the environment
         QStay(T) = QStay(T) + AlphaQ * RPE(ii);
 
         T = T+Env.TimeStep; % time in patch increases
-        NumObservations = NumObservations+1;
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; % not in a patch anymore
-        Q(ii+1,:) = [QLeave, QStay(1)]; % what are Q value's for next state? 
+        
+        Q(ii+1,:) = [QLeave, QStay(1)]; % what are Q value's for next state, s'? 
 
         if t == Env.TravelTime % if on the last second of travelling
             PAction(ii+1,:) = [0 1]; % force staying on next action
@@ -93,23 +108,22 @@ for ii = 1:Env.BlockTime % for each second in the environment
         PatchRR(ii) = 0; % patch reward rate;
         RPE(ii) = (Reward(ii)/maxR - Rho(ii)) + Q(ii+1, Action(ii+1)) - Q(ii, Action(ii)); % calculate RPE for this state
         Rho(ii+1) = Rho(ii) + AlphaRho * RPE(ii); % update estimate of average RR
-        QLeave = QLeave + AlphaQ * RPE(ii); % update Q-leave table based on individual states
+        QLeave = QLeave + AlphaQ * RPE(ii); % update Q-leave table
 
-        t = t+1; % increase time spent travelling
+        t = t+1; % increase time during travelling
     end
 end
 
 % store variables 
 out.QStay = QStay(1:max(sum(QStay~=0))); % limit Q_stay tables - find longest column
 out.QLeave = QLeave;
-out.Rho = Rho(1:Env.BlockTime)*maxR;
+out.Rho = Rho(1:Env.BlockTime)*maxR; % convert back to non-normalised reward rate
 out.PAction = PAction(1:Env.BlockTime,:);
 out.Action = Action(1:Env.BlockTime);
 out.Q = Q(1:Env.BlockTime,:);
 out.Reward = Reward(1:Env.BlockTime);
 out.PatchRR = PatchRR(1:Env.BlockTime);
 out.RPE = RPE(1:Env.BlockTime);
-out.NumObservations = NumObservations;
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

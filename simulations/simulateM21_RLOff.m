@@ -1,4 +1,20 @@
 function [out] = simulateM21_RLOff(params, Block, Env)
+
+% simulateM21_RLOn simulates an agent completing the Le Heron milk foraging 
+% task according to params
+
+% out = simulateM21_RLOn(PARAMS, BLOCK, ENV) simulates data given params:
+% Alpha Patch/Q - learning rate for the patch reward rate (MVT models) or Q
+% values (R-learning models) 
+% Alpha Rho - learning rate for the average reward rate (rho) 
+% Beta - softmax temperature (explore/exploit)
+
+% Block determines whether agent is in rich or poor bloc k
+% Env determines the parameters of the task
+
+% Emma S 15/05/23
+
+
 %% Set up
 PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
@@ -24,8 +40,6 @@ QLeave = zeros(Env.TravelTime+1,1); % Q-table for leaving - all seconds in leave
 % initialise possible actions
 Leave = 1;
 Stay = 2;
-
-NumObservations = 0; % how many updates to parameters (excluding leave states and arrival states) 
 
 % set the first actions for the first patch
 PatchNumber = 0; % start outside the patch
@@ -63,7 +77,8 @@ for ii = 1:Env.BlockTime % for each second in the environment
         QStay(T,PatchType) = QStay(T,PatchType) + AlphaQ * RPE(ii);
 
         % choose next action
-        PAction(ii + 1,:) = exp(Q(ii+1, :) * Beta) ./ sum(exp(Beta*Q(ii+1, :))); % probability of next action 
+        PAction(ii+1,Stay) = softmaxStay(Beta, Q(ii+1, Stay), Q(ii+1,Leave)); % function to calculate PAction based on softmax
+        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
          % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
         Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;    
 
@@ -82,7 +97,6 @@ for ii = 1:Env.BlockTime % for each second in the environment
         end
 
         T = T+Env.TimeStep; % time in patch increases
-        NumObservations = NumObservations+1;
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; % not in a patch anymore
@@ -118,7 +132,6 @@ out.Q = Q(1:Env.BlockTime,:);
 out.Reward = Reward(1:Env.BlockTime);
 out.PatchRR = PatchRR(1:Env.BlockTime);
 out.RPE = RPE(1:Env.BlockTime);
-out.NumObservations = NumObservations;
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

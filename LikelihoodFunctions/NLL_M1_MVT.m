@@ -23,7 +23,6 @@ EstimatedPatchRR = zeros(BlockTime, 1); % estimated patchRR
 Leave = 1;
 Stay = 2;
 
-NumObservations = 0; % how many PActions do subjects make (excluding forced leave and arrival states)
 LogLikelihood = 0; 
 
 % set the first actions for the first patch
@@ -68,7 +67,6 @@ for ii = 1:BlockTime-1 % for each second in the environment
         end
 
         T = T+Env.TimeStep; % time in patch increases
-        NumObservations = NumObservations+1;
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; 
@@ -106,7 +104,6 @@ out.Reward = Reward(1:BlockTime);
 out.PatchRR = PatchRR(1:BlockTime-1);
 out.PatchRPE = PatchRPE(1:BlockTime-1);
 out.RhoRPE = RhoRPE(1:BlockTime-1);
-out.NumObservations = NumObservations;
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

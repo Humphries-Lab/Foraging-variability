@@ -1,4 +1,19 @@
 function [out] = simulateM25_RLOn(params, Block, Env)
+
+% simulateM25_RLOn simulates an agent completing the Le Heron milk foraging 
+% task according to params
+
+% out = simulateM25_RLOn(PARAMS, BLOCK, ENV) simulates data given params:
+% Alpha Patch/Q - learning rate for the patch reward rate (MVT models) or Q
+% values (R-learning models) 
+% Alpha Rho - learning rate for the average reward rate (rho) 
+% Beta - softmax temperature (explore/exploit)
+
+% Block determines whether agent is in rich or poor bloc k
+% Env determines the parameters of the task
+
+% Emma S 15/05/23
+
 %% Set up
 PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
@@ -24,8 +39,6 @@ QLeave = zeros(Env.TravelTime+1,1); % Q-table for leaving - all seconds in leave
 % initialise possible actions
 Leave = 1;
 Stay = 2;
-
-NumObservations = 0; % how many updates to parameters (excluding leave states and arrival states) 
 
 % set the first actions for the first patch
 PatchNumber = 0; % start outside the patch
@@ -81,7 +94,6 @@ for ii = 1:Env.BlockTime % for each second in the environment
         QStay(T,PatchType) = QStay(T,PatchType) + AlphaQ * RPE(ii);
 
         T = T+Env.TimeStep; % time in patch increases
-        NumObservations = NumObservations+1;
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; % not in a patch anymore
@@ -110,14 +122,13 @@ end
 % store variables 
 out.QStay = QStay(1:max(sum(QStay~=0)), :); % limit Q_stay tables - find longest column
 out.QLeave = QLeave(1:Env.TravelTime);
-out.Rho = Rho(1:Env.BlockTime)*maxR;
+out.Rho = Rho(1:Env.BlockTime);
 out.PAction = PAction(1:Env.BlockTime,:);
 out.Action = Action(1:Env.BlockTime);
 out.Q = Q(1:Env.BlockTime,:);
 out.Reward = Reward(1:Env.BlockTime);
 out.PatchRR = PatchRR(1:Env.BlockTime);
 out.RPE = RPE(1:Env.BlockTime);
-out.NumObservations = NumObservations;
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
