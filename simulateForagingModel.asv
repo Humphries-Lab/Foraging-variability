@@ -7,7 +7,7 @@ close all
 addpath(genpath('./foraging/code'))
 
 %% initialise
-model = 1; % model type - see model table to check number to choose
+model = 3; % model type - see model table to check number to choose
 
 NSim = 39; % how many runs - set to participant number (39) or arbitrary value if simulating from scratch 
 
@@ -16,8 +16,8 @@ SetUpEnviron % generic script to set up foraging environment according to LeHero
 
 % agent parameters 
 % simulate from scratch
-richParams = [0.0025 0.16]; % [alpha Q, alpha rho, beta]
-poorParams = [0.0025 0.22]; % [alpha Q, alpha rho, beta]
+richParams = [1 0 0.16]; % [alpha Q, alpha rho, beta]
+poorParams = [1 0 0.22]; % [alpha Q, alpha rho, beta]
 blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
 
 % OR simulate after model fitting - using best fit parameters 

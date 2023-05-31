@@ -4,26 +4,23 @@ clear
 close all;
 addpath(genpath('~/Dropbox/foraging/code'))
 
-model = 5;
+model = 3;
 
 block = 2; % doesn't really matter
 SetUpEnviron % get the environment parameters
-
-[~, ~, paramsIndex] = buildForagingModel(model);
-numParams = sum(paramsIndex);
-
 blockNames = {'rich', 'poor'};
 paramNames = {'alpha patch/Q', 'alpha rho', 'beta'};
-paramNames = paramNames(paramsIndex);
 
 %% simulation and recovery of parameters
 
-lowerBounds = [0, 0, 0];lowerBounds = lowerBounds(paramsIndex); 
-upperBounds = [1, 1, 100];upperBounds = upperBounds(paramsIndex); 
+lowerBounds = [0, 0, 0];
+upperBounds = [1, 1, 100];
 options = optimoptions('fmincon','Display','none'); % don't display
 
 nSim = 250; % number of iterations to recover
 nStarts = 5; % how many starting locations to begin fitting (avoid local minima)
+
+numParams = length(lowerBounds);
 
 minNLLFitParams = zeros([nSim, numParams]);
 simParams = zeros([nSim, numParams]);
@@ -31,25 +28,23 @@ simParams = zeros([nSim, numParams]);
 for ii = 1:nSim
     ii
     % agent parameters
-    params = [defineBoundedParam(0, 1), defineBoundedParam(0, 1), exprnd(1)];
-    params = params(paramsIndex);
-    simParams(ii,:) = params;
+    simParams(ii,:) = [defineBoundedParam(0, 1), defineBoundedParam(0, 1), exprnd(3)];
 
     sim_f = buildForagingModel(model, Env, [], block); % get function handle for this model
-    out = sim_f(params); % simulate with the parameters
+    out = sim_f(simParams(ii,:)); % simulate with the parameters
 
     out.PatchOrder = Env.PatchOrder{block}; % give unlimited patch order so that fitting back doesn't break 
 
-    [~, NLL_f] = buildForagingModel(model, Env, out); % need to update NLL function with new subject data each time
+            [~, NLL_f] = buildForagingModel(model, Env, out); % need to update NLL function with new subject data each time
 
     NLLEval = zeros([nStarts, 1]);
     fitParams = zeros([nStarts, numParams]);
 
     % recover data
     parfor mm = 1:nStarts
-        params0 = [defineBoundedParam(0, 1), defineBoundedParam(0, 1), exprnd(1)];
-        params0 = params0(paramsIndex);
-        [fitParams(mm,:),NLLEval(mm)] = fmincon(NLL_f,params0,[],[],[],[],lowerBounds, upperBounds,[],options);
+        params0 = [defineBoundedParam(0, 1), defineBoundedParam(0, 1), exprnd(3)];
+
+        [fitParams(mm,:),NLLEval(mm)] = fmincon(f,params0,[],[],[],[],lowerBounds, upperBounds,[],options);
     end
 
     minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
@@ -91,13 +86,13 @@ plot(minNLLFitParams(:,1), minNLLFitParams(:,2), 'o', 'markersize', 8, 'linewidt
 title('fit alpha patch/Q vs alpha rho')
 xlabel('fit alpha patch/Q')
 ylabel('fit alpha rho')
-set(ax,'yscale' ,'log')
 
 ax = nexttile;
 plot(minNLLFitParams(:,1), minNLLFitParams(:,3), 'o', 'markersize', 8, 'linewidth', 1)
 title('fit alpha patch/Q vs fit beta')
 xlabel('fit alpha patch/Q')
 ylabel('fit beta')
+set(ax,'yscale' ,'log')
 
 ax = nexttile;
 plot(minNLLFitParams(:,2), minNLLFitParams(:,3), 'o', 'markersize', 8, 'linewidth', 1)
@@ -108,12 +103,12 @@ set(ax,'yscale' ,'log')
 
 %% checks - simulation and fitting scripts end up with the same outputs
 
-% TestParams = [0.4, 0.1, 1];
-% 
-% % simulate data
-% out = simulate_MVT_full_RW_softmax(TestParams, block, Env); % change this depending on model to test
-% [SubjNLLEval, RecoveredData] = NLL_MVT_full_RW_softmax(TestParams, Env, out);
-% out.PAction == RecoveredData.PAction
-% out.Q == RecoveredData.Q
-% out.Rho == RecoveredData.Rho
-% out.NextPatch == RecoveredData.NextPatch
+TestParams = [0.4, 0.1, 1];
+
+% simulate data
+out = simulate_MVT_full_RW_softmax(TestParams, block, Env); % change this depending on model to test
+[SubjNLLEval, RecoveredData] = NLL_MVT_full_RW_softmax(TestParams, Env, out);
+out.PAction == RecoveredData.PAction
+out.Q == RecoveredData.Q
+out.Rho == RecoveredData.Rho
+out.NextPatch == RecoveredData.NextPatch

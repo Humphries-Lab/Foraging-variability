@@ -3,13 +3,11 @@
 clearvars
 close all;
 
-allModels = 1:5;
-modelNames = {'avgRR RW', 'patchRR RW', 'full RW', 'softmax only', 'patchRR RW fix beta'};
-
+model = 1:5;
 block = 1; % rich = 1, poor = 2
 block_names = {'rich', 'poor'};
 numParams  = 3;
-numModels = size(allModels, 2);
+numModels = size(model, 2);
 % fmincon options
 lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
 upperBounds = [1,1,100];  % arbitrary upper bound on beta to stop pathological behaviour
@@ -21,7 +19,7 @@ options = optimoptions('fmincon','Display','none'); % don't display
 % set up the foraging environment
 SetUpEnviron % get the environment parameters
 
-CM = zeros(size(allModels,2));
+CM = zeros(size(model,2));
 
 for count = 1:100
     count
@@ -44,11 +42,10 @@ for count = 1:100
     testparams = [rand, rand, exprnd(3)]; % randomly select parameters each time
 
     for m = 1:numModels
-        sim_f = buildForagingModel(m, Env, [], block); % get function handle for this model
+        sim_f = buildForagingModel(model, Env, [], block); % get function handle for this model
         out = sim_f(testparams); % simulate with the parameters
-        out.PatchOrder = Env.PatchOrder{block}; % give unlimited patch order so that fitting back doesn't break 
 
-        [BIC, iBEST, BEST] = fitAll(allModels, out, Env);
+        [BIC, iBEST, BEST] = fitAll(m, out, Env);
         CM(m,:) = CM(m,:) + BEST;
 
     end
@@ -70,7 +67,6 @@ function [BIC, iBEST, BEST] = fitAll(models, Data, Env)
 numModels = size(models,2);
 
 nStarts = 5;
-options = optimoptions('fmincon','Display','none'); % don't display
 
 for m = 1:numModels
 
@@ -79,7 +75,7 @@ for m = 1:numModels
     lowerBounds = [0 0 0]; lowerBounds = lowerBounds(paramsIndex);
     upperBounds = [1 1 100]; upperBounds = upperBounds(paramsIndex);
     NLLEval = zeros([nStarts, 1]);
-
+    options = 
 
     % recover data
     parfor ii = 1:nStarts

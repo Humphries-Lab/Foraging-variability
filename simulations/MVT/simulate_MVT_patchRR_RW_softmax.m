@@ -1,10 +1,9 @@
-function [out] = simulateM2_MVT_RW(params, Block, Env)
+function [out] = simulate_MVT_patchRR_RW_softmax(params, Block, Env)
 %% Set up
 PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
 % reinforcement learning parameters
-AlphaPatchRR = 1;
-AlphaRho = params(1); % average RR learning rate
+AlphaPatchRR = params(1);
 Beta = params(2); % softmax temperature
 
 % initialise variables
@@ -13,8 +12,6 @@ Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken
 Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
 PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block 
 PatchRPE = zeros(Env.BlockTime+1,1); % reward prediction error
-RhoRPE = zeros(Env.BlockTime+1,1); % reward prediction error
-Rho = zeros(Env.BlockTime+1, 1); % estimated averageRR
 EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % estimated patchRR
 
 % initialise values - these will depend on model type
@@ -47,14 +44,12 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         PatchRR(ii) = Reward(ii)/Env.TimeStep;
         
         PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
 
-        PAction(ii+1,Stay) = softmaxStay(Beta, EstimatedPatchRR(ii+1), Rho(ii+1)); % function to calculate PAction based on softmax
-        PAction(ii+1,Leave) = 1 - PAction(ii+1,Stay); % p(Leave) is just inverse of p(Stay) 
+        PAction(ii+1,:) = CorrectedSoftmax([0, EstimatedPatchRR(ii+1)], Beta);
+
         % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
         Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;  
         
@@ -84,11 +79,9 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         PatchRR(ii) = 0; % patch reward rate;
        
         PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
@@ -96,13 +89,11 @@ end
 
 % store variables 
 out.EstimatedPatchRR = EstimatedPatchRR(1:Env.BlockTime);
-out.Rho = Rho(1:Env.BlockTime);
 out.PAction = PAction(1:Env.BlockTime/Env.TimeStep,:);
 out.Action = Action(1:Env.BlockTime/Env.TimeStep);
 out.Reward = Reward(1:Env.BlockTime/Env.TimeStep);
 out.PatchRR = PatchRR(1:Env.BlockTime/Env.TimeStep);
 out.PatchRPE = PatchRPE(1:Env.BlockTime);
-out.RhoRPE = RhoRPE(1:Env.BlockTime);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

@@ -36,7 +36,7 @@ title('AIC comparison of models (rich and poor)')
 % find best model for each participant 
 meanBIC = squeeze(mean(ppts_BIC,2));
 
-bestModel = sum(meanBIC == min(meanBIC, [], 2))
+bestModel = sum(meanBIC == min(meanBIC, [], 2));
 
 bestModelRich = sum(squeeze(ppts_BIC(:,1,:)) == min(squeeze(ppts_BIC(:,1,:)), [], 2));
 

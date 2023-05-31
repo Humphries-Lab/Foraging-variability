@@ -8,13 +8,13 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% initialise
 
-model = 5;
+model = 3;
 
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
 
 %% set up model
-[~, ~, paramsIndex] = buildForagingModel(model);
+[~, ~, paramsIndex] = buildForagingModel(model, Env);
 
 numParams = sum(paramsIndex);
 
@@ -44,8 +44,8 @@ clear k b SubjLT t_young
 
 % fmincon options
 nStarts = 50; % how many starting points to avoid local minima
-lowerBounds = [0,0,0];lowerBounds = lowerBounds(paramsIndex);  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,1,100];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
+lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
+upperBounds = [1,1,100];  % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
 
 minNLL = zeros([numSubjects, numBlocks]);

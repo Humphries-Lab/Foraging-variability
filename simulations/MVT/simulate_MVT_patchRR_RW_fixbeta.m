@@ -1,23 +1,18 @@
-function [NegLogLikelihood, out] = NLL_M2_MVT_RW(params, Env, SubjData)
+function [out] = simulate_MVT_patchRR_RW_fixbeta(params, Block, Env)
 %% Set up
-PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
-Action = SubjData.Action;
-
-BlockTime = size(Action, 1);
+PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
 % reinforcement learning parameters
-AlphaPatchRR = 1; % Q learning rate
-AlphaRho = params(1); % average RR learning rate
-Beta = params(2); % softmax temperature
+AlphaPatchRR = params(1);
+Beta = 0.2; % softmax temperature
 
 % initialise variables
-PAction = zeros(BlockTime,2); % probability of selecting leave or stay
-Reward = zeros(BlockTime,1); % the reward earned in each state in the block
-PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block 
-PatchRPE = zeros(BlockTime,1); % reward prediction error
-RhoRPE = zeros(BlockTime,1); % reward prediction error
-Rho = zeros(BlockTime, 1); % estimated averageRR
-EstimatedPatchRR = zeros(BlockTime, 1); % estimated patchRR
+PAction = zeros(Env.BlockTime/Env.TimeStep+1,2); % probability of selecting leave or stay
+Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken 
+Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
+PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block 
+PatchRPE = zeros(Env.BlockTime+1,1); % reward prediction error
+EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % estimated patchRR
 
 % initialise values - these will depend on model type
 PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
@@ -26,20 +21,19 @@ PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
 Leave = 1;
 Stay = 2;
 
-LogLikelihood = 0; 
-
 % set the first actions for the first patch
 PatchNumber = 0; % start outside the patch
 Arrive = 1; % start by arriving at new patch
+Action(1) = Stay; % set first action to stay
 
 % run model
-for ii = 1:BlockTime-1 % for each subject action
+for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
 
     if Action(ii) == Stay % take action to stay
 
         if Arrive % if arriving in the patch
             T = Env.TimeStep; % time in patch
-            N = 1;
+            N = 1; % index (separate to time step)
             PatchNumber = PatchNumber + 1; % patch number increases
             PatchType = PatchOrder(PatchNumber); % select patch type
             Arrive = 0; % no longer arriving
@@ -47,37 +41,37 @@ for ii = 1:BlockTime-1 % for each subject action
 
         % observe reward in current state
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
-        PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
+        PatchRR(ii) = Reward(ii)/Env.TimeStep;
         
         PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
 
-        PAction(ii+1,:) = CorrectedSoftmax([EstimatedPatchRR(ii+1), Rho(ii+1)], Beta);
-        pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
-        LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
+        PAction(ii+1,:) = CorrectedSoftmax([0, EstimatedPatchRR(ii+1)], Beta);
 
+        % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
+        Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;  
+        
         % if the next action is to leave 
         if Action(ii+1) == Leave
             t = Env.TimeStep; % if next action is leave, then reset travel time counter
-            LeavingTime(PatchNumber,1) = T; % log the patch leaving time
-            LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
+            LeavingTime(PatchNumber,1) = T; % log the patch leaving time 
+            LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate 
         end
 
         T = T+Env.TimeStep; % time in patch increases
-        N = N+1;
+        N = N+1; % index increases
 
     elseif Action(ii) == Leave % take action to leave
-        T = 0; 
-
+        T = 0; % not in a patch anymore
         if t == Env.TravelTime % if on the last second of travelling
             PAction(ii+1,:) = [0 1]; % force staying on next action
+            Action(ii+1) = Stay;
             Arrive = 1; % about to arrive in new patch
         elseif t < Env.TravelTime % if still travelling
             PAction(ii+1,:) = [1 0]; % force leaving for duration of travel time
+            Action(ii+1) = Leave;
         end
 
         % update 
@@ -85,27 +79,21 @@ for ii = 1:BlockTime-1 % for each subject action
         PatchRR(ii) = 0; % patch reward rate;
        
         PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
         EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
 end
 
-NegLogLikelihood = -LogLikelihood;
-
 % store variables 
-out.EstimatedPatchRR = EstimatedPatchRR(1:BlockTime);
-out.Rho = Rho(1:BlockTime);
-out.PAction = PAction(1:BlockTime,:);
-out.Action = Action(1:BlockTime);
-out.Reward = Reward(1:BlockTime);
-out.PatchRR = PatchRR(1:BlockTime-1);
-out.PatchRPE = PatchRPE(1:BlockTime-1);
-out.RhoRPE = RhoRPE(1:BlockTime-1);
+out.EstimatedPatchRR = EstimatedPatchRR(1:Env.BlockTime);
+out.PAction = PAction(1:Env.BlockTime/Env.TimeStep,:);
+out.Action = Action(1:Env.BlockTime/Env.TimeStep);
+out.Reward = Reward(1:Env.BlockTime/Env.TimeStep);
+out.PatchRR = PatchRR(1:Env.BlockTime/Env.TimeStep);
+out.PatchRPE = PatchRPE(1:Env.BlockTime);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
