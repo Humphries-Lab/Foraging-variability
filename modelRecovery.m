@@ -41,7 +41,7 @@ for count = 1:100
 
     drawnow
 
-    testparams = [rand, rand, exprnd(3)]; % randomly select parameters each time
+    testparams = [rand, rand, exprnd(1)]; % randomly select parameters each time
 
     for m = 1:numModels
         sim_f = buildForagingModel(m, Env, [], block); % get function handle for this model
