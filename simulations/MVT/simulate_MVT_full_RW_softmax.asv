@@ -1,5 +1,7 @@
-function [out] = simulate_MVT_full_RW_softmax(params, Env, startValues, PatchOrder)
+function [out] = simulate_MVT_full_RW_softmax(params, Env, startValues)
 %% Set up
+if contains(blockFlag, 'combined')
+    Env.BlockTime = Env.BlockTime * 2 
 
 % reinforcement learning parameters
 AlphaPatchRR = params(1);
@@ -8,17 +10,22 @@ Beta = params(3); % softmax temperature
 
 % initialise variables
 
-PAction = zeros(Env.BlockTime/Env.TimeStep+1,2); % probability of selecting leave or stay
-Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken
-Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
-PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block
-Rho = zeros(Env.BlockTime+1, 1); % estimated averageRR
-EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % estimated patchRR
+    PAction = zeros(Env.BlockTime/Env.TimeStep+1,2); % probability of selecting leave or stay
+    Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken
+    Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
+    PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block
+    Rho = zeros(Env.BlockTime+1, 1); % estimated averageRR
+    EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % estimated patchRR
 
 if exist(startValues, "var")
-    PatchRR(1) = startValues.PatchRR;
-    Rho(1) = startValues.Rho;
-    EstimatedPatchRR(1) = startValues.EstimatedPatchRR;
+    PAction(1,:) = startValues.PAction;
+    Action(1) = startValues.Action;
+    Reward(1) = startValues.Reward;
+    PatchRR = startValues.PatchRR;
+    Rho = startValues.Rho;
+    EstimatedPatchRR = startValues.EstimatedPatchRR; 
+else
+
 end
 
 % initialise values - these will depend on model type

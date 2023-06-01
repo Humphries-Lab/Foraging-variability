@@ -8,9 +8,17 @@ addpath(genpath('./foraging/code'))
 
 %% initialise
 model = 1; % model type - see model table to check number to choose
+blockFlag = 'combined'; %% CHANGE - either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+
+if contains(blockFlag, 'combined')
+    numBlocks = 1;
+elseif contains(blockFlag, 'separate')
+    numBlocks = 2;
+end
 
 NSim = 39; % how many runs - set to participant number (39) or arbitrary value if simulating from scratch 
 
+%% set up agent and task
 % environment parameters
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 
@@ -24,16 +32,18 @@ blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1]
 %load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d', model), 'minNLLFitParams');
 %blockParams = minNLLFitParams; 
 
+%% Run
 SimData = cell(NSim,1);
 LT = zeros(NSim, 3, 2);
 LRR = zeros(NSim, 3, 2);
-%% Run
+
 for n = 1:NSim
     n
     for block = 1:2 % for each environment: [rich, poor]
+        
         params = blockParams(n,:,block); 
 
-        sim_f = buildForagingModel(model, Env, [], block); % get function handle for this model
+        sim_f = buildForagingModel(model, Env, ); % get function handle for this model
         out = sim_f(params); % simulate with the parameters 
 
          SimData{n}{block} = out;
