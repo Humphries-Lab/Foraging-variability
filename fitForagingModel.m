@@ -8,37 +8,41 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% initialise
 
-model = 5;
+model = 5; %% CHANGE
+blockFlag = 'combined'; %% CHANGE - either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
 
+if contains(blockFlag, 'combined')
+    numBlocks = 1;
+elseif contains(blockFlag, 'separate')
+    numBlocks = 2;
+end
+
+%% set up model and task 
 SetUpEnviron % get the environment parameters
 blockNames = {'rich', 'poor'};
 
-%% set up model
-[~, ~, paramsIndex] = buildForagingModel(model);
-
+[~, ~, paramsIndex] = buildForagingModel(model); % get the right parameters for the model 
 numParams = sum(paramsIndex);
 
 paramNames = {'alpha patch RR/Q', 'alpha rho', 'beta'};
+paramNames = paramNames(paramsIndex); 
 
 %% load and prepare subject data
 
 % get subject data
 subj = [1:23 25:40];
 numSubjects = size(subj,2);
-numBlocks = size(blockNames, 2);
 
 load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
 
 Data = cell([numSubjects, 1]);
 
 for k = 1:numSubjects % for each subject
-    for b = 1:numBlocks % for each block [rich poor]
+    for b = 1:numBlocks % for each block
         SubjLT = t_young(t_young.subj == k,:); % extract their summarised leaving times
-        Data{k}{b} = PrepSubjData(SubjLT, b, Env); % transform into state actions ready for fitting
+        Data{k}{b} = PrepSubjData(SubjLT, b, Env, blockFlag); % transform into state actions ready for fitting
     end
 end
-
-clear k b SubjLT t_young
 
 %% fitting for each person in group with different starting points
 

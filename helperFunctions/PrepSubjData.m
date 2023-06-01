@@ -1,15 +1,19 @@
-function Data = PrepSubjData(SubjLT, block, Env)
+function Data = PrepSubjData(SubjLT, block, Env, blockFlag)
 
 %% build the foraging table from their MAIN session
 % specify actions
 Leave = 1;
 Stay = 2;
 
-LT = SubjLT.leaveT(SubjLT.env == block); % pull out leaving times
-LT = round(LT/Env.TimeStep)*Env.TimeStep; % round to nearest timestep (state precision)
+if contains(blockFlag, 'combined') % if fitting as a continuous task (no separate blocks) 
+    LT = SubjLT.leaveT; % pull out leaving times - note that this will do it in the correct block order for the participant [1 2] or [2 1]
+    PatchOrder = SubjLT.patch; % pull out patch order
+elseif contains(blockFlag, 'separate')
+    LT = SubjLT.leaveT(SubjLT.env == block); % pull out leaving times
+    PatchOrder = SubjLT.patch(SubjLT.env == block); % pull out patch order
+end
 
-PatchOrder = SubjLT.patch(SubjLT.env == block); % pull out patch order
-tmp = repelem(PatchOrder, (LT+Env.TravelTime)/Env.TimeStep); % create patch order for each state (depending on timestep), for calculating reward later
+LT = round(LT/Env.TimeStep)*Env.TimeStep; % round to nearest timestep (state precision)
 
 % transform leaving times into stay/leave actions for each state
 for ii = 1:length(LT)
