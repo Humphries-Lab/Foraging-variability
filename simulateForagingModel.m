@@ -1,36 +1,29 @@
 %% ---- Script to simulate Le Heron foraging task ---- %%
-% Emma Scholey 
-% latest update 30th May 2023 
+% Emma Scholey
+% latest update 30th May 2023
 
 clear
 close all
 addpath(genpath('./foraging/code'))
 
 %% initialise
-model = 1; % model type - see model table to check number to choose
-blockFlag = 'combined'; %% CHANGE - either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+model = 3; % model type - see model table to check number to choose
 
-if contains(blockFlag, 'combined')
-    numBlocks = 1;
-elseif contains(blockFlag, 'separate')
-    numBlocks = 2;
-end
-
-NSim = 39; % how many runs - set to participant number (39) or arbitrary value if simulating from scratch 
+NSim = 39; % how many runs - set to participant number (39) or arbitrary value if simulating from scratch
 
 %% set up agent and task
 % environment parameters
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 
-% agent parameters 
+% agent parameters
 % simulate from scratch
-richParams = [0.0025 0.16]; % [alpha Q, alpha rho, beta]
-poorParams = [0.0025 0.22]; % [alpha Q, alpha rho, beta]
+richParams = [1 0.0025 0.16]; % [alpha Q, alpha rho, beta]
+poorParams = [1 0.0025 0.22]; % [alpha Q, alpha rho, beta]
 blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
-
-% OR simulate after model fitting - using best fit parameters 
+blockOrder = 
+% OR simulate after model fitting - using best fit parameters
 %load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d', model), 'minNLLFitParams');
-%blockParams = minNLLFitParams; 
+%blockParams = minNLLFitParams;
 
 %% Run
 SimData = cell(NSim,1);
@@ -39,23 +32,35 @@ LRR = zeros(NSim, 3, 2);
 
 for n = 1:NSim
     n
-    for block = 1:2 % for each environment: [rich, poor]
-        
-        params = blockParams(n,:,block); 
+    for blockI = 1:2
 
-        sim_f = buildForagingModel(model, Env, ); % get function handle for this model
-        out = sim_f(params); % simulate with the parameters 
+        blockType = blockOrder(blockI); % which block do they see 1st or 2nd (to get order effects in simulations)
+        Env.BlockPatchOrder = Env.PatchOrder{blockType}; % set the current patch order
 
-         SimData{n}{block} = out;
 
-         % extract leaving times for each patch type
-         for ii = 1:3
-             LT(n,ii,block) = mean(out.LeavingTime(out.PatchOrder == ii));
-             LRR(n,ii,block) = mean(out.LeavingRR(out.PatchOrder == ii));
-         end
+        if blockI == 2 && contains(blockFlag, 'combined') % we need to specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
+            startValues.Rho = out.Rho(end); % first value is last value from previous block
+            startValues.EstimatedPatchRR = out.EstimatedPatchRR(end);
+        else
+            startValues.Rho = 0;
+            startValues.EstimatedPatchRR = 0;
+        end
 
-         % how much reward did they get?
-         TotalReward(n,block) = sum(out.Reward);
+        params = blockParams(n,:,blockType);
+
+        sim_f = buildForagingModel(model, Env, startValues); % get function handle for this model
+        out = sim_f(params); % simulate with the parameters
+
+        SimData{n}{blockType} = out;
+
+        % extract leaving times for each patch type
+        for ii = 1:3
+            LT(n,ii,blockType) = mean(out.LeavingTime(out.PatchOrder == ii));
+            LRR(n,ii,blockType) = mean(out.LeavingRR(out.PatchOrder == ii));
+        end
+
+        % how much reward did they get?
+        TotalReward(n,blockType) = sum(out.Reward);
     end
 end
 
@@ -68,7 +73,7 @@ RewardMean = squeeze(mean(TotalReward))';
 
 %save(sprintf('~/Dropbox/foraging/sim_data/simData_M%d.mat', model), 'RewardMean', "LTMean", "LTSEM", "out", "NSim", "SimData")
 
-%% figure - plot mean leaving times, compared to real subject data 
+%% figure - plot mean leaving times, compared to real subject data
 close all
 
 load('./foraging/raw_data/summary/young_variables/subMean_young.mat') % load real data
@@ -84,7 +89,7 @@ SubLTMean = [mean(SubLT(:,:,1), 2), mean(SubLT(:,:,2), 2)];
 SubSEM = [std(SubLT(:,:,1),[],2)./sqrt(NSub), std(SubLT(:,:,2), [], 2)./sqrt(NSub)]; % Standard Error
 
 ts = tinv([0.025  0.975],NSub-1);      % T-Score
-SubCI = ts(2).*SubSEM; % CIs 
+SubCI = ts(2).*SubSEM; % CIs
 
 figure()
 hold on

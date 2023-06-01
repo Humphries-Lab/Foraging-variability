@@ -8,13 +8,6 @@ addpath(genpath('./foraging/code'))
 
 %% initialise
 model = 1; % model type - see model table to check number to choose
-blockFlag = 'combined'; %% CHANGE - either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
-
-if contains(blockFlag, 'combined')
-    numBlocks = 1;
-elseif contains(blockFlag, 'separate')
-    numBlocks = 2;
-end
 
 NSim = 39; % how many runs - set to participant number (39) or arbitrary value if simulating from scratch 
 
@@ -38,24 +31,36 @@ LT = zeros(NSim, 3, 2);
 LRR = zeros(NSim, 3, 2);
 
 for n = 1:NSim
-    n
-    for block = 1:2 % for each environment: [rich, poor]
-        
-        params = blockParams(n,:,block); 
+    n        
+    for blockI = 1:2
 
-        sim_f = buildForagingModel(model, Env, ); % get function handle for this model
+    blockType = blockOrder(blockI); % which block do they see 1st or 2nd (to get order effects in simulations)
+    Env.BlockPatchOrder = Env.PatchOrder{blockType}; % set the current patch order 
+    
+    
+    if blockI == 2 && contains(blockFlag, 'combined') % we need to specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
+        startValues.Rho = out{1}.Rho(end); % first value is last value from previous block
+        startValues.EstimatedPatchRR = out{1}.EstimatedPatchRR(end);
+    else
+        startValues.Rho = 0;
+        startValues.EstimatedPatchRR = 0; 
+    end
+
+        params = blockParams(n,:,blockType); 
+
+        sim_f = buildForagingModel(model, Env, startValues); % get function handle for this model
         out = sim_f(params); % simulate with the parameters 
 
-         SimData{n}{block} = out;
+         SimData{n}{blockType} = out;
 
          % extract leaving times for each patch type
          for ii = 1:3
-             LT(n,ii,block) = mean(out.LeavingTime(out.PatchOrder == ii));
-             LRR(n,ii,block) = mean(out.LeavingRR(out.PatchOrder == ii));
+             LT(n,ii,blockType) = mean(out.LeavingTime(out.PatchOrder == ii));
+             LRR(n,ii,blockType) = mean(out.LeavingRR(out.PatchOrder == ii));
          end
 
          % how much reward did they get?
-         TotalReward(n,block) = sum(out.Reward);
+         TotalReward(n,blockType) = sum(out.Reward);
     end
 end
 
