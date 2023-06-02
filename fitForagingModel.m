@@ -6,20 +6,22 @@ clear
 close all;
 addpath(genpath('~/Dropbox/foraging/code'))
 
-%% initialise
+%% user options
 
-model = 5; %% CHANGE
-blockFlag = 'combined'; %% CHANGE - either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+model = 2; %% see buildForagingModel.m for model list 
+blockFlag = 'combined'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+
+%% set up model and task 
 
 if contains(blockFlag, 'combined')
     numBlocks = 1;
+    blockNames = {'combined'};
 elseif contains(blockFlag, 'separate')
     numBlocks = 2;
+    blockNames = {'rich', 'poor'};
 end
 
-%% set up model and task 
 SetUpEnviron % get the environment parameters
-blockNames = {'rich', 'poor'};
 
 [~, ~, paramsIndex] = buildForagingModel(model); % get the right parameters for the model 
 numParams = sum(paramsIndex);
@@ -44,6 +46,10 @@ for k = 1:numSubjects % for each subject
     end
 end
 
+% assume no knowledge of environment for fitting
+startValues.Rho = 0; 
+startValues.EstimatedPatchRR = 0;
+
 %% fitting for each person in group with different starting points
 
 % fmincon options
@@ -67,7 +73,7 @@ for block = 1:numBlocks
         NLLEval = zeros([nStarts, 1]);
         FitParams = zeros([nStarts, numParams]);
 
-        [~, NLL_f] = buildForagingModel(model, Env, subjData); % need to update NLL function with new subject data each time
+        [~, NLL_f] = buildForagingModel(model, Env, subjData, startValues); % need to update NLL function with new subject data each time
 
          % Run fmincon
          parfor ii = 1:nStarts
@@ -91,7 +97,7 @@ end
 clear FitParams NLLEval iS ix
 
 m = median(minNLLFitParams);
-save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d', model);
+save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d', blockFlag, model);
 save(save_name, 'AIC', 'BIC', 'minNLL', 'minNLLFitParams')
 
 %% plots

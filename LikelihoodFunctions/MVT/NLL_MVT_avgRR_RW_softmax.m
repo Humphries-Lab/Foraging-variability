@@ -13,7 +13,6 @@ Beta = params(2); % softmax temperature
 PAction = zeros(BlockTime,2); % probability of selecting leave or stay
 Reward = zeros(BlockTime,1); % the reward earned in each state in the block
 PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block 
-RhoRPE = zeros(BlockTime,1); % reward prediction error
 Rho = zeros(BlockTime, 1); % estimated averageRR
 
 % initialise values - these will depend on model type
@@ -46,9 +45,9 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
         
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
+        RhoRPE = Reward(ii) - Rho(ii);
 
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
+        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE;
 
         PAction(ii+1,:) = CorrectedSoftmax([Rho(ii+1), PatchRR(ii)], Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
@@ -78,9 +77,9 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
        
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
+        RhoRPE = Reward(ii) - Rho(ii);
 
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
+        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE;
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
@@ -94,7 +93,6 @@ out.PAction = PAction(1:BlockTime,:);
 out.Action = Action(1:BlockTime);
 out.Reward = Reward(1:BlockTime);
 out.PatchRR = PatchRR(1:BlockTime-1);
-out.RhoRPE = RhoRPE(1:BlockTime-1);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

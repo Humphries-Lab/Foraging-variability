@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_MVT_patchRR_RW_fixedbeta(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_MVT_patchRR_RW_fixbeta(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -13,7 +13,6 @@ Beta = 0.2; % softmax temperature
 PAction = zeros(BlockTime,2); % probability of selecting leave or stay
 Reward = zeros(BlockTime,1); % the reward earned in each state in the block
 PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block 
-PatchRPE = zeros(BlockTime,1); % reward prediction error
 EstimatedPatchRR = zeros(BlockTime, 1); % estimated patchRR
 
 % initialise values - these will depend on model type
@@ -46,10 +45,10 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
         
-        PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
+        PatchRPE = Reward(ii) - EstimatedPatchRR(ii);
 
         % what is the estimated patch reward rate 
-        EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
+        EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE;
 
         PAction(ii+1,:) = CorrectedSoftmax([0, EstimatedPatchRR(ii+1)], Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
@@ -79,10 +78,10 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
        
-        PatchRPE(ii) = Reward(ii) - EstimatedPatchRR(ii);
+        PatchRPE = Reward(ii) - EstimatedPatchRR(ii);
 
         % what is the estimated patch reward rate 
-        EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE(ii);
+        EstimatedPatchRR(ii+1) = EstimatedPatchRR(ii) + AlphaPatchRR * PatchRPE;
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
@@ -96,7 +95,6 @@ out.PAction = PAction(1:BlockTime,:);
 out.Action = Action(1:BlockTime);
 out.Reward = Reward(1:BlockTime);
 out.PatchRR = PatchRR(1:BlockTime-1);
-out.PatchRPE = PatchRPE(1:BlockTime-1);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));

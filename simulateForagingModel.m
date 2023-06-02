@@ -6,24 +6,48 @@ clear
 close all
 addpath(genpath('./foraging/code'))
 
-%% initialise
-model = 3; % model type - see model table to check number to choose
-
-NSim = 39; % how many runs - set to participant number (39) or arbitrary value if simulating from scratch
+%% user options
+model = 1; % model type - see model table to check number to choose
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+simulateFitData = 1; % 1 if simulating subject fit data, 0 if want to simulate own parameters
+NSim = 50; % this will override if simulating fit subject data 
 
 %% set up agent and task
 % environment parameters
+blockNames = {'rich', 'poor'};
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 
 % agent parameters
+
 % simulate from scratch
-richParams = [1 0.0025 0.16]; % [alpha Q, alpha rho, beta]
-poorParams = [1 0.0025 0.22]; % [alpha Q, alpha rho, beta]
-blockParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
-blockOrder = 
+
+if simulateFitData == 0
+    if contains(blockFlag, 'separate') % parameters allowed to be different in each block
+        richParams = [0.17 0.67 0.54]; % [alpha Q, alpha rho, beta]
+        poorParams = [1 0.0003 0.22]; % [alpha Q, alpha rho, beta]
+    elseif contains(blockFlag, 'combined')
+        richParams = [0.5 0.004 0.5];
+        poorParams = richParams; % params have to be the same in both blocks
+    end
+    allParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
+    blockOrder = [repmat([2 1], [NSim/2, 1]); repmat([1 2], [NSim/2, 1])]; % do half [poor rich], half [rich poor]
+
+elseif simulateFitData == 1
+    load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d', blockFlag, model), 'minNLLFitParams');
+    load('~/Dropbox/foraging/raw_data/BlockOrder.mat'); % load order of block presentation
+    blockOrder = BlockOrder;
+    NSim = 39;
+
+    if contains(blockFlag, 'separate')
+        allParams = minNLLFitParams;
+    elseif contains(blockFlag, 'combined')
+        allParams = cat(3, minNLLFitParams, minNLLFitParams); % duplicate for aligned block indexing later
+    end
+
+end
+
 % OR simulate after model fitting - using best fit parameters
-%load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d', model), 'minNLLFitParams');
-%blockParams = minNLLFitParams;
+
 
 %% Run
 SimData = cell(NSim,1);
@@ -34,9 +58,8 @@ for n = 1:NSim
     n
     for blockI = 1:2
 
-        blockType = blockOrder(blockI); % which block do they see 1st or 2nd (to get order effects in simulations)
+        blockType = blockOrder(n,blockI); % which block do they see 1st or 2nd (to get order effects in simulations)
         Env.BlockPatchOrder = Env.PatchOrder{blockType}; % set the current patch order
-
 
         if blockI == 2 && contains(blockFlag, 'combined') % we need to specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
             startValues.Rho = out.Rho(end); % first value is last value from previous block
@@ -46,9 +69,9 @@ for n = 1:NSim
             startValues.EstimatedPatchRR = 0;
         end
 
-        params = blockParams(n,:,blockType);
+        params = allParams(n,:,blockType);
 
-        sim_f = buildForagingModel(model, Env, startValues); % get function handle for this model
+        sim_f = buildForagingModel(model, Env, [], startValues); % get function handle for this model
         out = sim_f(params); % simulate with the parameters
 
         SimData{n}{blockType} = out;
@@ -124,10 +147,20 @@ subtitle(sprintf('Error bars show 95%% CI. NSim = %d', NSim))
 
 %% plot behaviour from a single run
 
-figure
-plot(1:Env.BlockTime, out.PatchRR, 'LineWidth', 1) % plot patch reward rate
-hold on
-plot(1:Env.BlockTime, out.Rho, 'LineWidth', 1) % plot estimated average RR
-legend('Patch RR', '\rho: Estimated average RR', 'FontSize', 16, 'FontName', 'Helvetica')
-xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
-ylabel('Reward rates','FontSize', 16, 'FontName', 'Helvetica');
+figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
+
+% find 'bad' alpha rho values
+%thresh = 0.25;
+%ind = abs(simParams(:,2) - minNLLFitParams(:,2)) > thresh;
+
+% for each parameter, plot sim vs fit
+for i= 1:2
+    ax = nexttile;
+    plot(1:Env.BlockTime, SimData{1}{i}.PatchRR, 'LineWidth', 1) % plot patch reward rate
+    hold on
+    plot(1:Env.BlockTime, SimData{1}{i}.Rho, 'LineWidth', 1) % plot estimated average RR
+    legend('Patch RR', '\rho: Estimated average RR', 'FontSize', 16, 'FontName', 'Helvetica')
+    xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
+    ylabel('Reward rates','FontSize', 16, 'FontName', 'Helvetica');
+    title(sprintf('%s environment', blockNames{i}));
+end

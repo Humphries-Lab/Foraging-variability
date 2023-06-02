@@ -5,7 +5,7 @@ foragingModels = {
     1, @(x)simulate_MVT_avgRR_RW_softmax(x,Env,startValues),   @(x0)NLL_MVT_avgRR_RW_softmax(x0, Env, subjData),   logical([0 1 1]);
     2, @(x)simulate_MVT_patchRR_RW_softmax(x,Env,startValues), @(x0)NLL_MVT_patchRR_RW_softmax(x0, Env, subjData), logical([1 0 1]);
     3, @(x)simulate_MVT_full_RW_softmax(x,Env,startValues),    @(x0)NLL_MVT_full_RW_softmax(x0, Env, subjData),    logical([1 1 1]);
-    4, @(x)simulate_MVT_softmax(x,Env,startValues),            @(x0)NLL_MVT_softmax(x0, Env, subjData),            logical([0 0 1]);
+    4, @(x)simulate_MVT_softmax(x,Env),            @(x0)NLL_MVT_softmax(x0, Env, subjData),            logical([0 0 1]);
     5, @(x)simulate_MVT_patchRR_RW_fixbeta(x,Env,startValues), @(x0)NLL_MVT_patchRR_RW_fixbeta(x0, Env, subjData), logical([1 0 0]);
 };
 

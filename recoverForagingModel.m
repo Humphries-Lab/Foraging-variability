@@ -2,12 +2,20 @@
 
 clear
 close all;
-addpath(genpath('~/Dropbox/foraging/code'))
+addpath(genpath('./foraging/code'))
 
-model = 5;
+%% user options
+model = 1; % model type - see model table to check number to choose
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+% note that if choosing 'separate', select below which block to look at
+% (rich 1 or poor 2) 
+block = 1;
 
-block = 2; % doesn't really matter
+nSim = 250; % number of iterations to recover
+
+%% set up agent and task
 SetUpEnviron % get the environment parameters
+blockOrder = [1 2]; 
 
 [~, ~, paramsIndex] = buildForagingModel(model);
 numParams = sum(paramsIndex);
@@ -16,13 +24,11 @@ blockNames = {'rich', 'poor'};
 paramNames = {'alpha patch/Q', 'alpha rho', 'beta'};
 paramNames = paramNames(paramsIndex);
 
-%% simulation and recovery of parameters
-
-lowerBounds = [0, 0, 0];lowerBounds = lowerBounds(paramsIndex); 
-upperBounds = [1, 1, 100];upperBounds = upperBounds(paramsIndex); 
+%% fmincon options
+lowerBounds = [0, 0, 0];lowerBounds = lowerBounds(paramsIndex);
+upperBounds = [1, 1, 100];upperBounds = upperBounds(paramsIndex);
 options = optimoptions('fmincon','Display','none'); % don't display
 
-nSim = 250; % number of iterations to recover
 nStarts = 5; % how many starting locations to begin fitting (avoid local minima)
 
 minNLLFitParams = zeros([nSim, numParams]);
@@ -30,17 +36,47 @@ simParams = zeros([nSim, numParams]);
 
 for ii = 1:nSim
     ii
-    % agent parameters
-    params = [defineBoundedParam(0, 1), defineBoundedParam(0, 1), exprnd(1)];
+
+    %% simulate data
+    simData = table; % container table for simulated data
+
+    % agent parameters - same parameters for both blocks
+    params = [defineBoundedParam(0, 1), defineBoundedParam(0, 0.05), exprnd(1)];
     params = params(paramsIndex);
     simParams(ii,:) = params;
 
-    sim_f = buildForagingModel(model, Env, [], block); % get function handle for this model
-    out = sim_f(params); % simulate with the parameters
+    for blockI = 1:2
 
-    out.PatchOrder = Env.PatchOrder{block}; % give unlimited patch order so that fitting back doesn't break 
+        blockType = blockOrder(blockI); % for recovery, assume always seen rich block first (same order as blockI)
+        Env.BlockPatchOrder = Env.PatchOrder{blockType}; % set the current patch order
 
-    [~, NLL_f] = buildForagingModel(model, Env, out); % need to update NLL function with new subject data each time
+        if blockI == 2 && contains(blockFlag, 'combined') % we need to specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
+            startValues.Rho = out.Rho(end); % first value is last value from previous block
+            startValues.EstimatedPatchRR = out.EstimatedPatchRR(end);
+        else
+            startValues.Rho = 0;
+            startValues.EstimatedPatchRR = 0;
+        end
+
+        sim_f = buildForagingModel(model, Env, [], startValues); % get function handle for this model
+        out = sim_f(params); % simulate with the parameters
+
+        % make a table of simulated data, similar to the real participant
+        % data (whilst it's a bit clunky, it helps for understanding if/how NLL is working differently to
+        % simulation script) 
+        tmp = table; 
+        tmp.leaveT = out.LeavingTime;
+        tmp.patch = out.PatchOrder';
+        tmp.env = repelem(blockI,numel(tmp.leaveT))'; 
+
+        simData = [simData; tmp]; % concatenate onto previous block 
+    end
+    
+    simSubjData = PrepSubjData(simData, block, Env, blockFlag); % transform into state actions ready for fitting
+
+    %% fit back to the simulated data 
+
+    [~, NLL_f] = buildForagingModel(model, Env, simSubjData); % need to update NLL function with new subject data each time
 
     NLLEval = zeros([nStarts, 1]);
     fitParams = zeros([nStarts, numParams]);
@@ -108,11 +144,12 @@ set(ax,'yscale' ,'log')
 
 %% checks - simulation and fitting scripts end up with the same outputs
 
-% TestParams = [0.4, 0.1, 1];
-% 
-% % simulate data
-% out = simulate_MVT_full_RW_softmax(TestParams, block, Env); % change this depending on model to test
-% [SubjNLLEval, RecoveredData] = NLL_MVT_full_RW_softmax(TestParams, Env, out);
+%  TestParams = [0.4, 0.1, 1];
+% % 
+% % % simulate data
+% block = 1; 
+%  out = simulate_MVT_full_RW_softmax(TestParams, block, Env); % change this depending on model to test
+%  [SubjNLLEval, RecoveredData] = NLL_MVT_full_RW_softmax(TestParams, Env, out);
 % out.PAction == RecoveredData.PAction
 % out.Q == RecoveredData.Q
 % out.Rho == RecoveredData.Rho

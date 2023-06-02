@@ -1,30 +1,30 @@
-function [out] = simulate_MVT_avgRR_RW_softmax(params, Block, Env)
+function [out] = simulate_MVT_avgRR_RW_softmax(params, Env, startValues)
 %% Set up
-PatchOrder = Env.PatchOrder{Block}; % specify which patches they see (high, medium, low quality) depending on environment
 
 % reinforcement learning parameters
 AlphaRho = params(1); % average RR learning rate
 Beta = params(2); % softmax temperature
+
+% initialise possible actions
+Leave = 1;
+Stay = 2;
 
 % initialise variables
 PAction = zeros(Env.BlockTime/Env.TimeStep+1,2); % probability of selecting leave or stay
 Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken 
 Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
 PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block 
-RhoRPE = zeros(Env.BlockTime+1,1); % reward prediction error
 Rho = zeros(Env.BlockTime+1, 1); % estimated averageRR
 
-% initialise values - these will depend on model type
-PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
+Rho(1) = startValues.Rho;
 
-% initialise possible actions
-Leave = 1;
-Stay = 2;
+PatchOrder = Env.BlockPatchOrder;
 
 % set the first actions for the first patch
+PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
+Action(1) = Stay; % set first action to stay
 PatchNumber = 0; % start outside the patch
 Arrive = 1; % start by arriving at new patch
-Action(1) = Stay; % set first action to stay
 
 % run model
 for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
@@ -43,10 +43,10 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep;
         
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
+        RhoRPE = Reward(ii) - Rho(ii);
 
         % what is the estimated patch reward rate 
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
+        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE;
 
         PAction(ii+1,:) = CorrectedSoftmax([Rho(ii+1), PatchRR(ii)], Beta);
 
@@ -78,9 +78,9 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate;
        
-        RhoRPE(ii) = Reward(ii) - Rho(ii);
+        RhoRPE = Reward(ii) - Rho(ii);
 
-        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE(ii);
+        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE;
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
@@ -92,8 +92,10 @@ out.PAction = PAction(1:Env.BlockTime/Env.TimeStep,:);
 out.Action = Action(1:Env.BlockTime/Env.TimeStep);
 out.Reward = Reward(1:Env.BlockTime/Env.TimeStep);
 out.PatchRR = PatchRR(1:Env.BlockTime/Env.TimeStep);
-out.RhoRPE = RhoRPE(1:Env.BlockTime);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
+
+out.EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % we include this as part of the output data to account for startValues
+
 end
