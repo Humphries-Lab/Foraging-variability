@@ -8,7 +8,7 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
 
-model = 2; %% see buildForagingModel.m for model list 
+model = 5; %% see buildForagingModel.m for model list 
 blockFlag = 'combined'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
 
 %% set up model and task 

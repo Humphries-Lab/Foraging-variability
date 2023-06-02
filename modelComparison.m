@@ -2,16 +2,28 @@
 % Emma Scholey, 17 March 2023
 clear  
 
+%% user options 
 model = 1:5; 
-nModels = size(model,2);
-modelNames = {'avgRR RW', 'patchRR RW', 'full RW', 'softmax only', 'patchRR RW fix beta'};
+modelNames = {'avgRR RW', 'patchRR RW', 'full RW', 'softmax only', 'patchRR RW fix beta'}; % automate this eventually
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+
+
 
 %% AIC/BIC
-models_AIC = zeros(nModels, 2);
-models_BIC = zeros(nModels, 2);
+
+if contains(blockFlag, 'combined')
+    nBlock = 1; 
+elseif contains(blockFlag, 'separate')
+    nBlock = 2; 
+end 
+
+nModels = size(model,2);
+
+models_AIC = zeros(nModels, nBlock);
+models_BIC = zeros(nModels, nBlock);
 
 for m = 1:nModels
-    load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d', model(m)));
+    load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d', blockFlag, model(m)));
     ppts_AIC(:,:,m) = AIC;
     ppts_BIC(:,:,m) = BIC;
     models_AIC(m,:) = sum(AIC);

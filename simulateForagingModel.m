@@ -7,7 +7,7 @@ close all
 addpath(genpath('./foraging/code'))
 
 %% user options
-model = 1; % model type - see model table to check number to choose
+model = 5; % model type - see model table to check number to choose
 blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 simulateFitData = 1; % 1 if simulating subject fit data, 0 if want to simulate own parameters
 NSim = 50; % this will override if simulating fit subject data 

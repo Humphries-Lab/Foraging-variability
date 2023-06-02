@@ -5,7 +5,7 @@ close all;
 addpath(genpath('./foraging/code'))
 
 %% user options
-model = 1; % model type - see model table to check number to choose
+model = 5; % model type - see model table to check number to choose
 blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 % note that if choosing 'separate', select below which block to look at
 % (rich 1 or poor 2) 

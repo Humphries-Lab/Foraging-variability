@@ -3,20 +3,17 @@
 clearvars
 close all;
 
+%% user options
 allModels = 1:5;
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 modelNames = {'avgRR RW', 'patchRR RW', 'full RW', 'softmax only', 'patchRR RW fix beta'};
-
-block = 1; % rich = 1, poor = 2
-block_names = {'rich', 'poor'};
-numParams  = 3;
-numModels = size(allModels, 2);
-% fmincon options
-lowerBounds = [0,0,0];  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,1,100];  % arbitrary upper bound on beta to stop pathological behaviour
-options = optimoptions('fmincon','Display','none'); % don't display
+block = 1; % rich = 1, poor = 2. Only required for separate block model fitting
 
 %% model recovery - plot confusion matrix
 % extent to which simulated data from model A can be explained by model B
+block_names = {'rich', 'poor'};
+numModels = size(allModels, 2);
+options = optimoptions('fmincon','Display','none'); % don't display
 
 % set up the foraging environment
 SetUpEnviron % get the environment parameters
@@ -41,14 +38,44 @@ for count = 1:100
 
     drawnow
 
-    testparams = [rand, rand, exprnd(1)]; % randomly select parameters each time
-
     for m = 1:numModels
-        sim_f = buildForagingModel(m, Env, [], block); % get function handle for this model
-        out = sim_f(testparams); % simulate with the parameters
-        out.PatchOrder = Env.PatchOrder{block}; % give unlimited patch order so that fitting back doesn't break 
 
-        [BIC, iBEST, BEST] = fitAll(allModels, out, Env);
+        %% simulate data
+        simData = table; % container table for simulated data
+        [~, ~, paramsIndex] = buildForagingModel(m); % find which parameters this model uses
+        params = [defineBoundedParam(0, 1), defineBoundedParam(0, 0.05), exprnd(1)]; % random parameters each time
+        params = params(paramsIndex); % restrict to only the parameters the models needs
+
+        for blockI = 1:2
+
+            blockType = blockI; % for recovery, assume always seen rich block first (same order as blockI)
+            Env.BlockPatchOrder = Env.PatchOrder{blockType}; % set the current patch order
+
+            if blockI == 2 && contains(blockFlag, 'combined') % we need to specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
+                startValues.Rho = out.Rho(end); % first value is last value from previous block
+                startValues.EstimatedPatchRR = out.EstimatedPatchRR(end);
+            else
+                startValues.Rho = 0;
+                startValues.EstimatedPatchRR = 0;
+            end
+
+            sim_f = buildForagingModel(m, Env, [], startValues); % get function handle for this model
+            out = sim_f(params); % simulate with the parameters
+            % make a table of simulated data, similar to the real participant
+            % data (whilst it's a bit clunky, it helps for understanding if/how NLL is working differently to
+            % simulation script)
+            tmp = table;
+            tmp.leaveT = out.LeavingTime;
+            tmp.patch = out.PatchOrder';
+            tmp.env = repelem(blockI,numel(tmp.leaveT))';
+
+            simData = [simData; tmp]; % concatenate onto previous block
+        end
+
+        simSubjData = PrepSubjData(simData, block, Env, blockFlag); % transform into state actions ready for fitting
+
+        % fit all models back to the simulated data
+        [BIC, iBEST, BEST] = fitAll(allModels, simSubjData, Env);
         CM(m,:) = CM(m,:) + BEST;
 
     end
@@ -59,9 +86,6 @@ for count = 1:100
     set(gca, 'fontsize', 28);
 
 end
-
-
-
 
 
 
@@ -99,6 +123,8 @@ end
 BEST = BIC == M;
 BEST = BEST / sum(BEST);
 
+xticklabels(modelNames)
+yticklabels(modelNames)
 end
 
 
