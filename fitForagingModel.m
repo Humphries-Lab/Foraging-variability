@@ -8,7 +8,7 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
 
-model = 6; %% see buildForagingModel.m for model list 
+model = 7; %% see buildForagingModel.m for model list 
 blockFlag = 'combined'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
 
 %% set up model and task 
@@ -26,7 +26,7 @@ SetUpEnviron % get the environment parameters
 [~, ~, paramsIndex] = buildForagingModel(model); % get the right parameters for the model 
 numParams = sum(paramsIndex);
 
-paramNames = {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda'};
+paramNames = {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda', 'omega', 'kappa'};
 paramNames = paramNames(paramsIndex); 
 
 %% load and prepare subject data
@@ -53,8 +53,8 @@ startValues = [];
 
 % fmincon options
 nStarts = 50; % how many starting points to avoid local minima
-lowerBounds = [0,0,0,0];lowerBounds = lowerBounds(paramsIndex);  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,1,100,100];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
+lowerBounds = [0,0,0,-100, -100, -100];lowerBounds = lowerBounds(paramsIndex);  % [alpha_Q, alpha_rho, beta] % parameter bounds
+upperBounds = [1,1,100,100, 100, 100];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
 
 minNLL = zeros([numSubjects, numBlocks]);
@@ -76,7 +76,7 @@ for block = 1:numBlocks
 
          % Run fmincon
          parfor ii = 1:nStarts
-             params0 = [rand, rand, exprnd(3), defineBoundedParam(0,50)]; % choose full set of start parameters [alpha alpha beta lambda]
+             params0 = [rand, rand, exprnd(3), defineBoundedParam(0,50), defineBoundedParam(0,50), defineBoundedParam(0,50)]; % choose full set of start parameters [alpha alpha beta lambda]
              params0 = params0(paramsIndex); % only take the parameters we need for this specific model
 
              [FitParams(ii,:),NLLEval(ii)] = fmincon(NLL_f,params0,[],[],[],[],lowerBounds, upperBounds,[],options);
@@ -109,7 +109,7 @@ for i= 1:numParams
     boxchart(squeeze(minNLLFitParams(:,i,:)))
     title(paramNames{i})
     xlabel(sprintf('Fit %s', paramNames{i}))
-    xticklabels(blockNames)
+    xticklabels({''})
 end
 title(tl, 'Best fit parameter distributions')
 

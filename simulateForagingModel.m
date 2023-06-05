@@ -7,7 +7,7 @@ close all
 addpath(genpath('./foraging/code'))
 
 %% user options
-model = 6; % model type - see model table to check number to choose
+model = 7; % model type - see model table to check number to choose
 blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 simulateFitData = 1; % 1 if simulating subject fit data, 0 if want to simulate own parameters
 NSim = 50; % this will override if simulating fit subject data 
@@ -28,7 +28,7 @@ if simulateFitData == 0
         poorParams = [1, 0.0003, 0.22, 0.1]; poorParams = poorParams(paramsIndex);% [alpha Q, alpha rho, beta, lambda]
 
     elseif contains(blockFlag, 'combined')
-        richParams = [0.5, 0.004, 0.5, 100]; richParams = richParams(paramsIndex);
+        richParams = [0.5, 0.004, 0.5, 1.6]; richParams = richParams(paramsIndex);
         poorParams = richParams; % params have to be the same in both blocks
     end
     allParams = cat(3, repmat(richParams, [NSim, 1]), repmat(poorParams, [NSim, 1])); %[parameters for rich block; parameters for poor block % [alpha_Q, alpha_rho, beta]
@@ -155,16 +155,11 @@ subtitle(sprintf('Error bars show 95%% CI. NSim = %d', NSim))
 
 figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
-% find 'bad' alpha rho values
-%thresh = 0.25;
-%ind = abs(simParams(:,2) - minNLLFitParams(:,2)) > thresh;
-
-% for each parameter, plot sim vs fit
 for i= 1:2
     ax = nexttile;
-    plot(1:Env.BlockTime, SimData{1}{i}.PatchRR, 'LineWidth', 1) % plot patch reward rate
+    plot(1:Env.BlockTime, SimData{10}{i}.PatchRR, 'LineWidth', 1) % plot patch reward rate
     hold on
-    plot(1:Env.BlockTime, SimData{1}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
+    plot(1:Env.BlockTime, SimData{10}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
     legend('Patch RR', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
     ylabel('Reward rates','FontSize', 16, 'FontName', 'Helvetica');
@@ -176,12 +171,12 @@ end
 figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 for i= 1:2
     ax = nexttile;
-    plot(1:Env.BlockTime, SimData{5}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
+    plot(1:Env.BlockTime, SimData{10}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
     %hold on
     %plot(1:Env.BlockTime, SimData{2}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
     legend('Beta', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
     title(sprintf('%s environment', blockNames{i}));
-    ylim([0,0.15])
+    ylim([0,1])
 end
 
