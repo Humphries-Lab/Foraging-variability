@@ -18,10 +18,6 @@ blockNames = {'rich', 'poor'};
 SetUpEnviron % generic script to set up foraging environment according to LeHeron et al (2020)
 [~, ~, paramsIndex] = buildForagingModel(model);
 
-% agent parameters
-
-% simulate from scratch
-
 if simulateFitData == 0
     if contains(blockFlag, 'separate') % parameters allowed to be different in each block
         richParams = [1, 0.67, 0.54, 0.1]; richParams = richParams(paramsIndex); % [alpha Q, alpha rho, beta, lambda]
@@ -47,9 +43,6 @@ elseif simulateFitData == 1
     end
 
 end
-
-% OR simulate after model fitting - using best fit parameters
-
 
 %% Run
 SimData = cell(NSim,1);

@@ -5,7 +5,7 @@ clear
 %% user options 
 model = 1:5; 
 modelNames = {'avgRR RW', 'patchRR RW', 'full RW', 'softmax only', 'patchRR RW fix beta'}; % automate this eventually
-blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+blockFlag = 'separate'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 
 
@@ -30,16 +30,20 @@ for m = 1:nModels
     models_BIC(m,:) = sum(BIC);
 end
 
+% compute posterior probabilities 
+meanBICs = mean(models_BIC,2);
+posteriorProbabilities = BICposterior(meanBICs);
+
 % plot
 
 figure
-bar(mean(models_BIC,2))
+bar(meanBICs)
 xticklabels(modelNames)
 ylabel('sum BIC')
 title('BIC comparison of models (rich and poor)')
 
 figure
-bar(mean(models_AIC,2))
+bar(meanBICs)
 xticklabels(modelNames)
 ylabel('sum AIC')
 title('AIC comparison of models (rich and poor)')
