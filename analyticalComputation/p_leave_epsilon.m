@@ -9,7 +9,7 @@ function p = p_leave_epsilon(epsilon)
 % probability of leaving
 
 if rand < epsilon
-    p = randi(0:1);
+    p = randi(0:1); % coin flip (stay/leave)
 else
-    p = 0; % assume stay as default action
+    p = 0; % assume stay as default action (because reward never < 0, so stay will always be max action) 
 end

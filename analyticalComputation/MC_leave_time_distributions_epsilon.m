@@ -1,16 +1,18 @@
-%MC_leave_time_distriEutions_lapse
+%MC_leave_time_distributions_epsilon
 
 % script to Monte Carlo generate leave-time distriEutions for lapse policy
-% Sweep over epsilon parameter, for 3 different patch types (r0)
+% Sweep over epsilon parameter, for 3 different patch types (r0). 
+% Can look at two different choice rules - e-greedy and e-softmax. 
 % 
 % Emma Scholey 16 May 2023. 
+% adapted from MC_leave_time_distributions from MH
 
 clearvars
 close all;
 
-number_samples = 250;  % number of Monte Carlo samples per parameter pair
+number_samples = 1000;  % number of Monte Carlo samples per parameter pair
 
-beta = 0.25; % fix at 'best fit' for now
+beta = 0.25; % fix at 'best fit' for now - for epsilon-softmax model
 
 epsilon = logspace(-3,0); % for lapse model
                         
@@ -35,7 +37,8 @@ for iE = 1:numel(epsilon)
         for n = 1:n_steps
             time_now = n * t_step;                          % what is actual time on this time-step?          
             r(n) = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-            p(n) = p_leave_lapse(r(n),beta, epsilon(iE));          % probability on that time-step
+            %p(n) = p_leave_lapse(r(n),beta, epsilon(iE));          % probability on that time-step
+            p(n) = p_leave_epsilon(epsilon(iE));                % probability on that time-step - no function of reward
 
             % THIS IS NOT RIGHT: IT IS NOT 1-p(current step)^n-1: it is
             % cumulative 1-p of all previous failures to leave!
@@ -53,14 +56,17 @@ for iE = 1:numel(epsilon)
 
         E_leave(iE,iR) = sum(t_series.*f_leave);
         VAR_leave(iE,iR) = sum((t_series - E_leave(iE,iR)).^2 .* f_leave); 
-        
+
+
         %% Monte Carlo sampling of distriEution
         for iSample = 1:number_samples
             blnLeave = 0; n = 1;
             while ~blnLeave
                 time_now = n * t_step;                          % what is actual time on this time-step?          
                 r = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-                p = p_leave_lapse(r,beta, epsilon(iE));          % probability on that time-step
+                %p = p_leave_lapse(r,beta, epsilon(iE));          % probability on that time-step
+                 p = p_leave_epsilon(epsilon(iE));                % probability on that time-step - no function of reward
+
                 blnLeave = rand <= p;
                 n = n + 1;
             end
@@ -102,12 +108,14 @@ ylabel('Coeff Var of leaving time (s)')
 
 % find index that agrees with middle-valued patch (as it occured at same
 % rate in both environments)
-ixRich = find(E_leave(:,2) > 16,1,'last');  
-ixPoor = find(E_leave(:,2) > 20,1,'last'); 
+%ixRich = find(E_leave(:,2) > 16,1,'last');  
+%ixPoor = find(E_leave(:,2) > 20,1,'last'); 
+ixRich = find(E_MC_leave(:,2) > 16,1,'last');  % use MC version for e-greedy 
+ixPoor = find(E_MC_leave(:,2) > 20,1,'last'); % use MC version for e-greedy
 % 
 figure 
-plot(E_leave(ixRich,:),'.-','Color',[0.7 0.3 0.3]); hold on
-plot(E_leave(ixPoor,:),'.-','Color',[0.3 0.3 0.7]);
+plot(E_MC_leave(ixRich,:),'.-','Color',[0.7 0.3 0.3], 'LineWidth', 2); hold on
+plot(E_MC_leave(ixPoor,:),'.-','Color',[0.3 0.3 0.7], 'LineWidth', 2);
 set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
 ylabel('Expected leaving time (s)')
 
@@ -120,18 +128,18 @@ epsilon_poor = epsilon(ixPoor)
 
 % do for LeHeron estimates here - this is a more general question 
 
-change_in_SD_between_environments = SD_leave(ixPoor,:) - SD_leave(ixRich,:)
-change_in_SD_within_rich_environment = SD_leave(ixRich,:) - SD_leave(ixRich,:)'
-change_in_SD_within_poor_environment = SD_leave(ixPoor,:) - SD_leave(ixPoor,:)'
+change_in_SD_between_environments = SD_MC_leave(ixPoor,:) - SD_MC_leave(ixRich,:)
+change_in_SD_within_rich_environment = SD_MC_leave(ixRich,:) - SD_MC_leave(ixRich,:)'
+change_in_SD_within_poor_environment = SD_MC_leave(ixPoor,:) - SD_MC_leave(ixPoor,:)'
 % ANSWER: SDs between low and high should differ more within environment
 % than patch SDs do between environment
 
 % E and SD at participant fit 
-E_leave(ixPoor,:)
-E_leave(ixRich,:)
+E_MC_leave(ixPoor,:)
+E_MC_leave(ixRich,:)
 
-SD_leave_mean(1,:) = SD_leave(ixRich,:);
-SD_leave_mean(2,:) = SD_leave(ixPoor,:);
+SD_leave_mean(1,:) = SD_MC_leave(ixRich,:);
+SD_leave_mean(2,:) = SD_MC_leave(ixPoor,:);
 
  %% compare to participant data
 
@@ -148,8 +156,8 @@ SD_LT = zeros([numSubjects, numPatches, numBlocks]); % each row is subject SD, e
 
 for iSubj = 1:numSubjects % for each subject
     for iPatch = 1:numPatches % each patch
-        for iElock = 1:numBlocks % each block
-            SD_LT(iSubj,iPatch,iElock) = std(t_young.leaveT(t_young.subj == iSubj & t_young.env == iElock & t_young.patch == iPatch));
+        for iBlock = 1:numBlocks % each block
+            SD_LT(iSubj,iPatch,iBlock) = std(t_young.leaveT(t_young.subj == iSubj & t_young.env == iBlock & t_young.patch == iPatch));
         end
     end
 end
@@ -157,12 +165,6 @@ end
 % between environments 
 
 real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
-% our results agree in that there is higher SD in poor environment compared
-% to rich, but differences in real SDs are much smaller than analytical SDs
-% could this be related to noisier SDs in participants, which mask any
-% differences?
-% and don't see increase in SD differences as patch yield increases
-% e.g. (0.5, 0.03 0.22 participants) compared to (4.5, 7, 9 analytical)  
 
 % within environments 
 
@@ -175,15 +177,15 @@ SD_LT_mean = squeeze(mean(SD_LT))';
 % plot model vs participant SDs across patches and environment
 figure
 
-plot(SD_leave(ixRich,:),'.--','Color',[0.7 0.3 0.3], 'LineWidth', 2, 'MarkerSize', 15); hold on
-plot(SD_leave(ixPoor,:),'.--','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15);
+plot(SD_MC_leave(ixRich,:),'.--','Color',[0.7 0.3 0.3], 'LineWidth', 2, 'MarkerSize', 15); hold on
+plot(SD_MC_leave(ixPoor,:),'.--','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15);
 plot(SD_LT_mean(1,:),'.-','Color',[0.7 0.3 0.3], 'LineWidth', 2,'MarkerSize', 15) % rich
 plot(SD_LT_mean(2,:),'.-','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15) % poor
 scatter([1 2 3], SD_LT(:,:,1),[],[0.7 0.3 0.3], 'filled', 'MarkerFaceAlpha', 0.1) % rich
 scatter([1 2 3], SD_LT(:,:,2),[],[0.3 0.3 0.7], 'filled', 'MarkerFaceAlpha', 0.1) % poor
 
 set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
-set(gca,'YLim', [0 12])
+%set(gca,'YLim', [0 12])
 ylabel('SD of leaving time (s)')
 
 % plot between environment differences 

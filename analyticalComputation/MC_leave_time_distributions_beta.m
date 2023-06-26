@@ -1,8 +1,9 @@
-% script to Monte Carlo generate leave-time distributions for softmax
-% policy
+% script to Monte Carlo generate leave-time distributions for different
+% action selection policies - softmax and epsilon-softmax
 % Sweep over range of beta parameter, for 3 different patch types (r0)
 % 
 % Mark Humphries 13 May 2023. 
+% Emma Scholey updated - latest 26 June 2023
 
 clearvars
 close all;
@@ -34,9 +35,9 @@ for iB = 1:numel(beta)
         for n = 1:n_steps
             time_now = n * t_step;                          % what is actual time on this time-step?          
             r(n) = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-            p(n) = p_leave_softmax(r(n),beta(iB));          % probability on that time-step
-            %p(n) = p_leave_lapse(r(n),beta(iB), epsilon);          % probability on that time-step
-
+            %p(n) = p_leave_softmax(r(n),beta(iB));          % probability on that time-step
+            %p(n) = p_leave_lapse(r(n),beta(iB), epsilon);  % probability on that time-step
+            
             % THIS IS NOT RIGHT: IT IS NOT 1-p(current step)^n-1: it is
             % cumulative 1-p of all previous failures to leave!
             % f_leave(n) = n * (1-p(n))^(n-1)*p(n);           % probability of leaving on that time-step
@@ -60,9 +61,9 @@ for iB = 1:numel(beta)
             while ~blnLeave
                 time_now = n * t_step;                          % what is actual time on this time-step?          
                 r = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-                p = p_leave_softmax(r,beta(iB));          % probability on that time-step
-                 %p = p_leave_lapse(r,beta(iB), epsilon);          % probability on that time-step
-                
+                %p = p_leave_softmax(r,beta(iB));          % probability on that time-step
+                %p = p_leave_lapse(r,beta(iB), epsilon);          % probability on that time-step
+
                 blnLeave = rand <= p;
                 n = n + 1;
             end
