@@ -39,7 +39,9 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep;
         
-        PAction(ii+1,:) = CorrectedLapse([0, PatchRR(ii)], Beta, Epsilon);
+        %PAction(ii+1,:) = CorrectedLapse([0, PatchRR(ii)], Beta, Epsilon);
+        PAction(ii+1,Leave) = p_leave_lapse(PatchRR(ii), Beta, Epsilon); 
+        PAction(ii+1,Stay) = 1 - PAction(ii+1,Leave);
 
         % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
         Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;  

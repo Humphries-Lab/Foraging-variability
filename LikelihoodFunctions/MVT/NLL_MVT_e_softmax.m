@@ -43,7 +43,10 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
         
-        PAction(ii+1,:) = CorrectedLapse([0, PatchRR(ii)], Beta, Epsilon);
+        %PAction(ii+1,:) = CorrectedLapse([0, PatchRR(ii)], Beta, Epsilon);
+        PAction(ii+1,Leave) = p_leave_lapse(PatchRR(ii), Beta, Epsilon); 
+        PAction(ii+1,Stay) = 1 - PAction(ii+1,Leave);
+
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
         LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
 

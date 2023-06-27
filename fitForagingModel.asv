@@ -8,8 +8,8 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
 
-model = 6; %% see buildForagingModel.m for model list 
-blockFlag = 'combined'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+model = 7; %% see buildForagingModel.m for model list 
+blockFlag = 'separate'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
 
 %% set up model and task 
 
@@ -36,6 +36,7 @@ subj = [1:23 25:40];
 numSubjects = size(subj,2);
 
 load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
+load ~/Dropbox/foraging/raw_data/experiencedAvgRR.mat
 
 Data = cell([numSubjects, 1]);
 
@@ -43,27 +44,34 @@ for k = 1:numSubjects % for each subject
     for b = 1:numBlocks % for each block
         SubjLT = t_young(t_young.subj == k,:); % extract their summarised leaving times
         Data{k}{b} = PrepSubjData(SubjLT, b, Env, blockFlag); % transform into state actions ready for fitting
+         Data{k}{b}.experiencedAvgRR{1} = experiencedAvgRR(k,1);
+         Data{k}{b}.experiencedAvgRR{2} = experiencedAvgRR(k,2);
     end
 end
 
-% log the experienced avgRR for each participant 
-for k = 1:numSubjects 
-        tmp(k) = Data{k}{b}.experiencedAvgRR; 
-end
+% experiencedAvgRR = zeros([numSubjects, 2]);
+% % log the experienced avgRR for each participant 
+% for k = 1:numSubjects
+%     for b = 1:numBlocks
+%         experiencedAvgRR(k,1) = Data{k}{b}.experiencedAvgRR{1};
+%         experiencedAvgRR(k,2) = Data{k}{b}.experiencedAvgRR{2};
+%     end
+% end
+% save('~/Dropbox/foraging/raw_data/experiencedAvgRR.mat', 'experiencedAvgRR')
 
 % assume no knowledge of environment for fitting
 startValues = []; 
 
 %% test NLL function on one participant
-% subjData = Data{7}{1}; % get example subject data 
+% subjData = Data{7}{2}; % get example subject data
 % [FitParams,NLLEval] = NLL_MVT_softmax_dynamicbeta(3, Env, subjData)
 
 %% fitting for each person in group with different starting points
 
 % fmincon options
 nStarts = 50; % how many starting points to avoid local minima
-lowerBounds = [0,0,0,-100, -100, -100];lowerBounds = lowerBounds(paramsIndex);  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,1,100,100, 100, 100];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
+lowerBounds = [0,0,0,-100, ];lowerBounds = lowerBounds(paramsIndex);  % [alpha_Q, alpha_rho, beta] % parameter bounds
+upperBounds = [1,1,100,100, ];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
 
 minNLL = zeros([numSubjects, numBlocks]);

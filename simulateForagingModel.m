@@ -7,7 +7,7 @@ close all
 addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
-model = 4; % model type - see model table to check number to choose
+model = 7; % model type - see model table to check number to choose
 blockFlag = 'separate'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 simulateFitData = 1; % 1 if simulating subject fit data, 0 if want to simulate own parameters
 NSim = 50; % this will override if simulating fit subject data 
