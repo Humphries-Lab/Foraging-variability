@@ -3,9 +3,9 @@
 clear  
 
 %% user options 
-model = 1:5; 
-modelNames = {'avgRR RW', 'patchRR RW', 'full RW', 'softmax only', 'patchRR RW fix beta'}; % automate this eventually
-blockFlag = 'separate'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+model = 6:7; 
+modelNames = {'M6', 'M7'}; % automate this eventually
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 
 

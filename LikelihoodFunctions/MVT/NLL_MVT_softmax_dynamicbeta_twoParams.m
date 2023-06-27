@@ -2,6 +2,7 @@ function [NegLogLikelihood, out] = NLL_MVT_softmax_dynamicbeta_twoParams(params,
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
+BlockType = SubjData.BlockType;
 
 BlockTime = size(Action, 1);
 
@@ -11,8 +12,8 @@ Omega = params(2); % exponential
 % initialise variables
 PAction = zeros(BlockTime,2); % probability of selecting leave or stay
 Reward = zeros(BlockTime,1); % the reward earned in each state in the block
-PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block 
-experiencedAvgRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % real experienced average RR
+PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block
+experiencedAvgRR = zeros(BlockTime/Env.TimeStep+1,1); % real experienced average RR
 
 % initialise values - these will depend on model type
 PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
@@ -21,13 +22,13 @@ PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
 Leave = 1;
 Stay = 2;
 
-LogLikelihood = 0; 
+LogLikelihood = 0;
 
 % set the first actions for the first patch
 PatchNumber = 0; % start outside the patch
 Arrive = 1; % start by arriving at new patch
 
-sumReward = 0; 
+sumReward = 0;
 % run model
 for ii = 1:BlockTime-1 % for each subject action
 
@@ -43,17 +44,18 @@ for ii = 1:BlockTime-1 % for each subject action
 
         % observe reward in current state
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
-        PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
-        
+        PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep.
+
         sumReward = Reward(ii)+sumReward;
-        experiencedAvgRR(ii) = sumReward/(ii);
+        %experiencedAvgRR(ii) = sumReward/(ii);
+        experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)};
         Beta = Lambda * 1/(experiencedAvgRR(ii)^Omega); % beta function based on avgRR
 
         PAction(ii+1,:) = CorrectedSoftmax([0, PatchRR(ii)], Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
         LogLikelihood = LogLikelihood + log(pSelected); % update log likelihood
 
-        % if the next action is to leave 
+        % if the next action is to leave
         if Action(ii+1) == Leave
             t = Env.TimeStep; % if next action is leave, then reset travel time counter
             LeavingTime(PatchNumber,1) = T; % log the patch leaving time
@@ -64,7 +66,7 @@ for ii = 1:BlockTime-1 % for each subject action
         N = N+1;
 
     elseif Action(ii) == Leave % take action to leave
-        T = 0; 
+        T = 0;
 
         if t == Env.TravelTime % if on the last second of travelling
             PAction(ii+1,:) = [0 1]; % force staying on next action
@@ -73,11 +75,12 @@ for ii = 1:BlockTime-1 % for each subject action
             PAction(ii+1,:) = [1 0]; % force leaving for duration of travel time
         end
 
-        % update 
+        % update
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate
         sumReward = Reward(ii)+sumReward;
-        experiencedAvgRR(ii) = sumReward/ii;
+        %experiencedAvgRR(ii) = sumReward/ii;
+        experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)};
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
@@ -85,7 +88,7 @@ end
 
 NegLogLikelihood = -LogLikelihood;
 
-% store variables 
+% store variables
 out.PAction = PAction(1:BlockTime,:);
 out.Action = Action(1:BlockTime);
 out.Reward = Reward(1:BlockTime);

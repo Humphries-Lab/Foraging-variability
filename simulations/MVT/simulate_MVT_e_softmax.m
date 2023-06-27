@@ -1,8 +1,8 @@
-function [out] = simulate_MVT_softmax_dynamicbeta_twoParams(params, Env, startValues)
+function [out] = simulate_MVT_e_softmax(params, Env)
 %% Set up
 
-Lambda = params(1); %weight
-Omega = params(2); % exponential
+Beta = params(1); % softmax temperature
+Epsilon = params(2);
 
 % initialise possible actions
 Leave = 1;
@@ -10,12 +10,9 @@ Stay = 2;
 
 % initialise variables
 PAction = zeros(Env.BlockTime/Env.TimeStep+1,2); % probability of selecting leave or stay
-Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken
+Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken 
 Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
-PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block
-%experiencedAvgRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % real experienced average RR
-Beta = zeros(Env.BlockTime/Env.TimeStep+1,1);
-experiencedAvgRR = Env.OptimalAverageRR{Env.CurrentBlock}*ones(Env.BlockTime/Env.TimeStep+1,1);
+PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block 
 
 PatchOrder = Env.BlockPatchOrder;
 
@@ -24,9 +21,6 @@ PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
 PatchNumber = 0; % start outside the patch
 Arrive = 1; % start by arriving at new patch
 Action(1) = Stay; % set first action to stay
-
-sumReward = startValues.sumReward;
-timeInPreviousBlock = startValues.timeInPreviousBlock;
 
 % run model
 for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
@@ -44,21 +38,17 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         % observe reward in current state
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep;
+        
+        PAction(ii+1,:) = CorrectedLapse([0, PatchRR(ii)], Beta, Epsilon);
 
-        sumReward = Reward(ii)+sumReward;
-       % experiencedAvgRR(ii) = sumReward/(ii+timeInPreviousBlock);
-        Beta(ii) = Lambda * 1/(experiencedAvgRR(ii)^Omega); % beta function based on avgRR
-
-        PAction(ii+1,:) = CorrectedSoftmax([0, PatchRR(ii)], Beta(ii));
-
-        % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p).
-        Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;
-
-        % if the next action is to leave
+        % choose next action: discreteinvrnd will output 1 (leave) or 2 (stay), depending on probability distribution of PAction (1-p, p). 
+        Action(ii+1) = discreteinvrnd(PAction(ii+1,:),1,1) ;  
+        
+        % if the next action is to leave 
         if Action(ii+1) == Leave
             t = Env.TimeStep; % if next action is leave, then reset travel time counter
-            LeavingTime(PatchNumber,1) = T; % log the patch leaving time
-            LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate
+            LeavingTime(PatchNumber,1) = T; % log the patch leaving time 
+            LeavingRR(PatchNumber,1) = PatchRR(ii); % log the patch leaving reward rate 
         end
 
         T = T+Env.TimeStep; % time in patch increases
@@ -75,18 +65,15 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
             Action(ii+1) = Leave;
         end
 
-        % update
+        % update 
         Reward(ii) = 0; % not getting anything during travel
-        PatchRR(ii) = 0; % patch reward rate
-        sumReward = Reward(ii)+sumReward;
-       % experiencedAvgRR(ii) = sumReward/(ii+timeInPreviousBlock);
-        Beta(ii) = Lambda * 1/(experiencedAvgRR(ii)^Omega); % beta function based on avgRR
+        PatchRR(ii) = 0; % patch reward rate     
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
 end
 
-% store variables
+% store variables 
 out.PAction = PAction(1:Env.BlockTime/Env.TimeStep,:);
 out.Action = Action(1:Env.BlockTime/Env.TimeStep);
 out.Reward = Reward(1:Env.BlockTime/Env.TimeStep);
@@ -94,9 +81,6 @@ out.PatchRR = PatchRR(1:Env.BlockTime/Env.TimeStep);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
-out.sumReward = sumReward;
-out.experiencedAvgRR = experiencedAvgRR(1:Env.BlockTime/Env.TimeStep);
-out.Beta = Beta(1:Env.BlockTime/Env.TimeStep);
 
 out.Rho = zeros(Env.BlockTime+1, 1);
 out.EstimatedPatchRR = zeros(Env.BlockTime+1, 1); % we include this as part of the output data to account for startValues

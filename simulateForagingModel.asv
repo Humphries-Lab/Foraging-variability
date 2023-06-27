@@ -7,8 +7,8 @@ close all
 addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
-model = 4; % model type - see model table to check number to choose
-blockFlag = 'separate'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+model = 6; % model type - see model table to check number to choose
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 simulateFitData = 1; % 1 if simulating subject fit data, 0 if want to simulate own parameters
 NSim = 50; % this will override if simulating fit subject data 
 
@@ -169,12 +169,12 @@ end
 figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 for i= 1:2
     ax = nexttile;
-    plot(1:Env.BlockTime, SimData{1}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
+    plot(1:Env.BlockTime, SimData{8}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
     %hold on
     %plot(1:Env.BlockTime, SimData{2}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
     legend('Beta', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
     title(sprintf('%s environment', blockNames{i}));
-    %ylim([0,1])
+    ylim([0,1])
 end
 

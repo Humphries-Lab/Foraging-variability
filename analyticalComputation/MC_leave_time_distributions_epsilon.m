@@ -38,7 +38,7 @@ for iE = 1:numel(epsilon)
             time_now = n * t_step;                          % what is actual time on this time-step?          
             r(n) = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
             %p(n) = p_leave_lapse(r(n),beta, epsilon(iE));          % probability on that time-step
-            p(n) = p_leave_epsilon(epsilon(iE));                % probability on that time-step - no function of reward
+            p(n) = p_leave_egreedy(epsilon(iE));                % probability on that time-step - no function of reward
 
             % THIS IS NOT RIGHT: IT IS NOT 1-p(current step)^n-1: it is
             % cumulative 1-p of all previous failures to leave!
@@ -65,7 +65,7 @@ for iE = 1:numel(epsilon)
                 time_now = n * t_step;                          % what is actual time on this time-step?          
                 r = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
                 %p = p_leave_lapse(r,beta, epsilon(iE));          % probability on that time-step
-                 p = p_leave_epsilon(epsilon(iE));                % probability on that time-step - no function of reward
+                 p = p_leave_egreedy(epsilon(iE));                % probability on that time-step - no function of reward
 
                 blnLeave = rand <= p;
                 n = n + 1;
