@@ -1,8 +1,8 @@
-function [out] = simulate_MVT_softmax_dynamicbeta_twoParams(params, Env, startValues)
+function [out] = simulate_MVT_softmax_dynamicbeta_window(params, Env, startValues)
 %% Set up
 
-Lambda = params(1); 
-Omega = params(2);
+Lambda = params(1); % softmax temperature weight
+windowSize = 80;
 
 % initialise possible actions
 Leave = 1;
@@ -13,11 +13,8 @@ PAction = zeros(Env.BlockTime/Env.TimeStep+1,2); % probability of selecting leav
 Action = zeros(Env.BlockTime/Env.TimeStep+1,1); % what action taken
 Reward = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward earned in each state in the block
 PatchRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % the reward rate in each state in the block
-%experiencedAvgRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % real experienced average RR
+experiencedAvgRR = zeros(Env.BlockTime/Env.TimeStep+1,1); % real experienced average RR
 Beta = zeros(Env.BlockTime/Env.TimeStep+1,1);
-
-%experiencedAvgRR = Env.OptimalAverageRR{Env.CurrentBlock}*ones(Env.BlockTime/Env.TimeStep+1,1);
-experiencedAvgRR = Env.experiencedAvgRR(Env.CurrentBlock)*ones(Env.BlockTime/Env.TimeStep+1,1);
 
 PatchOrder = Env.BlockPatchOrder;
 
@@ -48,8 +45,13 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         PatchRR(ii) = Reward(ii)/Env.TimeStep;
 
         sumReward = Reward(ii)+sumReward;
-        %experiencedAvgRR(ii) = sumReward/(ii+timeInPreviousBlock);
-        Beta(ii) = 1/((experiencedAvgRR(ii)^Lambda) * Omega); % beta function based on avgRR
+        if ii <= windowSize
+            experiencedAvgRR(ii) = Env.OptimalAverageRR{Env.CurrentBlock}; % initialise to real optimum
+        else 
+            experiencedAvgRR(ii) = sum(Reward(ii-windowSize:ii))/windowSize; % take moving average of reward
+        end
+
+        Beta(ii) = Lambda * 1/experiencedAvgRR(ii); % beta function based on avgRR
 
         PAction(ii+1,:) = CorrectedSoftmax([0, PatchRR(ii)], Beta(ii));
 
@@ -81,8 +83,13 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate
         sumReward = Reward(ii)+sumReward;
-        %experiencedAvgRR(ii) = sumReward/(ii+timeInPreviousBlock);
-        Beta(ii) = 1/((experiencedAvgRR(ii)^Lambda) * Omega); % beta function based on avgRR
+        if ii <= windowSize 
+            experiencedAvgRR(ii) = Env.OptimalAverageRR{Env.CurrentBlock}; % initialise to real optimum
+        else 
+            experiencedAvgRR(ii) = sum(Reward(ii-windowSize:ii))/windowSize; % take moving average of reward
+        end
+
+        Beta(ii) = Lambda * 1/experiencedAvgRR(ii); % beta function based on avgRR
 
         t = t+Env.TimeStep; % increase time spent travelling
     end

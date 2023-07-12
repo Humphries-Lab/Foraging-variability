@@ -35,7 +35,7 @@ for iB = 1:numel(beta)
         for n = 1:n_steps
             time_now = n * t_step;                          % what is actual time on this time-step?          
             r(n) = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-            %p(n) = p_leave_softmax(r(n),beta(iB));          % probability on that time-step
+            p(n) = p_leave_softmax(r(n),beta(iB));          % probability on that time-step
             %p(n) = p_leave_lapse(r(n),beta(iB), epsilon);  % probability on that time-step
             
             % THIS IS NOT RIGHT: IT IS NOT 1-p(current step)^n-1: it is
@@ -61,7 +61,7 @@ for iB = 1:numel(beta)
             while ~blnLeave
                 time_now = n * t_step;                          % what is actual time on this time-step?          
                 r = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-                %p = p_leave_softmax(r,beta(iB));          % probability on that time-step
+                p = p_leave_softmax(r,beta(iB));          % probability on that time-step
                 %p = p_leave_lapse(r,beta(iB), epsilon);          % probability on that time-step
 
                 blnLeave = rand <= p;

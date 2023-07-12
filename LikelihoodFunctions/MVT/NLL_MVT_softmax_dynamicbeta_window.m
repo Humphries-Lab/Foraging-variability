@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_MVT_softmax_dynamicbeta_twoParams(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_MVT_softmax_dynamicbeta_window(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -7,7 +7,7 @@ BlockType = SubjData.BlockType;
 BlockTime = size(Action, 1);
 
 Lambda = params(1); % weight for softmax temperature 
-Omega = params(2);
+windowSize = 80;
 
 % initialise variables
 PAction = zeros(BlockTime,2); % probability of selecting leave or stay
@@ -47,11 +47,14 @@ for ii = 1:BlockTime-1 % for each subject action
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
         
         sumReward = Reward(ii)+sumReward;
-        %experiencedAvgRR(ii) = sumReward/(ii);
-        %experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)};
-        experiencedAvgRR(ii) = SubjData.experiencedAvgRR{BlockType(PatchNumber)};
 
-        Beta = 1/((experiencedAvgRR(ii)^Lambda) * Omega); % beta function based on avgRR
+        if ii > windowSize
+            experiencedAvgRR(ii) = sum(Reward(ii-windowSize:ii))/windowSize; % take moving average of reward
+        else
+            experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)}; % initialise to real optimum 
+        end
+
+        Beta = Lambda * 1/experiencedAvgRR(ii); % beta function based on avgRR
 
         PAction(ii+1,:) = CorrectedSoftmax([0, PatchRR(ii)], Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
@@ -81,9 +84,11 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate
         sumReward = Reward(ii)+sumReward;
-        %experiencedAvgRR(ii) = sumReward/ii;
-        %experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)};
-        experiencedAvgRR(ii) = SubjData.experiencedAvgRR{BlockType(PatchNumber)};
+        if ii > windowSize
+            experiencedAvgRR(ii) = sum(Reward(ii-windowSize:ii))/windowSize; % take moving average of reward
+        else
+            experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)}; % initialise to real optimum 
+        end
 
         t = t+Env.TimeStep; % increase time spent travelling
     end

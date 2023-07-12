@@ -8,8 +8,8 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
 
-model = 7; %% see buildForagingModel.m for model list 
-blockFlag = 'separate'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+model = 10; %% see buildForagingModel.m for model list 
+blockFlag = 'combined'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
 
 %% set up model and task 
 
@@ -26,7 +26,7 @@ SetUpEnviron % get the environment parameters
 [~, ~, paramsIndex] = buildForagingModel(model); % get the right parameters for the model 
 numParams = sum(paramsIndex);
 
-paramNames = {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda', 'epsilon'};
+paramNames = {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda', 'epsilon', 'omega'};
 paramNames = paramNames(paramsIndex); 
 
 %% load and prepare subject data
@@ -63,15 +63,15 @@ end
 startValues = []; 
 
 %% test NLL function on one participant
-% subjData = Data{7}{2}; % get example subject data
-% [FitParams,NLLEval] = NLL_MVT_softmax_dynamicbeta(3, Env, subjData)
+% subjData = Data{8}{1}; % get example subject data
+% [NLL, out] = NLL_MVT_softmax_dynamicbeta_window([3, 30], Env, subjData)
 
 %% fitting for each person in group with different starting points
 
 % fmincon options
 nStarts = 50; % how many starting points to avoid local minima
-lowerBounds = [0,0,0,-100, 0];lowerBounds = lowerBounds(paramsIndex);  % [alpha_Q, alpha_rho, beta] % parameter bounds
-upperBounds = [1,1,10,100, 1];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
+lowerBounds = [0,0,0,-100, 0, -20];lowerBounds = lowerBounds(paramsIndex);  % {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda', 'epsilon', 'omega'} % parameter bounds
+upperBounds = [1,1,10,300, 1, 20];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
 
 minNLL = zeros([numSubjects, numBlocks]);
@@ -95,7 +95,7 @@ for block = 1:numBlocks
 
          % Run fmincon
          parfor ii = 1:nStarts
-             params0 = [rand, rand, exprnd(3), defineBoundedParam(0,50), rand]; % choose full set of start parameters [alpha alpha beta lambda]
+             params0 = [rand, rand, exprnd(3), defineBoundedParam(0,50), rand, rand]; % choose full set of start parameters [alpha alpha beta lambda]
              params0 = params0(paramsIndex); % only take the parameters we need for this specific model
 
              [FitParams(ii,:),NLLEval(ii)] = fmincon(NLL_f,params0,[],[],[],[],lowerBounds, upperBounds,[],options);
@@ -131,4 +131,3 @@ for i= 1:numParams
     xticklabels({'rich', 'poor'})
 end
 title(tl, 'Best fit parameter distributions')
-

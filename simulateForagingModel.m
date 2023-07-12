@@ -7,8 +7,8 @@ close all
 addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
-model = 7; % model type - see model table to check number to choose
-blockFlag = 'separate'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+model = 10; % model type - see model table to check number to choose
+blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 simulateFitData = 1; % 1 if simulating subject fit data, 0 if want to simulate own parameters
 NSim = 50; % this will override if simulating fit subject data 
 
@@ -157,7 +157,7 @@ for i= 1:2
     ax = nexttile;
     plot(1:Env.BlockTime, SimData{8}{i}.PatchRR, 'LineWidth', 1) % plot patch reward rate
     hold on
-    plot(1:Env.BlockTime, SimData{8}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
+    plot(1:Env.BlockTime, SimData{8}{i}.Rho, 'LineWidth', 1) % plot estimated average RR
     legend('Patch RR', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
     ylabel('Reward rates','FontSize', 16, 'FontName', 'Helvetica');
@@ -166,15 +166,29 @@ end
 
 % plot how betas change over course of experiment (for dynamic beta models
 % only) % for each parameter, plot sim vs fit
-figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
-for i= 1:2
-    ax = nexttile;
-    plot(1:Env.BlockTime, SimData{1}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
-    %hold on
-    %plot(1:Env.BlockTime, SimData{2}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
-    legend('Beta', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
-    xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
-    title(sprintf('%s environment', blockNames{i}));
-    %ylim([0,1])
-end
+% figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
+% for i= 1:2
+%     ax = nexttile;
+%     plot(1:Env.BlockTime, SimData{1}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
+%     %hold on
+%     %plot(1:Env.BlockTime, SimData{2}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
+%     legend('Beta', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
+%     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
+%     title(sprintf('%s environment', blockNames{i}));
+%     %ylim([0,1])
+% end
 
+%% compare simulated leaving times with real leaving times for each participant 
+
+load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
+
+figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
+
+for iSubj = 1:NSub
+    ax = nexttile;
+    simLT = SimData{iSubj}{i}.LeavingTime;
+    subjLT = t_young.leaveT(t_young.subj == iSubj & t_young.env == 1);
+
+    plot(simLT, 'LineWidth', 1); hold on; plot(subjLT, 'LineWidth', 1)
+    ylim([0 70])
+end

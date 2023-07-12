@@ -98,4 +98,5 @@ out.PatchRR = PatchRR(1:BlockTime-1);
 out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
+out.experiencedAvgRR = experiencedAvgRR; 
 end

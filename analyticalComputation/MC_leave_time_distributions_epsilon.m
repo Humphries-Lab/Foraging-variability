@@ -85,13 +85,13 @@ SD_MC_leave = std(sample_leave_time,[],3);
 
 %% plot results
 figure
-semilogx(epsilon,E_leave,'k'); hold on
+%semilogx(epsilon,E_leave,'k'); hold on
 semilogx(epsilon,E_MC_leave); hold on
 xlabel('epsilon: higher = more noisy')
 ylabel('Expected leaving time (s)')
 
 figure
-semilogx(epsilon,SD_leave,'k'); hold on
+%semilogx(epsilon,SD_leave,'k'); hold on
 semilogx(epsilon,SD_MC_leave);
 xlabel('epsilon: higher = more noisy')
 ylabel('SD of leaving time (s)')

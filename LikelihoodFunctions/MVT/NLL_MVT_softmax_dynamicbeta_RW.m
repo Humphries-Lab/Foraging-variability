@@ -1,4 +1,4 @@
-function [NegLogLikelihood, out] = NLL_MVT_softmax_dynamicbeta_twoParams(params, Env, SubjData)
+function [NegLogLikelihood, out] = NLL_MVT_softmax_dynamicbeta_RW(params, Env, SubjData)
 %% Set up
 PatchOrder = SubjData.PatchOrder; % specify which patches they see (high, medium, low quality) depending on environment
 Action = SubjData.Action;
@@ -6,14 +6,16 @@ BlockType = SubjData.BlockType;
 
 BlockTime = size(Action, 1);
 
-Lambda = params(1); % weight for softmax temperature 
-Omega = params(2);
+AlphaRho = params(1); % learning rate for Rho 
+Lambda = params(2); % weight for softmax temperature 
 
 % initialise variables
 PAction = zeros(BlockTime,2); % probability of selecting leave or stay
 Reward = zeros(BlockTime,1); % the reward earned in each state in the block
 PatchRR = zeros(BlockTime,1); % the reward rate in each state in the block 
+Rho = zeros(BlockTime,1); % the reward rate in each state in the block 
 experiencedAvgRR = zeros(BlockTime/Env.TimeStep+1,1); % real experienced average RR
+Rho(1) = Env.OptimalAverageRR{BlockType(1)};
 
 % initialise values - these will depend on model type
 PAction(1, :) = [0 1]; % set first probabilities (starting in patch)
@@ -45,13 +47,13 @@ for ii = 1:BlockTime-1 % for each subject action
         % observe reward in current state
         Reward(ii) = Env.R(N,PatchType); % reward depends on time in patch and patch type
         PatchRR(ii) = Reward(ii)/Env.TimeStep; % Reward Rate - this is the same as the reward, according to TimeStep. 
+       
+        RhoRPE = Reward(ii) - Rho(ii);
+        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE;
         
         sumReward = Reward(ii)+sumReward;
-        %experiencedAvgRR(ii) = sumReward/(ii);
-        %experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)};
-        experiencedAvgRR(ii) = SubjData.experiencedAvgRR{BlockType(PatchNumber)};
 
-        Beta = 1/((experiencedAvgRR(ii)^Lambda) * Omega); % beta function based on avgRR
+        Beta = Lambda * 1/Rho(ii+1); % beta function based on avgRR
 
         PAction(ii+1,:) = CorrectedSoftmax([0, PatchRR(ii)], Beta);
         pSelected = PAction(ii+1, Action(ii+1)); % what did they actually do next, and what PAction does the model estimate
@@ -81,9 +83,8 @@ for ii = 1:BlockTime-1 % for each subject action
         Reward(ii) = 0; % not getting anything during travel
         PatchRR(ii) = 0; % patch reward rate
         sumReward = Reward(ii)+sumReward;
-        %experiencedAvgRR(ii) = sumReward/ii;
-        %experiencedAvgRR(ii) = Env.OptimalAverageRR{BlockType(PatchNumber)};
-        experiencedAvgRR(ii) = SubjData.experiencedAvgRR{BlockType(PatchNumber)};
+        RhoRPE = Reward(ii) - Rho(ii);
+        Rho(ii+1) = Rho(ii) + AlphaRho * RhoRPE;
 
         t = t+Env.TimeStep; % increase time spent travelling
     end
@@ -100,4 +101,5 @@ out.LeavingTime = LeavingTime;
 out.LeavingRR = LeavingRR;
 out.PatchOrder = PatchOrder(1:length(LeavingTime));
 out.experiencedAvgRR = experiencedAvgRR; 
+out.Rho = Rho(1:BlockTime-1);
 end
