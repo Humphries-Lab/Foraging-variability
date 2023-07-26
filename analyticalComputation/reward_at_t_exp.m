@@ -1,4 +1,4 @@
-function reward_in_patch_at_t = reward_at_t_exp(t,r0,alpha)
+function reward_in_patch_at_t = reward_at_t_exp(t,r0,alpha,reward_func)
 
 % REWARD_AT_T_EXP exponentially-decaying reward obtained in patch at time-step T
 % R = REWARD_AT_T_EXP(T,RO,ALPHA) computes the reward R obtained in a patch
@@ -6,5 +6,12 @@ function reward_in_patch_at_t = reward_at_t_exp(t,r0,alpha)
 % parameterised by initial reward in patch R0 and decay rate ALPHA
 %
 % Mark Humphries 9/5/2023
+% Adapted 26/7/2023 Emma Scholey - specify reward function to use (exp
+% or linear)
 
-reward_in_patch_at_t = r0*exp(-alpha*t);
+switch reward_func
+    case 'exp'
+        reward_in_patch_at_t = r0*exp(-alpha*t);
+    case 'linear'
+        reward_in_patch_at_t = r0 - alpha*t;
+end

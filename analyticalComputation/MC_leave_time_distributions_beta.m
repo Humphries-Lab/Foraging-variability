@@ -1,27 +1,54 @@
 % script to Monte Carlo generate leave-time distributions for different
 % action selection policies - softmax and epsilon-softmax
 % Sweep over range of beta parameter, for 3 different patch types (r0)
-% 
-% Mark Humphries 13 May 2023. 
-% Emma Scholey updated - latest 26 June 2023
+%
+% Mark Humphries 13 May 2023.
+% Emma Scholey updated - latest 26 July 2023
 
 clearvars
 close all;
 
+study = 'kane'; % dataset to investigate. Options are:
+% 'leheron' - human patch foraging
+% 'contrerashuerta - human patch foraging
+% 'kane' - rodent patch foraging
+
+% select patch decay parameters depending on study
+switch study
+    case 'leheron'
+        alpha = 0.075; % decay rate
+        r0 = [32.5 45 57.5]; % initial yield
+        t_step = 0.1;  % time-step at which to calculate estimates of E and VAR
+
+    case 'contrerashuerta'
+        alpha = 0.11;
+        r0 = [34.5, 57.5];
+        t_step = 0.1;  
+
+    case 'kane'
+        alpha = 8;
+        r0 = [60, 90, 120];
+        t_step = 1;  
+
+end
+
+action_policy = 'softmax'; % options are softmax or e-softmax
+
+switch action_policy
+    case 'softmax'
+        epsilon = 0;
+    case 'e-softmax'
+        epsilon = 0.01;
+end
+
 number_samples = 250;  % number of Monte Carlo samples per parameter pair
 
-beta = logspace(-3,0);  % space of softmax temperatures to calculate; 
-                        % maximum of beta=1 here, as actual temperature is
-                        % beta * r0
-%epsilon = 0.01; 
+beta = logspace(-3,0, 100);  % space of softmax temperatures to calculate;
+% maximum of beta=1 here, as actual temperature is
+% beta * r0
 
 t_max = 100;   % maximum time in patch (for explicit calculations)
-t_step = 1;  % time-step at which to calculate estimates of E and VAR
-alpha = 0.075;  % decay rate from LeHeron et al 202
-r0 = [32.5 45 57.5];  % initial patch values from LeHeron et al 2020
-
 n_steps = round(t_max / t_step);  % number of time-steps
-
 
 %% MC sampling
 t_series = (t_step* (1:n_steps))';  % the sequence of time-steps tested
@@ -30,39 +57,48 @@ sample_leave_time = zeros(numel(beta),numel(r0),number_samples);
 E_leave = zeros(numel(beta),numel(r0)); VAR_leave = zeros(numel(beta),numel(r0));
 for iB = 1:numel(beta)
     for iR = 1:numel(r0)
-       %% calculate expected probability of leaving on each time-step
+        %% calculate expected probability of leaving on each time-step
         f_leave = zeros(n_steps,1); p = zeros(n_steps,1); r = zeros(n_steps,1);
         for n = 1:n_steps
-            time_now = n * t_step;                          % what is actual time on this time-step?          
-            r(n) = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-            p(n) = p_leave_softmax(r(n),beta(iB));          % probability on that time-step
-            %p(n) = p_leave_lapse(r(n),beta(iB), epsilon);  % probability on that time-step
-            
-            % THIS IS NOT RIGHT: IT IS NOT 1-p(current step)^n-1: it is
-            % cumulative 1-p of all previous failures to leave!
-            % f_leave(n) = n * (1-p(n))^(n-1)*p(n);           % probability of leaving on that time-step
-            
+            time_now = n * t_step;                          % what is actual time on this time-step?
+
+            switch study
+                case 'kane'
+                    r(n) = reward_at_t_exp(time_now,r0(iR),alpha,'linear');  % reward on that time-step
+                otherwise
+                    r(n) = reward_at_t_exp(time_now,r0(iR),alpha,'exp');  % reward on that time-step
+            end
+
+            p(n) = p_leave_softmax(r(n),beta(iB),epsilon);          % probability on that time-step
+
             % probability of leaving on that time-step is the product of
             % all probabilities of *not leaving* up till the current trial and the probability of
             % leaving on this trial
+
             if n == 1
                 f_leave(n) = p(n);
             else
-                f_leave(n) = prod(1-p(1:n-1)) * p(n); 
+                f_leave(n) = prod(1-p(1:n-1)) * p(n);
             end
         end
 
         E_leave(iB,iR) = sum(t_series.*f_leave);
-        VAR_leave(iB,iR) = sum((t_series - E_leave(iB,iR)).^2 .* f_leave); 
-        
+        VAR_leave(iB,iR) = sum((t_series - E_leave(iB,iR)).^2 .* f_leave);
+
         %% Monte Carlo sampling of distribution
         for iSample = 1:number_samples
             blnLeave = 0; n = 1;
             while ~blnLeave
-                time_now = n * t_step;                          % what is actual time on this time-step?          
-                r = reward_at_t_exp(time_now,r0(iR),alpha);  % reward on that time-step
-                p = p_leave_softmax(r,beta(iB));          % probability on that time-step
-                %p = p_leave_lapse(r,beta(iB), epsilon);          % probability on that time-step
+                time_now = n * t_step;                          % what is actual time on this time-step?
+
+                switch study
+                    case 'kane'
+                        r = reward_at_t_exp(time_now,r0(iR),alpha,'linear');  % reward on that time-step
+                    otherwise
+                        r = reward_at_t_exp(time_now,r0(iR),alpha,'exp');  % reward on that time-step
+                end
+
+                p = p_leave_softmax(r,beta(iB),epsilon);          % probability on that time-step
 
                 blnLeave = rand <= p;
                 n = n + 1;
@@ -78,144 +114,219 @@ CV_leave = E_leave ./ SD_leave;
 
 %% statistics from MC simulations
 E_MC_leave = mean(sample_leave_time,3);
-SD_MC_leave = std(sample_leave_time,[],3); 
+SD_MC_leave = std(sample_leave_time,[],3);
 
-%% plot results
+%% load and summarise real data
+
+switch study
+
+    case 'leheron'
+        load('~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat') % load real data
+
+        nEnv = 2;
+        nPatch = 3;
+
+        nSub = numel(unique(t_young.subj));
+
+        subLT_mean = zeros([nEnv,nPatch,nSub]);
+        subLT_sd = zeros([nEnv,nPatch,nSub]);
+
+        for iS = 1:nSub
+            for iP = 1:nPatch
+                for iE = 1:nEnv
+                    subLT_mean(iE,iP,iS) = mean(t_young.leaveT(t_young.subj == iS & t_young.env == iE & t_young.patch == iP));
+                    subLT_sd(iE,iP,iS) = std(t_young.leaveT(t_young.subj == iS & t_young.env == iE & t_young.patch == iP));
+                end
+            end
+        end
+
+        % Optimal MVT
+        %ixRich = find(E_leave(:,2) > 9.5,1,'first');
+        %ixPoor = find(E_leave(:,2) > 11.5,1,'first');
+
+    case 'contrerashuerta'
+        % Sebs data - self - study 1. These LTs mean they are firmly within SD
+        % plateau
+        %ixRich = find(E_leave(:,2) > 17.5,1,'first');
+        %ixPoor = find(E_leave(:,2) > 19,1,'first');
+
+        % Sebs data - self - study 2. These LTs mean they start to leave SD
+        % plateau.
+        %ixRich = find(E_leave(:,2) > 13,1,'first');
+        %ixPoor = find(E_leave(:,2) > 15,1,'first');
+
+
+    case 'kane'
+        data = readtable('~/Dropbox/foraging/raw_data/replication_dataset_code/kane2019-rats-fig-1-data.csv');
+        % filter to only study we need
+        data = data(contains(data.Experiment,'Travel'),:);
+
+        subID = unique(unique(data.Subject));
+        nSub = numel(subID);
+
+        envType = unique(data.Travel);
+        patchType = unique(data.startVolume);
+
+        nEnv = numel(envType); % 2 environments determined by travel time between patches
+        nPatch = numel(patchType); % 3 patches determined by initial yield
+
+        subLT_mean = zeros([nEnv,nPatch,nSub]);
+        subLT_sd = zeros([nEnv,nPatch,nSub]);
+
+        for iP = 1:nPatch
+            for iE = 1:nEnv
+                for iS = 1:nSub
+                    subjData = data(data.Subject == subID(iS), :);
+
+                    % extract state where leave decision made, for each patch x env
+                    % combination
+                    subLT_mean(iE,iP,iS) = mean(subjData.StateInPatch(subjData.Decision == 1 & subjData.Travel == envType(iE) & subjData.startVolume == patchType(iP)));
+                    subLT_sd(iE,iP,iS) = std(subjData.StateInPatch(subjData.Decision == 1 & subjData.Travel == envType(iE) & subjData.startVolume == patchType(iP)));
+                end
+            end
+        end
+    
+        % plot decay function 
+        figure
+
+        for iP = 1:nPatch
+            plot(patchType(iP)*1000:-8:0), hold on
+        end
+
+        xlim([1,20])
+        ylabel('Patch reward rate, \mu l')
+        xlabel('State in patch (1 state = 10s)')
+        legend({'low yield', 'medium yield', 'high yield'})
+
+end
+
+% group averages 
+mean_leave_data = mean(subLT_mean,3);
+SD_leave_data = mean(subLT_sd,3);
+
+%% plot expected vs participant leaving times
 figure
-semilogx(beta,E_leave,'k'); hold on
-semilogx(beta,E_MC_leave); hold on
-xlabel('Beta: higher = exploit')
-ylabel('Expected leaving time (s)')
 
-figure
-semilogx(beta,SD_leave,'k'); hold on
-semilogx(beta,SD_MC_leave);
-xlabel('Beta: higher = exploit')
-ylabel('SD of leaving time (s)')
+c_rich = [0.7 0.3 0.3];
+c_poor = [0.3 0.3 0.7];
 
-figure
-semilogx(beta,CV_leave)
-xlabel('Beta: higher = exploit')
-ylabel('Coeff Var of leaving time (s)')
+% plot the actual experimental data
+plot(mean_leave_data(1,:),':', 'Color',c_rich);
+hold on
+plot(mean_leave_data(2,:),':', 'Color',c_poor);
 
-% plot examples like LeHeron task performance
-% roughly from Fig 2A:
-% rich: [11 16 21]
-% poor: [15 20 25]
-
-% find index that agrees with middle-valued patch (as it occured at same
+% find predicted leaving times for this dataset:
+% find index that agrees with middle (or high) -valued patch (as it occured at same
 % rate in both environments)
-ixRich = find(E_leave(:,2) > 16,1,'first');  
-ixPoor = find(E_leave(:,2) > 20,1,'first'); 
-% 
-% figure 
-plot(E_leave(ixRich,:),'.-','Color',[0.7 0.3 0.3]); hold on
-plot(E_leave(ixPoor,:),'.-','Color',[0.3 0.3 0.7]);
-set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
+ixRich = find(E_leave(:,2) > mean_leave_data(1,2),1,'first');
+ixPoor = find(E_leave(:,2) > mean_leave_data(2,2),1,'first');
+
+beta_rich = beta(ixRich) + 0.001
+beta_poor = beta(ixPoor) + 0.001
+
+% plot model predictions
+plot(E_leave(ixRich,:),'.-','Color',c_rich)
+plot(E_leave(ixPoor,:),'.-','Color',c_poor);
+set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'}, 'YLim', [0 30])
 ylabel('Expected leaving time (s)')
+title(sprintf('beta rich = %f, beta poor = %f', round(beta_rich,3),round(beta_poor,3)))
 
-beta_rich = beta(ixRich)
-beta_poor = beta(ixPoor)
+legend({'Model - rich', 'Model - poor', 'Subj - rich', 'Subj - poor'})
 
-
-%% question: which is bigger - change in SD of patch-type between environments, 
-% or between patch types in same environment?
-
-% do for LeHeron estimates here - this is a more general question 
-
-change_in_SD_between_environments = SD_leave(ixPoor,:) - SD_leave(ixRich,:)
-change_in_SD_within_rich_environment = SD_leave(ixRich,:) - SD_leave(ixRich,:)'
-change_in_SD_within_poor_environment = SD_leave(ixPoor,:) - SD_leave(ixPoor,:)'
-% ANSWER: SDs between low and high should differ more within environment
-% than patch SDs do between environment
-
-% E and SD at participant fit 
-E_leave(ixPoor,:)
-E_leave(ixRich,:)
-
-SD_leave_mean(1,:) = SD_leave(ixRich,:);
-SD_leave_mean(2,:) = SD_leave(ixPoor,:);
-
- %% compare to participant data
-% 
-% % initialise
-% numBlocks = 2;
-% numPatches = 3;
-% 
-% load t_young.mat % load summarised subject data 
-% numSubjects = numel(unique(t_young.subj));
-% 
-% % test analytical predictions 
-% 
-% SD_LT = zeros([numSubjects, numPatches, numBlocks]); % each row is subject SD, each column patch type, 3d is block type
-% 
-% for iSubj = 1:numSubjects % for each subject
-%     for iPatch = 1:numPatches % each patch
-%         for iBlock = 1:numBlocks % each block
-%             SD_LT(iSubj,iPatch,iBlock) = std(t_young.leaveT(t_young.subj == iSubj & t_young.env == iBlock & t_young.patch == iPatch));
-%         end
+% overlay optimal MVT predictions 
+% % overlay MVT optimal times
+% RR_Leave = [21.8678 18.5632]; % this is the average background RR at which subjects should leave, for Rich and Poor env... -
+% ... respectively.
+%
+% clear optLT
+% A=[32.5 45 57.5];a=0.075;
+% for e=1:2 %each env
+%     for p=1:3 % each patch type
+%         optLT(e,p)=(log(RR_Leave(e)/A(p)))/-a;
 %     end
 % end
-% 
-% % between environments 
-% 
-% real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
-% % our results agree in that there is higher SD in poor environment compared
-% % to rich, but differences in real SDs are much smaller than analytical SDs
-% % could this be related to noisier SDs in participants, which mask any
-% % differences?
-% % and don't see increase in SD differences as patch yield increases
-% % e.g. (0.5, 0.03 0.22 participants) compared to (4.5, 7, 9 analytical)  
-% 
-% % within environments 
-% 
-% real_change_in_SD_within_rich = mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))';
-% real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
-% 
-% %mean SDs
-% SD_LT_mean = squeeze(mean(SD_LT))';
-% 
-% % plot model vs participant SDs across patches and environment
-% figure
-% 
-% plot(SD_leave(ixRich,:),'.--','Color',[0.7 0.3 0.3], 'LineWidth', 2, 'MarkerSize', 15); hold on
-% plot(SD_leave(ixPoor,:),'.--','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15);
-% plot(SD_LT_mean(1,:),'.-','Color',[0.7 0.3 0.3], 'LineWidth', 2,'MarkerSize', 15) % rich
-% plot(SD_LT_mean(2,:),'.-','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15) % poor
-% scatter([1 2 3], SD_LT(:,:,1),[],[0.7 0.3 0.3], 'filled', 'MarkerFaceAlpha', 0.1) % rich
-% scatter([1 2 3], SD_LT(:,:,2),[],[0.3 0.3 0.7], 'filled', 'MarkerFaceAlpha', 0.1) % poor
-% 
-% set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
-% set(gca,'YLim', [0 12])
-% ylabel('SD of leaving time (s)')
-% 
-% % plot between environment differences 
-% figure
-% 
-% plot(change_in_SD_between_environments,'.--', 'Color', 'black', 'LineWidth', 2, 'MarkerSize', 15); hold on
-% plot(real_change_in_SD_between_environments,'.-', 'Color', 'black', 'LineWidth', 2,'MarkerSize', 15) % rich
-% scatter([1 2 3], SD_LT(:,:,2) - SD_LT(:,:,1), 'black',  'filled', 'MarkerFaceAlpha', 0.1) % rich
-% 
-% set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
-% ylabel('Change in SD leaving time (s) (poor - rich)')
-% 
-% 
-% % plot within environment differences 
-% figure
-% change_rich = nonzeros(triu(change_in_SD_within_rich_environment))';
-% change_poor = nonzeros(triu(change_in_SD_within_poor_environment))';
-% real_change_rich = nonzeros(triu(real_change_in_SD_within_rich))';
-% real_change_poor = nonzeros(triu(real_change_in_SD_within_poor))';
-% real_change_points(:,1,:) = SD_LT(:,2,:) - SD_LT(:,1,:); %mid-low
-% real_change_points(:,2,:) = SD_LT(:,3,:) - SD_LT(:,1,:); %high-low
-% real_change_points(:,3,:) = SD_LT(:,3,:) - SD_LT(:,2,:); %high-mid
-% 
-% plot(change_rich,'.--','Color',[0.7 0.3 0.3], 'LineWidth', 2, 'MarkerSize', 15); hold on
-% plot(change_poor,'.--','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15);
-% plot(real_change_rich,'.-','Color',[0.7 0.3 0.3], 'LineWidth', 2,'MarkerSize', 15) % rich
-% plot(real_change_poor,'.-','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15) % poor
-% scatter([1 2 3], real_change_points(:,:,1),[],[0.7 0.3 0.3], 'filled', 'MarkerFaceAlpha', 0.2) % rich
-% scatter([1 2 3], real_change_points(:,:,2),[],[0.3 0.3 0.7], 'filled', 'MarkerFaceAlpha', 0.2) % poor
-% 
-% set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Mid-Low','High-low','High-mid'})
-% ylabel('Change in SD leaving time (s) (patch yield)')
+% plot(optLT(1,:),'--','Color',c_rich)
+% plot(optLT(2,:),'--','Color',c_poor)
+
+%% plot expected leaving times for range of beta values, compared to 'best' betas for real data
+
+figure
+semilogx(beta,E_leave); hold on
+semilogx(beta,E_MC_leave); hold on
+xline(beta_rich,'Color', c_rich,'Label','rich'), xline(beta_poor, 'Color', c_poor,'Label', 'poor')
+xlabel('Beta: higher = exploit')
+ylabel('Expected leaving time (s)')
+legend({'low yield', 'medium yield', 'high yield'})
+
+figure
+semilogx(beta,SD_leave); hold on;
+semilogx(beta,SD_MC_leave);
+xline(beta_rich,'Color', c_rich,'Label','rich'), xline(beta_poor, 'Color', c_poor,'Label', 'poor')
+xlabel('Beta: higher = exploit')
+ylabel('SD of leaving time (s)')
+legend({'low yield', 'medium yield', 'high yield'})
+
+%% SD analysis
+% % question: which is bigger - change in SD of patch-type between environments,
+% or between patch types in same environment?
+
+% E and SD at participant fit
+E_leave_fit = [E_leave(ixRich,:); E_leave(ixPoor,:)]; %[rich; poor]
+SD_leave_fit = [SD_leave(ixRich,:); SD_leave(ixPoor,:)]; %[rich; poor]
+
+model_change_in_SD_between_environments = SD_leave_fit(2,:) - SD_leave_fit(1,:); % poor - rich
+model_change_in_SD_within_rich = nonzeros(triu(SD_leave_fit(1,:) - SD_leave_fit(1,:)'))';
+model_change_in_SD_within_poor = nonzeros(triu(SD_leave_fit(2,:) - SD_leave_fit(2,:)'))';
+
+% compare to participant data
+
+real_change_in_SD_between_environments = SD_leave_data(2,:) - SD_leave_data(1,:); % poor - rich
+real_change_in_SD_within_rich = nonzeros(triu(SD_leave_data(1,:) - SD_leave_data(1,:)'))';
+real_change_in_SD_within_poor = nonzeros(triu(SD_leave_data(2,:) - SD_leave_data(2,:)'))';
+
+% plot model vs participant SDs
+figure
+
+plot(SD_leave_fit(1,:),'.--','Color',c_rich, 'LineWidth', 2, 'MarkerSize', 15); hold on
+plot(SD_leave_fit(2,:),'.--','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15);
+plot(SD_leave_data(1,:),'.-','Color',c_rich, 'LineWidth', 2,'MarkerSize', 15)
+plot(SD_leave_data(2,:),'.-','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15) 
+scatter([1 2 3], squeeze(subLT_sd(1,:,:)),[],c_rich, 'filled', 'MarkerFaceAlpha', 0.2) 
+scatter([1 2 3], squeeze(subLT_sd(2,:,:)),[],c_poor, 'filled', 'MarkerFaceAlpha', 0.2)
+
+set(gca,'XLim',[0 4],'XTick',[1:nPatch],'XTickLabel',{'Low','Medium','High'})
+ylabel('SD of leaving time (s)')
+legend({'Model - rich', 'Model - poor', 'Data - rich', 'Data - poor'})
+
+
+% plot between environment differences
+figure
+
+plot(model_change_in_SD_between_environments,'.--', 'Color', 'black', 'LineWidth', 2, 'MarkerSize', 15); hold on
+plot(real_change_in_SD_between_environments,'.-', 'Color', 'black', 'LineWidth', 2,'MarkerSize', 15)
+scatter([1 2 3], squeeze(subLT_sd(2,:,:)-subLT_sd(1,:,:)),'k', 'filled', 'MarkerFaceAlpha', 0.2) 
+
+set(gca,'XLim',[0 4],'XTick',[1:nPatch],'XTickLabel',{'Low','Medium','High'})
+ylabel('Change in SD leaving time (s) (poor - rich)')
+legend({'Model' 'Data'})
+
+% plot within environment differences
+figure
+
+points_real_change_in_SD_within = zeros([nSub,nPatch,nEnv]);
+for iE = 1:nEnv
+    points_real_change_in_SD_within(:,1,iE) = squeeze(subLT_sd(iE,2,:)-subLT_sd(iE,1,:)); % mid-low
+    points_real_change_in_SD_within(:,2,iE) = squeeze(subLT_sd(iE,3,:)-subLT_sd(iE,1,:)); % high-low
+    points_real_change_in_SD_within(:,3,iE) = squeeze(subLT_sd(iE,3,:)-subLT_sd(iE,2,:)); % high-mid
+end
+
+plot(model_change_in_SD_within_rich,'.--','Color',c_rich, 'LineWidth', 2, 'MarkerSize', 15); hold on
+plot(model_change_in_SD_within_poor,'.--','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15);
+plot(real_change_in_SD_within_rich,'.-','Color',c_rich, 'LineWidth', 2,'MarkerSize', 15) % rich
+plot(real_change_in_SD_within_poor,'.-','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15) % poor
+scatter([1 2 3], points_real_change_in_SD_within(:,:,1),[],c_rich, 'filled', 'MarkerFaceAlpha', 0.2) 
+scatter([1 2 3], points_real_change_in_SD_within(:,:,2),[],c_poor, 'filled', 'MarkerFaceAlpha', 0.2)
+
+set(gca,'XLim',[0 4],'XTick',[1:nPatch],'XTickLabel',{'Mid-Low','High-low','High-mid'})
+ylabel('Change in SD leaving time (s) (patch yield)')
+legend({'Model - rich', 'Model - poor', 'Data - rich', 'Data - poor'})

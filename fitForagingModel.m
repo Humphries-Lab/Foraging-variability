@@ -8,8 +8,8 @@ addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
 
-model = 10; %% see buildForagingModel.m for model list 
-blockFlag = 'combined'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+model = 4; %% see buildForagingModel.m for model list 
+blockFlag = 'separate'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
 
 %% set up model and task 
 
@@ -63,8 +63,8 @@ end
 startValues = []; 
 
 %% test NLL function on one participant
-% subjData = Data{8}{1}; % get example subject data
-% [NLL, out] = NLL_MVT_softmax_dynamicbeta_window([3, 30], Env, subjData)
+subjData = Data{8}{1}; % get example subject data
+[NLL, out] = NLL_MVT_softmax([0.17], Env, subjData)
 
 %% fitting for each person in group with different starting points
 

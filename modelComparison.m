@@ -3,8 +3,8 @@
 clear  
 
 %% user options 
-model = 6:7; 
-modelNames = {'M6', 'M7'}; % automate this eventually
+model = 6; 
+modelNames = {'M6'}; % automate this eventually
 blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 

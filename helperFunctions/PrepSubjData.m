@@ -17,7 +17,7 @@ LT = round(LT/Env.TimeStep)*Env.TimeStep; % round to nearest timestep (state pre
 
 % transform leaving times into stay/leave actions for each state
 for ii = 1:length(LT)
-    a{ii} = repelem([Stay Leave], [LT(ii) Env.TravelTime]/Env.TimeStep);
+    a{ii} = repelem([Stay Leave], round([LT(ii) Env.TravelTime]./Env.TimeStep));
 end
 
 A = cat(2, a{:})'; % concatenate all patches into one long block

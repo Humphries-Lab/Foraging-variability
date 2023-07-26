@@ -62,10 +62,10 @@ for ii = 1:BlockTime-1 % for each subject action
     elseif Action(ii) == Leave % take action to leave
         T = 0; 
 
-        if t == Env.TravelTime % if on the last second of travelling
+        if round(t,1) == Env.TravelTime % if on the last timestep of travelling. Issue with floating point integer requires round
             PAction(ii+1,:) = [0 1]; % force staying on next action
             Arrive = 1; % about to arrive in new patch
-        elseif t < Env.TravelTime % if still travelling
+        elseif round(t,1) < Env.TravelTime % if still travelling
             PAction(ii+1,:) = [1 0]; % force leaving for duration of travel time
         end
 

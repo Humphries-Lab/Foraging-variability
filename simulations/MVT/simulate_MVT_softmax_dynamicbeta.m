@@ -67,11 +67,11 @@ for ii = 1:Env.BlockTime/Env.TimeStep % for each second in the environment
 
     elseif Action(ii) == Leave % take action to leave
         T = 0; % not in a patch anymore
-        if t == Env.TravelTime % if on the last second of travelling
+        if round(t,1) == Env.TravelTime % if on the last second of travelling
             PAction(ii+1,:) = [0 1]; % force staying on next action
             Action(ii+1) = Stay;
             Arrive = 1; % about to arrive in new patch
-        elseif t < Env.TravelTime % if still travelling
+        elseif round(t,1) < Env.TravelTime % if still travelling
             PAction(ii+1,:) = [1 0]; % force leaving for duration of travel time
             Action(ii+1) = Leave;
         end

@@ -13,7 +13,7 @@ number_samples = 250;  % number of Monte Carlo samples per parameter pair
 lambda = logspace(-1,1.2,100);  % space of lambda values to calculate - based on range of participant fits
                         
 t_max = 100;   % maximum time in patch (for explicit calculations)
-t_step = 1;  % time-step at which to calculate estimates of E and VAR
+t_step = 0.1;  % time-step at which to calculate estimates of E and VAR
 alpha = 0.075;  % decay rate from LeHeron et al 202
 r0 = [32.5 45 57.5];  % initial patch values from LeHeron et al 2020
 
@@ -166,3 +166,100 @@ plot(SubLTMean(:,2),':', 'Color',[0.3 0.3 0.7]);
 legend({'Model - rich', 'Model - poor', 'MVT - rich', 'MVT - poor', 'Subj - rich', 'Subj - poor'})
 set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'}, 'YLim', [0 30])
 ylabel('Expected leaving time (s)')
+
+%% question: which is bigger - change in SD of patch-type between environments, 
+% or between patch types in same environment?
+
+% do for LeHeron estimates here - this is a more general question 
+
+change_in_SD_between_environments = SD_leave_poor(ixPoor,:) - SD_leave_poor(ixRich,:)
+change_in_SD_within_rich_environment = SD_leave_rich(ixRich,:) - SD_leave_rich(ixRich,:)'
+change_in_SD_within_poor_environment = SD_leave_poor(ixPoor,:) - SD_leave_poor(ixPoor,:)'
+
+
+SD_leave_mean(1,:) = SD_leave_rich(ixRich,:);
+SD_leave_mean(2,:) = SD_leave_poor(ixPoor,:);
+
+ %% compare to participant data
+
+ % initialise
+ numBlocks = 2;
+ numPatches = 3;
+
+ load t_young.mat % load summarised subject data
+ numSubjects = numel(unique(t_young.subj));
+
+ % test analytical predictions
+
+ SD_LT = zeros([numSubjects, numPatches, numBlocks]); % each row is subject SD, each column patch type, 3d is block type
+
+ for iSubj = 1:numSubjects % for each subject
+     for iPatch = 1:numPatches % each patch
+         for iBlock = 1:numBlocks % each block
+             SD_LT(iSubj,iPatch,iBlock) = std(t_young.leaveT(t_young.subj == iSubj & t_young.env == iBlock & t_young.patch == iPatch));
+         end
+     end
+ end
+
+ % between environments
+
+ real_change_in_SD_between_environments = mean(SD_LT(:,:,2) - SD_LT(:,:,1)); % poor - rich
+ % our results agree in that there is higher SD in poor environment compared
+ % to rich, but differences in real SDs are much smaller than analytical SDs
+ % could this be related to noisier SDs in participants, which mask any
+ % differences?
+ % and don't see increase in SD differences as patch yield increases
+ % e.g. (0.5, 0.03 0.22 participants) compared to (4.5, 7, 9 analytical)
+
+ % within environments
+
+ real_change_in_SD_within_rich = mean(SD_LT(:,:,1)) - mean(SD_LT(:,:,1))';
+ real_change_in_SD_within_poor = mean(SD_LT(:,:,2)) - mean(SD_LT(:,:,2))';
+
+ %mean SDs
+ SD_LT_mean = squeeze(mean(SD_LT))';
+
+ % plot model vs participant SDs across patches and environment
+ figure
+
+ plot(SD_leave_rich(ixRich,:),'.--','Color',[0.7 0.3 0.3], 'LineWidth', 2, 'MarkerSize', 15); hold on
+ plot(SD_leave_poor(ixPoor,:),'.--','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15);
+ plot(SD_LT_mean(1,:),'.-','Color',[0.7 0.3 0.3], 'LineWidth', 2,'MarkerSize', 15) % rich
+ plot(SD_LT_mean(2,:),'.-','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15) % poor
+ scatter([1 2 3], SD_LT(:,:,1),[],[0.7 0.3 0.3], 'filled', 'MarkerFaceAlpha', 0.1) % rich
+ scatter([1 2 3], SD_LT(:,:,2),[],[0.3 0.3 0.7], 'filled', 'MarkerFaceAlpha', 0.1) % poor
+
+ set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
+ set(gca,'YLim', [0 12])
+ ylabel('SD of leaving time (s)')
+
+ % plot between environment differences
+ figure
+
+ plot(change_in_SD_between_environments,'.--', 'Color', 'black', 'LineWidth', 2, 'MarkerSize', 15); hold on
+ plot(real_change_in_SD_between_environments,'.-', 'Color', 'black', 'LineWidth', 2,'MarkerSize', 15) % rich
+ scatter([1 2 3], SD_LT(:,:,2) - SD_LT(:,:,1), 'black',  'filled', 'MarkerFaceAlpha', 0.1) % rich
+
+ set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'})
+ ylabel('Change in SD leaving time (s) (poor - rich)')
+
+
+ % plot within environment differences
+ figure
+ change_rich = nonzeros(triu(change_in_SD_within_rich_environment))';
+ change_poor = nonzeros(triu(change_in_SD_within_poor_environment))';
+ real_change_rich = nonzeros(triu(real_change_in_SD_within_rich))';
+ real_change_poor = nonzeros(triu(real_change_in_SD_within_poor))';
+ real_change_points(:,1,:) = SD_LT(:,2,:) - SD_LT(:,1,:); %mid-low
+ real_change_points(:,2,:) = SD_LT(:,3,:) - SD_LT(:,1,:); %high-low
+ real_change_points(:,3,:) = SD_LT(:,3,:) - SD_LT(:,2,:); %high-mid
+
+ plot(change_rich,'.--','Color',[0.7 0.3 0.3], 'LineWidth', 2, 'MarkerSize', 15); hold on
+ plot(change_poor,'.--','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15);
+ plot(real_change_rich,'.-','Color',[0.7 0.3 0.3], 'LineWidth', 2,'MarkerSize', 15) % rich
+ plot(real_change_poor,'.-','Color',[0.3 0.3 0.7], 'LineWidth', 2,'MarkerSize', 15) % poor
+ scatter([1 2 3], real_change_points(:,:,1),[],[0.7 0.3 0.3], 'filled', 'MarkerFaceAlpha', 0.2) % rich
+ scatter([1 2 3], real_change_points(:,:,2),[],[0.3 0.3 0.7], 'filled', 'MarkerFaceAlpha', 0.2) % poor
+
+ set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Mid-Low','High-low','High-mid'})
+ ylabel('Change in SD leaving time (s) (patch yield)')
