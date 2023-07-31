@@ -23,12 +23,12 @@ switch study
     case 'contrerashuerta'
         alpha = 0.11;
         r0 = [34.5, 57.5];
-        t_step = 0.1;
+        t_step = 0.1;  
 
     case 'kane'
         alpha = 8;
         r0 = [60, 90, 120];
-        t_step = 1;
+        t_step = 1;  
 
 end
 
@@ -43,7 +43,7 @@ end
 
 number_samples = 250;  % number of Monte Carlo samples per parameter pair
 
-beta = logspace(-3,0, 100);  % space of softmax temperatures to calculate;
+beta = logspace(-3,0, 50);  % space of softmax temperatures to calculate;
 % maximum of beta=1 here, as actual temperature is
 % beta * r0
 
@@ -125,9 +125,8 @@ switch study
 
         nEnv = 2;
         nPatch = 3;
-        nPatchDiff = 3;
 
-        patchNames = {'low', 'medium', 'high'};
+        patchNames = {'low', 'medium', 'high'}; 
         nSub = numel(unique(t_young.subj));
 
         subLT_mean = zeros([nEnv,nPatch,nSub]);
@@ -148,12 +147,11 @@ switch study
 
     case 'contrerashuerta'
         data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT.xlsx');
-        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT_SD.xlsx');
-
+        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT_SD.xlsx'); 
+        
         nEnv = 2;
         nPatch = 2;
-        patchNames = {'low', 'high'};
-        nPatchDiff = 1;
+        patchNames = {'low', 'high'}; 
 
         nSub = height(data);
 
@@ -178,8 +176,7 @@ switch study
 
         nEnv = numel(envType); % 2 environments determined by travel time between patches
         nPatch = numel(patchType); % 3 patches determined by initial yield
-        patchNames = {'low', 'medium', 'high'};
-        nPatchDiff = 3;
+        patchNames = {'low', 'medium', 'high'}; 
 
         subLT_mean = zeros([nEnv,nPatch,nSub]);
         subLT_sd = zeros([nEnv,nPatch,nSub]);
@@ -196,8 +193,8 @@ switch study
                 end
             end
         end
-
-        % plot decay function
+    
+        % plot decay function 
         figure
 
         for iP = 1:nPatch
@@ -211,7 +208,7 @@ switch study
 
 end
 
-% group averages
+% group averages 
 mean_leave_data = mean(subLT_mean,3);
 SD_leave_data = mean(subLT_sd,3);
 
@@ -220,6 +217,11 @@ figure
 
 c_rich = [0.7 0.3 0.3];
 c_poor = [0.3 0.3 0.7];
+
+% plot the actual experimental data
+plot(mean_leave_data(1,:),':', 'Color',c_rich);
+hold on
+plot(mean_leave_data(2,:),':', 'Color',c_poor);
 
 % find predicted leaving times for this dataset:
 % find index that agrees with middle (or high) -valued patch (as it occured at same
@@ -231,20 +233,15 @@ beta_rich = beta(ixRich)
 beta_poor = beta(ixPoor)
 
 % plot model predictions
-plot(E_leave(ixRich,:),'.--','Color',c_rich, 'LineWidth', 2, 'MarkerSize', 15), hold on
-plot(E_leave(ixPoor,:),'.--','Color',c_poor, 'LineWidth', 2, 'MarkerSize', 15)
-
-% plot the actual experimental data
-plot(mean_leave_data(1,:),'x-', 'Color',c_rich,'LineWidth', 2, 'MarkerSize', 15)
-plot(mean_leave_data(2,:),'x-', 'Color',c_poor,'LineWidth', 2, 'MarkerSize', 15)
-
-set(gca,'XLim',[0 4],'XTick',1:nPatch,'XTickLabel',patchNames, 'YLim', [0 30])
+plot(E_leave(ixRich,:),'.-','Color',c_rich)
+plot(E_leave(ixPoor,:),'.-','Color',c_poor);
+set(gca,'XLim',[0 4],'XTick',[ 1 2 3],'XTickLabel',{'Low','Medium','High'}, 'YLim', [0 30])
 ylabel('Expected leaving time (s)')
 title(sprintf('beta rich = %f, beta poor = %f', round(beta_rich,3),round(beta_poor,3)))
 
 legend({'Model - rich', 'Model - poor', 'Subj - rich', 'Subj - poor'})
 
-% overlay optimal MVT predictions
+% overlay optimal MVT predictions 
 % % overlay MVT optimal times
 % RR_Leave = [21.8678 18.5632]; % this is the average background RR at which subjects should leave, for Rich and Poor env... -
 % ... respectively.
@@ -300,9 +297,9 @@ figure
 
 plot(SD_leave_fit(1,:),'.--','Color',c_rich, 'LineWidth', 2, 'MarkerSize', 15); hold on
 plot(SD_leave_fit(2,:),'.--','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15);
-plot(SD_leave_data(1,:),'x-','Color',c_rich, 'LineWidth', 2,'MarkerSize', 15)
-plot(SD_leave_data(2,:),'x-','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15)
-scatter(1:nPatch, squeeze(subLT_sd(1,:,:)),[],c_rich, 'filled', 'MarkerFaceAlpha', 0.2)
+plot(SD_leave_data(1,:),'.-','Color',c_rich, 'LineWidth', 2,'MarkerSize', 15)
+plot(SD_leave_data(2,:),'.-','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15) 
+scatter(1:nPatch, squeeze(subLT_sd(1,:,:)),[],c_rich, 'filled', 'MarkerFaceAlpha', 0.2) 
 scatter(1:nPatch, squeeze(subLT_sd(2,:,:)),[],c_poor, 'filled', 'MarkerFaceAlpha', 0.2)
 
 set(gca,'XLim',[0 4],'XTick',1:nPatch,'XTickLabel',patchNames)
@@ -314,8 +311,8 @@ legend({'Model - rich', 'Model - poor', 'Data - rich', 'Data - poor'})
 figure
 
 plot(model_change_in_SD_between_environments,'.--', 'Color', 'black', 'LineWidth', 2, 'MarkerSize', 15); hold on
-plot(real_change_in_SD_between_environments,'x-', 'Color', 'black', 'LineWidth', 2,'MarkerSize', 15)
-scatter(1:nPatch, squeeze(subLT_sd(2,:,:)-subLT_sd(1,:,:)),'k', 'filled', 'MarkerFaceAlpha', 0.2)
+plot(real_change_in_SD_between_environments,'.-', 'Color', 'black', 'LineWidth', 2,'MarkerSize', 15)
+scatter(1:nPatch, squeeze(subLT_sd(2,:,:)-subLT_sd(1,:,:)),'k', 'filled', 'MarkerFaceAlpha', 0.2) 
 
 set(gca,'XLim',[0 4],'XTick',1:nPatch,'XTickLabel',patchNames)
 ylabel('Change in SD leaving time (s) (poor - rich)')
@@ -324,27 +321,25 @@ legend({'Model' 'Data'})
 % plot within environment differences
 figure
 
-points_real_change_in_SD_within = zeros([nSub,nPatchDiff,nEnv]);
+points_real_change_in_SD_within = zeros([nSub,nPatch,nEnv]);
 for iE = 1:nEnv
     switch study
         case 'contrerashuerta'
-            points_real_change_in_SD_within(:,1,iE) = squeeze(subLT_sd(iE,2,:)-subLT_sd(iE,1,:)); % high-low
-            patchDiffNames = {'High-low'};
+            points_real_change_in_SD_within(:,1,iE) = squeeze(subLT_sd(iE,3,:)-subLT_sd(iE,1,:)); % high-low
         otherwise
             points_real_change_in_SD_within(:,1,iE) = squeeze(subLT_sd(iE,2,:)-subLT_sd(iE,1,:)); % mid-low
             points_real_change_in_SD_within(:,2,iE) = squeeze(subLT_sd(iE,3,:)-subLT_sd(iE,1,:)); % high-low
             points_real_change_in_SD_within(:,3,iE) = squeeze(subLT_sd(iE,3,:)-subLT_sd(iE,2,:)); % high-mid
-            patchDiffNames = {'Mid-Low','High-low','High-mid'};
     end
 end
 
 plot(model_change_in_SD_within_rich,'.--','Color',c_rich, 'LineWidth', 2, 'MarkerSize', 15); hold on
 plot(model_change_in_SD_within_poor,'.--','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15);
-plot(real_change_in_SD_within_rich,'x-','Color',c_rich, 'LineWidth', 2,'MarkerSize', 15) % rich
-plot(real_change_in_SD_within_poor,'x-','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15) % poor
-scatter(1:nPatchDiff, points_real_change_in_SD_within(:,:,1),[],c_rich, 'filled', 'MarkerFaceAlpha', 0.2)
-scatter(1:nPatchDiff, points_real_change_in_SD_within(:,:,2),[],c_poor, 'filled', 'MarkerFaceAlpha', 0.2)
+plot(real_change_in_SD_within_rich,'.-','Color',c_rich, 'LineWidth', 2,'MarkerSize', 15) % rich
+plot(real_change_in_SD_within_poor,'.-','Color',c_poor, 'LineWidth', 2,'MarkerSize', 15) % poor
+scatter(1:nPatch, points_real_change_in_SD_within(:,:,1),[],c_rich, 'filled', 'MarkerFaceAlpha', 0.2) 
+scatter(1:nPatch, points_real_change_in_SD_within(:,:,2),[],c_poor, 'filled', 'MarkerFaceAlpha', 0.2)
 
-set(gca,'XLim',[0 4],'XTick',1:nPatchDiff,'XTickLabel',patchDiffNames)
+set(gca,'XLim',[0 4],'XTick',1:nPatch,'XTickLabel',{'Mid-Low','High-low','High-mid'})
 ylabel('Change in SD leaving time (s) (patch yield)')
 legend({'Model - rich', 'Model - poor', 'Data - rich', 'Data - poor'})
