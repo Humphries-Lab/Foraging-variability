@@ -12,7 +12,7 @@ addpath(genpath('~/Dropbox/foraging/code'))
 study = 'leheron'; % study to simulate/fit data to
 
 % model options
-modelNum = 6; % model type - see model table to check number to choose
+modelNum = 4; % model type - see model table to check number to choose
 blockPresentation = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
 
@@ -23,8 +23,8 @@ nSim = 50; % this will override if simulating fit subject data
 % agent parameters (if simulating from scratch)
 % if fitting combined blocks, then enter params into paramsRich (paramsPoor
 % will be ignored) 
-params.rich = [0.14,      0.2,        0,        1,        0.2,        0.2];
-params.poor = [0.2,      0.1,        0,        1,        0.2,        0.2];
+params.rich = [0.2,      0.2,        0.2,        0.2,        0.2,        0.2];
+params.poor = [0.1,      0.1,        0.1,        0.1,        0.2,        0.2];
 params.names = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'};
 
 %% set up
@@ -36,32 +36,41 @@ task = loadTask(study,blockPresentation); % set up task
 model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 model.blockPresentation = blockPresentation;
 
-allAgents = loadAgents(study,model,params,nSim,task,fitDataFlag); clear params 
+[allAgents,allParams] = loadAgents(study,model,params,nSim,task,fitDataFlag); clear params 
 
 nSim = size(allAgents,1); % refresh nSim if loaded fit data
 
 %%
-iB = 1; iS = 1; 
-% for iB = 1:task.blockNum
-%  % we have to fit block by block to allow separate vs combined fitting 
-% 
-% for iS = 1:nSim
-%     iS
 
-    % what is the agent data for this block? 
-    agent.blockType = allAgents.summary.blockOrder(iS,iB); % specific for the subject
-    agent.experiencedAvgRR = allAgents.summary.experiencedAvgRR(iS,iB); % specific for the subject
-    agentParams = allAgents.params{iB}(iS,:); % specific for the subject
+for iB = 1:task.blockNum
+ % we have to fit block by block to allow separate vs combined fitting 
 
-    agent.data = allAgents.data{iB}; % empty generic container
-    agent.blockPatchOrder = task.patchOrder{iB}; % generic patch order for all participants
+for iS = 1:nSim
+    iS
+
+    % what are the agent features for this block? 
+    agent.blockOrder = allAgents.blockOrder(iS,iB);
+    agent.experiencedAvgRR = allAgents.experiencedAvgRR(iS,iB);
+    agent.blockPatchOrder = task.patchOrder{iB};
+    agentParams = allParams{iB}(iS,:);
+
 
     if iB == 2 && strcmp(blockPresentation, 'combined') % specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
-        agent.data = out(end,:);
-    end
+        agent.startVals.Rho = out(end);
 
-    [NLL,out,leaveT] = simulate_MVT_model(task,model,agent,agentParams);
+            if blockI == 2 && contains(blockPresentation, 'combined') % we need to 
+            startValues.Rho = out.Rho(end); % first value is last value from previous block
+            startValues.EstimatedPatchRR = out.EstimatedPatchRR(end);
+            startValues.sumReward = out.sumReward;
+            startValues.timeInPreviousBlock = Env.BlockTime;
+        else
+            startValues.Rho = 0;
+            startValues.EstimatedPatchRR = 0;
+            startValues.sumReward = 0;
+            startValues.timeInPreviousBlock = 0;
+        end
 
+    [NLL,out] = simulate_MVT_model(task,model,agent,agentParams);
 
         % Extract leaving times (LT) for each patch and block type 
     for patch = 1: RunSim.Task(i).PatchNum

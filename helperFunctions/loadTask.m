@@ -1,0 +1,39 @@
+function task = loadTask(study, blockPresentation)
+
+switch study
+
+    case 'leheron'
+
+        % task parameters
+        task.travelTime = 6; % delay between patches
+        task.timeStep = 1;  % T, seconds (discretising continuous time)
+        task.blockTime = 600; % seconds in block
+        task.r0 = [32.5, 45, 57.5]; % starting reward rate
+        task.decayRate = 0.075; % decay rate
+        task.environNames = {'rich', 'poor'};
+
+        switch blockPresentation
+            case 'combined'
+                task.blockNum = 1; % how many blocks to fit separately
+                task.duration = task.blockTime * 2;
+            case 'separate'
+                task.blockNum = 2; 
+                task.duration = task.blockTime;
+        end
+
+        % specify which patch the agent enters. This trial order was set by
+        % CLH for cabergoline data, where every 10 patches leads to correct
+        % proportions of low, medium or high patches based on the environment type
+
+        % patch order in rich environment
+        task.patchOrder{1} = repmat([3,2,3,1,3,2,1,3,3,2,1,3,2,1,3,3,2,3,3,2,3,3,1,3,3,2,3,1,2,2,3,2,2,1,3,3,2,3,1,3,3,3,2,2,3,3,3,1,1,2,3,2,2,3,3,1,1,3,2,3,3,2,3,1,1,3,2,2,3,3,3,3,3,1,3,2,3,2,2,1,1,3,2,3,3,1,2,2,3,3,2,3,1,3,3,3,1,2,2,3], [1,5]);
+        % patch order in poor environment
+        task.patchOrder{2} = repmat([1,1,2,1,3,2,2,1,3,1,1,2,3,1,2,1,1,2,3,1,1,1,2,3,1,2,3,2,1,1,3,1,1,2,2,1,2,3,1,1,1,2,3,1,1,2,1,3,1,2,3,2,2,1,2,1,1,1,3,1,1,1,2,1,2,1,1,2,3,3,1,3,1,3,2,2,2,1,1,1,2,3,1,3,1,2,1,2,1,1,2,1,2,3,2,3,1,1,1,1], [1,5]);
+
+        task.optAvgRR(1) = 21.8678; % optimal average RR in rich environment
+        task.optAvgRR(2) = 18.5632; % optimal average RR in poor environment
+
+    case 'contrerashuerta'
+
+    case 'kane'
+end
