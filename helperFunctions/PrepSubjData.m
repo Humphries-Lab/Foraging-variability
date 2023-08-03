@@ -29,19 +29,6 @@ elseif contains(blockFlag, 'separate')
     B = SubjLT.env(SubjLT.env == block);
 end
 
-% calculate their experienced avgRR for each block (based on type & length in patch) 
-% for iB = 1:2
-%     blockLT = LT(SubjLT.env==iB); % only get LTs for correct block
-%     blockPatchOrder = PatchOrder(SubjLT.env == iB);
-%     for ii = 1:length(blockLT) % for each patch
-%         reward_vector = Env.R(1:blockLT(ii),blockPatchOrder(ii));
-%         patch_reward(ii) = sum(reward_vector); % sum reward for that patch, according to time in patch
-%     end
-% 
-%     Data.experiencedAvgRR{iB} = sum(patch_reward)/(sum(blockLT)+Env.TravelTime*numel(blockLT)); % total reward/time
-%     clear patch_reward
-% end
-
 Data.Action = A;
 Data.PatchOrder = PatchOrder;
 Data.NextPatch = 0; % this is required to force the NLL script to predict the next patch (for stochastic patch prediction models)

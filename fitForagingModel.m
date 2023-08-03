@@ -125,7 +125,7 @@ figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
 for i= 1:numParams
     nexttile;
-    boxchart(squeeze(minNLLFitParams(:,i,:)))
+    scatter(minNLLFitParams(:,i),minNLLFitParams(:,i+1))
     title(paramNames{i})
     xlabel(sprintf('Fit %s', paramNames{i}))
     xticklabels({'rich', 'poor'})
