@@ -1,6 +1,6 @@
-function PAction = CorrectedSoftmax(Q, Beta)
+function PAction = softmaxConstrain(valueStay, valueLeave, Beta)
 
-numerator = exp(Q * Beta); % softmax function
+numerator = exp([valueLeave, valueStay] * Beta); % softmax function
 numerator(numerator==inf) = realmax/2; % replace any infs with just a large number
 numerator(numerator==0) = eps(0); % replace any 0's with just a tiny number to prevent NaN emerging during division
 PAction = numerator ./ sum(numerator);

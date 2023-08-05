@@ -1,4 +1,4 @@
-function task = loadTask(study, blockPresentation)
+function task = buildTask(study, blockPresentation)
 
 switch study
 
@@ -8,12 +8,18 @@ switch study
         task.travelTime = 6; % delay between patches
         task.timeStep = 1;  % T, seconds (discretising continuous time)
         task.blockTime = 600; % seconds in block
-        task.startYield = [32.5, 45, 57.5]; % starting reward rate
+        task.r0 = [32.5, 45, 57.5]; % starting reward rate
+        task.patchNames = {'low', 'medium', 'high'};
+
+        task.decayRate = 0.075; % decay rate
+        task.environNames = {'rich', 'poor'};
+        task.nEnviron = 2;
+        task.nPatch = numel(task.r0);
 
         switch blockPresentation
             case 'combined'
                 task.blockNum = 1; % how many blocks to fit separately
-                task.duration = task.blockTime * task.blockNum;
+                task.duration = task.blockTime * 2;
             case 'separate'
                 task.blockNum = 2; 
                 task.duration = task.blockTime;

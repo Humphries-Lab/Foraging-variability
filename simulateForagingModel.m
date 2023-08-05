@@ -1,4 +1,4 @@
-%% ---- Script to simulate Le Heron foraging task ---- %%
+%% ---- Script to simulate patch foraging task ---- %%
 % Emma Scholey
 % latest update 3 August 2023
 
@@ -12,215 +12,69 @@ addpath(genpath('~/Dropbox/foraging/code'))
 study = 'leheron'; % study to simulate/fit data to
 
 % model options
-modelNum = 6; % model type - see model table to check number to choose
-blockPresentation = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+modelNum = 5; % model type - see model table to check number to choose
 modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
 
 % simulation options
-fitDataFlag = 0; % 1 if simulating subject fit data, 0 if want to simulate own parameters
-nSim = 50; % this will override if simulating fit subject data
+simOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
+simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
-% agent parameters (if simulating from scratch)
-% if fitting combined blocks, then enter params into paramsRich (paramsPoor
-% will be ignored) 
-params.rich = [0.14,      0.2,        0,        1,        0.2,        0.2];
-params.poor = [0.2,      0.1,        0,        1,        0.2,        0.2];
-params.names = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'};
+% options below will override if simulating already fit parameters
+simOptions.nSim = 50; 
+simOptions.params.rich = [0.18, 0.2, 0.0004, 1, 3, 0.2]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
+simOptions.params.poor = [0.22, 0.1, 0.0004, 1, 0.2, 0.2]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
 
 %% set up
 
 % load task 
-task = loadTask(study,blockPresentation); % set up task
+task = buildTask(study,simOptions.blockPresentation); % set up task
+
+% load dataframe container for simulations
+allData = buildData(study,task,simOptions);
 
 % load model 
 model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
-model.blockPresentation = blockPresentation;
 
-allAgents = loadAgents(study,model,params,nSim,task,fitDataFlag); clear params 
+% load agent parameters
+allParams = buildParams(study,task,model,simOptions); clear params 
+model.paramNames = allParams.names;
 
-nSim = size(allAgents,1); % refresh nSim if loaded fit data
+simOptions.nSim = size(allData.nStates,1); % refresh nSim if loaded fit data
 
-%%
-iB = 1; iS = 1; 
-% for iB = 1:task.blockNum
-%  % we have to fit block by block to allow separate vs combined fitting 
-% 
-% for iS = 1:nSim
-%     iS
+%% run simulations
+LT = zeros([task.nEnviron,task.nPatch,simOptions.nSim]); % store leaving times
 
-    % what is the agent data for this block? 
-    agent.blockType = allAgents.summary.blockOrder(iS,iB); % specific for the subject
-    agent.experiencedAvgRR = allAgents.summary.experiencedAvgRR(iS,iB); % specific for the subject
-    agentParams = allAgents.params{iB}(iS,:); % specific for the subject
+for iS = 1:simOptions.nSim
 
-    agent.data = allAgents.data{iB}; % empty generic container
-    agent.blockPatchOrder = task.patchOrder{iB}; % generic patch order for all participants
+    for iB = 1:task.nEnviron
 
-    if iB == 2 && strcmp(blockPresentation, 'combined') % specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
-        agent.data = out(end,:);
-    end
+        iS
+   
+        % what is the agent data for this block?
+        agent.currentBlock = allData.blockOrder(iS,iB); % get current block for this subject based on their block order
 
-    [NLL,out,leaveT] = simulate_MVT_model(task,model,agent,agentParams);
+        agent.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % specific for the subject
+        agent.nStates = allData.nStates(iS,agent.currentBlock);
+        agent.data = allData.data{agent.currentBlock}; % empty generic container
+        agent.patchOrder = task.patchOrder{agent.currentBlock}'; % generic patch order for all participants
 
+        agentParams = table2array(allParams.params{agent.currentBlock}(iS,:)); % specific for the subject
 
-        % Extract leaving times (LT) for each patch and block type 
-    for patch = 1: RunSim.Task(i).PatchNum
-        for block = 1: RunSim.Task(i).BlockNum
-            LT{i}(patch,block) = mean(out.LeavingTime{block}(out.PatchOrder{block}(1:end-1) == patch), 'omitnan');            
-        end
-    end
-
-end
-
-%% Run
-SimData = cell(nSim,1);
-LT = zeros(nSim, 3, 2);
-LRR = zeros(nSim, 3, 2);
-
-for n = 1:nSim
-    n
-    Env.experiencedAvgRR = experiencedAvgRR(n,:);
-
-    for blockI = 1:2
-
-        params = allParams(n,:,blockType);
-
-        sim_f = buildForagingModel(modelNum, Env, [], startValues); % get function handle for this model
-        out = sim_f(params); % simulate with the parameters
-
-        SimData{n}{blockType} = out;
-
-        % extract leaving times for each patch type
-        for ii = 1:3
-            LT(n,ii,blockType) = mean(out.LeavingTime(out.PatchOrder == ii));
-            LRR(n,ii,blockType) = mean(out.LeavingRR(out.PatchOrder == ii));
+        if iB == 2 && strcmp(simOptions.blockPresentation, 'combined') % specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
+            agent.data.rho(1) = out.rho(end);
         end
 
-        % how much reward did they get?
-        TotalReward(n,blockType) = sum(out.Reward);
+        [NLL,results,out] = simulate_MVT_model(task,model,agent,agentParams,simOptions);
+
+        % Extract leaving times (LT) for each patch and block type
+        for iP = 1:task.nPatch
+            LT(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder == iP), 'omitnan');
+        end
+
     end
 end
 
-%% compute means and standard errors across NSim
-LTMean = squeeze(mean(LT));
-LRRMean = squeeze(mean(LRR));
-LTSEM = squeeze(std(LT))./sqrt(nSim);
-LRRSEM = squeeze(std(LRR))./sqrt(nSim);
-RewardMean = squeeze(mean(TotalReward))';
-
-%save(sprintf('~/Dropbox/foraging/sim_data/simData_M%d.mat', model), 'RewardMean', "LTMean", "LTSEM", "out", "NSim", "SimData")
-
-%% figure - plot mean leaving times, compared to real subject data
-close all
-
-load('~/Dropbox/foraging/raw_data/summary/young_variables/subMean_young.mat') % load real data
-
-% set up colours
-c = [0.6353    0.0784    0.1843; 0    0.4471    0.7412]; % [rich, poor]
-
-% plot the actual experimental data
-NSub = size(subMean_young, 3);
-SubLT(:,:,1) = squeeze(subMean_young(1,:,:)); % rich environment
-SubLT(:,:,2) = squeeze(subMean_young(2,:,:)); % poor environment
-SubLTMean = [mean(SubLT(:,:,1), 2), mean(SubLT(:,:,2), 2)];
-SubSEM = [std(SubLT(:,:,1),[],2)./sqrt(NSub), std(SubLT(:,:,2), [], 2)./sqrt(NSub)]; % Standard Error
-
-ts = tinv([0.025  0.975],NSub-1);      % T-Score
-SubCI = ts(2).*SubSEM; % CIs
-
-figure()
-hold on
-title('Mean patch leaving times');
-xlabel('Patch yield type')
-ylabel('Time in patch (s)')
-
-errorbar([1 2 3],SubLTMean(:,1), SubCI(:,1),'LineStyle','--', 'Color',c(1,:) ,'LineWidth', 1);
-hold on
-errorbar([1 2 3],SubLTMean(:,2), SubCI(:,2),'LineStyle','--', 'Color',c(2,:) ,'LineWidth', 1);
-
-%overlay simulated data
-%load(sprintf('~/Dropbox/foraging/sim_data/simData_M%d.mat', model)) % load simulated results for each model
-
-ts = tinv([0.025  0.975],nSim-1);      % T-Score
-LTCI = LTSEM .* ts(2);
-
-errorbar([1 2 3], LTMean(:,1), LTCI(:,1), 'LineWidth', 2, 'Color', c(1,:)); % rich environment
-errorbar([1 2 3], LTMean(:,2), LTCI(:,2), 'LineWidth', 2, 'Color', c(2,:)); % poor environment
+% plot against participant data
+plotLeaveTimes(study,task,LT)
 
 
-title(sprintf('M%d', modelNum))
-
-% tidy up axes
-ax = gca;
-xlim(ax, xlim(ax) + [-1,1]*range(xlim(ax)).* 0.1)
-xticks(ax, [1 2 3]); xticklabels(ax, {'Low'; 'Medium'; 'High'}); xlabel('Patch quality')
-ylim([0, 30]); ylabel('Patch leaving times (s)')
-
-legend({'Subject - rich', 'Subject - poor', 'Agent - rich', 'Agent - poor'}, 'Location', 'north');
-subtitle(sprintf('Error bars show 95%% CI. NSim = %d', nSim))
-
-%% plot behaviour from a single run
-
-% figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
-%
-% for i= 1:2
-%     ax = nexttile;
-%     plot(1:Env.BlockTime, SimData{8}{i}.PatchRR, 'LineWidth', 1) % plot patch reward rate
-%     hold on
-%     plot(1:Env.BlockTime, SimData{8}{i}.Rho, 'LineWidth', 1) % plot estimated average RR
-%     legend('Patch RR', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
-%     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
-%     ylabel('Reward rates','FontSize', 16, 'FontName', 'Helvetica');
-%     title(sprintf('%s environment', blockNames{i}));
-% end
-
-% plot how betas change over course of experiment (for dynamic beta models
-% only) % for each parameter, plot sim vs fit
-% figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
-% for i= 1:2
-%     ax = nexttile;
-%     plot(1:Env.BlockTime, SimData{1}{i}.Beta, 'LineWidth', 1) % plot patch reward rate
-%     %hold on
-%     %plot(1:Env.BlockTime, SimData{2}{i}.experiencedAvgRR, 'LineWidth', 1) % plot estimated average RR
-%     legend('Beta', 'Experienced average RR', 'FontSize', 16, 'FontName', 'Helvetica')
-%     xlabel('Time (s)','FontSize', 16, 'FontName', 'Helvetica');
-%     title(sprintf('%s environment', blockNames{i}));
-%     %ylim([0,1])
-% end
-
-%% compare simulated leaving times with real leaving times for each participant
-
-load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
-
-figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
-
-for iSubj = 1:NSub
-    ax = nexttile;
-    simLT = SimData{iSubj}{1}.LeavingTime;
-    subjLT = t_young.leaveT(t_young.subj == iSubj & t_young.env == 1);
-    minlen = min([numel(simLT), numel(subjLT)]);
-    simLT = simLT(1:minlen);
-    subjLT = subjLT(1:minlen);
-    plot(simLT, 'LineWidth', 1); hold on; plot(subjLT,'LineWidth', 1)
-    ylim([0 50])
-    title(iSubj)
-end
-
-lg = legend(ax, {'Sim Data', 'Subject Data'});
-lg.Layout.Tile = 'South';
-
-%% difference in sim vs subj plot
-figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
-
-for iSubj = 1:NSub
-    ax = nexttile;
-    simLT = SimData{iSubj}{1}.LeavingTime;
-    subjLT = t_young.leaveT(t_young.subj == iSubj & t_young.env == 1);
-    minlen = min([numel(simLT), numel(subjLT)]);
-    simLT = simLT(1:minlen);
-    subjLT = subjLT(1:minlen);
-    diffLT = simLT-subjLT;
-    plot(diffLT, 'LineWidth', 1);
-    ylim([-20,20])
-    title(iSubj)
-end

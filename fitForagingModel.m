@@ -1,133 +1,145 @@
 %% fitting models to foraging data
 % Emma Scholey 9 Jun 2022
-% latest update 30th May 2023
+% latest update 4 August 2023 
 
 clear
-close all;
+close all
 addpath(genpath('~/Dropbox/foraging/code'))
 
 %% user options
 
-model = 4; %% see buildForagingModel.m for model list 
-blockFlag = 'separate'; %%  either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks) 
+% study options
+study = 'leheron'; % study to simulate/fit data to
+
+% model options
+modelNum = 1; % model type - see model table to check number to choose
+modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
+
+% fitting options 
+fitOptions.type = 'fit'; % not simulating data here
+fitOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+fitOptions.nStarts = 8; % how many starts/iterations for fmincon search
 
 %% set up model and task 
 
-if contains(blockFlag, 'combined')
-    numBlocks = 1;
-    blockNames = {'combined'};
-elseif contains(blockFlag, 'separate')
-    numBlocks = 2;
-    blockNames = {'rich', 'poor'};
-end
+% load task 
+task = buildTask(study,fitOptions.blockPresentation);
 
-SetUpEnviron % get the environment parameters
+% load model 
+model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
-[~, ~, paramsIndex] = buildForagingModel(model); % get the right parameters for the model 
-numParams = sum(paramsIndex);
+% load participant data 
+allData = buildData(study,task,fitOptions);
+nSub = size(allData.data,2); 
 
-paramNames = {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda', 'epsilon', 'omega'};
-paramNames = paramNames(paramsIndex); 
-
-%% load and prepare subject data
-
-% get subject data
-subj = [1:23 25:40];
-numSubjects = size(subj,2);
-
-load ~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat
-load ~/Dropbox/foraging/raw_data/experiencedAvgRR.mat
-
-Data = cell([numSubjects, 1]);
-
-for k = 1:numSubjects % for each subject
-    for b = 1:numBlocks % for each block
-        SubjLT = t_young(t_young.subj == k,:); % extract their summarised leaving times
-        Data{k}{b} = PrepSubjData(SubjLT, b, Env, blockFlag); % transform into state actions ready for fitting
-         Data{k}{b}.experiencedAvgRR{1} = experiencedAvgRR(k,1);
-         Data{k}{b}.experiencedAvgRR{2} = experiencedAvgRR(k,2);
-    end
-end
-
-% experiencedAvgRR = zeros([numSubjects, 2]);
-% % log the experienced avgRR for each participant 
-% for k = 1:numSubjects
-%     for b = 1:numBlocks
-%         experiencedAvgRR(k,1) = Data{k}{b}.experiencedAvgRR{1};
-%         experiencedAvgRR(k,2) = Data{k}{b}.experiencedAvgRR{2};
-%     end
-% end
-% save('~/Dropbox/foraging/raw_data/experiencedAvgRR.mat', 'experiencedAvgRR')
-
-% assume no knowledge of environment for fitting
-startValues = []; 
+% load random set of start parameters for fmincon search 
+allParams = buildParams(study,task,model,fitOptions);
+model.paramNames = allParams.names;
 
 %% test NLL function on one participant
-subjData = Data{8}{1}; % get example subject data
-[NLL, out] = NLL_MVT_softmax([0.17], Env, subjData)
+
+% for iS = 1:nSub
+%     subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
+% 
+%     for iB = 1:task.blockNum
+%         iS
+%         subj.nStates = allData.nStates(iS,iB);
+%         subj.data = allData.data{iS}{iB};
+%         subj.patchOrder = allData.patchOrder{iS,iB};
+%         subj.env = allData.env{iS,iB}; 
+%         subjParams = table2array(allParams.params(iS,:));
+% 
+%         [NLL, out] = simulate_MVT_model(task,model,subj,subjParams, fitOptions);
+%     end
+% end
 
 %% fitting for each person in group with different starting points
-
-% fmincon options
-nStarts = 50; % how many starting points to avoid local minima
-lowerBounds = [0,0,0,-100, 0, -20];lowerBounds = lowerBounds(paramsIndex);  % {'alpha patch RR/Q', 'alpha rho', 'beta', 'lambda', 'epsilon', 'omega'} % parameter bounds
-upperBounds = [1,1,10,300, 1, 20];upperBounds = upperBounds(paramsIndex);   % arbitrary upper bound on beta to stop pathological behaviour
 options = optimoptions('fmincon','Display','none'); % don't display
+lb = allParams.lb;
+ub = allParams.ub;
 
-minNLL = zeros([numSubjects, numBlocks]);
-minNLLFitParams = zeros([numSubjects, numParams, numBlocks]);
-BIC = zeros([numSubjects, numBlocks]);
-AIC = zeros([numSubjects, numBlocks]);
+% initialise containers
+minNLL = zeros([nSub, task.blockNum]);
+minNLLFitParams = zeros([nSub, allParams.nParams, task.blockNum]);
+BIC = zeros([nSub, task.blockNum]);
+AIC = zeros([nSub, task.blockNum]);
 
-for block = 1:numBlocks
+paramArray = table2array(allParams.params);
 
-    for iS = 1:numSubjects
+for iS = 1:nSub
+    subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
 
+    for iB = 1:task.blockNum
         iS
+        subj.nStates = allData.nStates(iS,iB);
+        subj.data = allData.data{iS}{iB};
+        subj.patchOrder = allData.patchOrder{iS,iB};
+        subj.env = allData.env{iS,iB};
 
-        subjData = Data{iS}{block};
-        numObservations = sum(subjData.Action == 2); % only count states when subject stays in patch (this is when log likelihood updates as they make a decision in that state)
+        NLLEval = zeros([fitOptions.nStarts, 1]);
+        FitParams = zeros([fitOptions.nStarts, allParams.nParams]);        
 
-        NLLEval = zeros([nStarts, 1]);
-        FitParams = zeros([nStarts, numParams]);
-
-        [~, NLL_f] = buildForagingModel(model, Env, subjData, startValues); % need to update NLL function with new subject data each time
-
-         % Run fmincon
-         parfor ii = 1:nStarts
-             params0 = [rand, rand, exprnd(3), defineBoundedParam(0,50), rand, rand]; % choose full set of start parameters [alpha alpha beta lambda]
-             params0 = params0(paramsIndex); % only take the parameters we need for this specific model
-
-             [FitParams(ii,:),NLLEval(ii)] = fmincon(NLL_f,params0,[],[],[],[],lowerBounds, upperBounds,[],options);
-         end
+        % Run fmincon
+        parfor ii = 1:fitOptions.nStarts
+            params0 =  paramArray(ii,:);
+             
+            f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
+            [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
+        end
 
         % Find the best fitting parameter values
         minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
         ix = find(minNLL == NLLEval);    % indices of location of minimum, to find the corresponding best fit parameters
-        minNLLFitParams(iS,:,block) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
+        minNLLFitParams(iS,:,iB) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
 
         % Calculate BIC/AIC
-        BIC(iS,block) = numParams * log(numObservations) + 2*minNLL;
-        AIC(iS,block) = 2/numObservations * minNLL + 2 * numParams/numObservations;
+        BIC(iS,iB) = allParams.nParams * log(allData.nObservations(iS)) + 2*minNLL;
+        AIC(iS,iB) = 2/allData.nObservations(iS) * minNLL + 2 * allParams.nParams/allData.nObservations(iS);
 
     end
 end
 clear FitParams NLLEval iS ix
-
-m = median(minNLLFitParams);
-save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d', blockFlag, model);
-save(save_name, 'AIC', 'BIC', 'minNLL', 'minNLLFitParams')
+ 
 
 %% plots
 
 close all
-figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
-for i= 1:numParams
-    nexttile;
-    scatter(minNLLFitParams(:,i),minNLLFitParams(:,i+1))
-    title(paramNames{i})
-    xlabel(sprintf('Fit %s', paramNames{i}))
-    xticklabels({'rich', 'poor'})
+combinations = nchoosek(1:allParams.nParams,2); 
+
+if strcmp(fitOptions.blockPresentation,'separate')
+    plotNames = task.environNames;
+elseif strcmp(fitOptions.blockPresentation,'combined')
+    plotNames = 'combined';
+end
+
+for iB = 1:task.blockNum
+    figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
+
+    for i= 1:size(combinations,1)
+        nexttile;
+        scatter(minNLLFitParams(:,combinations(i,1),iB),minNLLFitParams(:,combinations(i,2),iB))
+        xlabel(sprintf('Fit %s', model.paramNames{:,combinations(i,1)}))
+        ylabel(sprintf('Fit %s', model.paramNames{:,combinations(i,2)}))
+        title(plotNames{iB})
+    end
 end
 title(tl, 'Best fit parameter distributions')
+
+%% save results
+m = median(minNLLFitParams);
+
+if strcmp(fitOptions.blockPresentation, 'separate')
+    minNLLFitParams_rich = array2table(minNLLFitParams(:,:,1), "VariableNames",model.paramNames);
+    minNLLFitParams_poor = array2table(minNLLFitParams(:,:,2), "VariableNames",model.paramNames);
+elseif strcmp(fitOptions.blockPresentation, 'combined')
+    minNLLFitParams = array2table(minNLLFitParams, "VariableNames",model.paramNames);
+end
+
+if strcmp(fitOptions.blockPresentation, 'separate')
+    save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d_new', model.modelNumber);
+    save(save_name, 'AIC', 'BIC', 'minNLLFitParams_rich', 'minNLLFitParams_poor')
+elseif strcmp(fitOptions.blockPresentation, 'combined')
+    save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_combined_M%d_new', model.modelNumber);
+    save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
+end
