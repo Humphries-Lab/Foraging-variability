@@ -1,4 +1,4 @@
-function p = p_leave_epsilon(epsilon)
+function p = p_leave_egreedy(epsilon)
 
 % P_LEAVE_EPSILON compute the probability of leaving the patch
 % P = P_LEAVE_EPSILON(EPSILON) computes probability of leaving a patch given

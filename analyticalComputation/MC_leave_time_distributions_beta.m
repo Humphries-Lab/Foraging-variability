@@ -8,7 +8,7 @@
 clearvars
 close all;
 
-study = 'contrerashuerta'; % dataset to investigate. Options are:
+study = 'kane'; % dataset to investigate. Options are:
 % 'leheron' - human patch foraging
 % 'contrerashuerta - human patch foraging
 % 'kane' - rodent patch foraging
@@ -18,12 +18,12 @@ switch study
     case 'leheron'
         alpha = 0.075; % decay rate
         r0 = [32.5 45 57.5]; % initial yield
-        t_step = 0.1;  % time-step at which to calculate estimates of E and VAR
+        t_step = 1;  % time-step at which to calculate estimates of E and VAR
 
     case 'contrerashuerta'
         alpha = 0.11;
         r0 = [34.5, 57.5];
-        t_step = 0.1;
+        t_step = 1;
 
     case 'kane'
         alpha = 8;
@@ -64,12 +64,12 @@ for iB = 1:numel(beta)
 
             switch study
                 case 'kane'
-                    r(n) = reward_at_t_exp(time_now,r0(iR),alpha,'linear');  % reward on that time-step
+                    r(n) = reward_at_t(time_now,r0(iR),alpha,'linear');  % reward on that time-step
                 otherwise
-                    r(n) = reward_at_t_exp(time_now,r0(iR),alpha,'exp');  % reward on that time-step
+                    r(n) = reward_at_t(time_now,r0(iR),alpha, 'exp');  % reward on that time-step
             end
 
-            p(n) = p_leave_softmax(r(n),beta(iB),epsilon);          % probability on that time-step
+            p(n) = p_leave_softmax(r(n),beta(iB));          % probability on that time-step
 
             % probability of leaving on that time-step is the product of
             % all probabilities of *not leaving* up till the current trial and the probability of
@@ -93,12 +93,12 @@ for iB = 1:numel(beta)
 
                 switch study
                     case 'kane'
-                        r = reward_at_t_exp(time_now,r0(iR),alpha,'linear');  % reward on that time-step
+                        r = reward_at_t(time_now,r0(iR),alpha,'linear');  % reward on that time-step
                     otherwise
-                        r = reward_at_t_exp(time_now,r0(iR),alpha,'exp');  % reward on that time-step
+                        r = reward_at_t(time_now,r0(iR),alpha, 'exp');  % reward on that time-step
                 end
 
-                p = p_leave_softmax(r,beta(iB),epsilon);          % probability on that time-step
+                p = p_leave_softmax(r,beta(iB));          % probability on that time-step
 
                 blnLeave = rand <= p;
                 n = n + 1;
@@ -147,8 +147,8 @@ switch study
         %ixPoor = find(E_leave(:,2) > 11.5,1,'first');
 
     case 'contrerashuerta'
-        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT.xlsx');
-        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT_SD.xlsx');
+        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta/contrerashuerta_exp2_LT.xlsx');
+        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta/contrerashuerta_exp2_LT_SD.xlsx');
 
         nEnv = 2;
         nPatch = 2;
@@ -166,7 +166,7 @@ switch study
         end
 
     case 'kane'
-        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/kane2019-rats-fig-1-data.csv');
+        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/kane/kane2019-rats-fig-1-data.csv');
         % filter to only study we need
         data = data(contains(data.Experiment,'Travel'),:);
 

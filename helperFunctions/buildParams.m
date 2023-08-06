@@ -88,15 +88,15 @@ switch funcOptions.type
                 end
 
             case 'epsilon-greedy'
-                agentParams.params.epsilon= exprnd(3,[funcOptions.nStarts,1]);
+                agentParams.params.epsilon= rand([funcOptions.nStarts,1]);
 
             case 'epsilon-softmax'
                 agentParams.params.beta = exprnd(3,[funcOptions.nStarts,1]);
-                agentParams.params.epsilon= exprnd(3,[funcOptions.nStarts,1]);
+                agentParams.params.epsilon= rand([funcOptions.nStarts,1]);
         end
 
         % set up learning rates for average RR
-        if modelOptions.learnRho
+        if modelOptions.learnRho || strcmp(modelOptions.rhoFunction, 'rw')
             agentParams.params.alphaRho = rand([funcOptions.nStarts,1]);
         end
 

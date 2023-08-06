@@ -5,13 +5,15 @@ switch study
     case 'leheron'
 
         % task parameters
-        task.travelTime = 6; % delay between patches
+        task.travelTime = [6, 6]; % delay between patches. same time in both environments
         task.timeStep = 1;  % T, seconds (discretising continuous time)
         task.blockTime = 600; % seconds in block
         task.r0 = [32.5, 45, 57.5]; % starting reward rate
         task.patchNames = {'low', 'medium', 'high'};
 
         task.decayRate = 0.075; % decay rate
+        task.decayFunction = 'exp';
+        
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
         task.nPatch = numel(task.r0);
@@ -21,7 +23,7 @@ switch study
                 task.blockNum = 1; % how many blocks to fit separately
                 task.duration = task.blockTime * 2;
             case 'separate'
-                task.blockNum = 2; 
+                task.blockNum = 2;
                 task.duration = task.blockTime;
         end
 
@@ -39,5 +41,68 @@ switch study
 
     case 'contrerashuerta'
 
+        % task parameters
+        task.travelTime = [3, 5]; % delay in s between patches [rich env, poor env] 
+        task.timeStep = 1;  % T, seconds (discretising continuous time)
+        task.blockTime = 900; % seconds in block
+        task.r0 = [34.5, 57.5]; % starting reward rate
+        task.patchNames = {'low', 'high'};
+
+        task.decayRate = 0.11; % decay rate
+        task.decayFunction = 'exp';
+
+        task.environNames = {'rich', 'poor'};
+        task.nEnviron = 2;
+        task.nPatch = numel(task.r0);
+
+        switch blockPresentation
+            case 'combined'
+                task.blockNum = 1; % how many blocks to fit separately
+                task.duration = task.blockTime * 2;
+            case 'separate'
+                task.blockNum = 2;
+                task.duration = task.blockTime;
+        end
+
+        % patch order in rich environment
+        task.patchOrder{1} = repmat([2,2,1,1,2,1,2,1,2,1], [1,40]); % assume same random patch order in both environments
+        % patch order in poor environment
+        task.patchOrder{2} = repmat([2,2,1,1,2,1,2,1,2,1], [1,40]);
+
+        task.optAvgRR(1) = 23.7388; % optimal average RR in rich environment
+        task.optAvgRR(2) = 19.2564; % optimal average RR in poor environment
+
     case 'kane'
+         % task parameters. Note that 1 state = 10s (trial by trial rather than
+         % continuous time) 
+        task.travelTime = [1, 3]; % delay in STATES between patches [rich env, poor env] 
+        task.timeStep = 1;  % T, seconds (discretising continuous time). Here this is equivalent to one state
+        task.blockTime = 1800; % how many trials in each environment (for simulation only) 
+        task.r0 = [60, 90, 120]; % starting reward rate
+        task.patchNames = {'low', 'medium', 'high'};
+
+        task.decayRate = 8; % decay rate
+        task.decayFunction = 'linear'; % linear or exponential
+
+        task.environNames = {'rich', 'poor'};
+        task.nEnviron = 2;
+        task.nPatch = numel(task.r0);
+
+        switch blockPresentation
+            case 'combined'
+                task.blockNum = 1; % how many blocks to fit separately
+                task.duration = task.blockTime * 2;
+            case 'separate'
+                task.blockNum = 2;
+                task.duration = task.blockTime;
+        end
+
+        % patch order in rich environment
+        task.patchOrder{1} = repmat([2 3 1 2 1 3 1 2 3 1 3 2 1 2 3 3 1 2 1 3 2], [1,40]); % assume same random patch order in both environments
+        % patch order in poor environment
+        task.patchOrder{2} = repmat([2 3 1 2 1 3 1 2 3 1 3 2 1 2 3 3 1 2 1 3 2], [1,40]);
+
+        % TO DO: find opt average reward rate 
+        %task.optAvgRR(1) = 23.7388; % optimal average RR in rich environment
+        %task.optAvgRR(2) = 19.2564; % optimal average RR in poor environment
 end

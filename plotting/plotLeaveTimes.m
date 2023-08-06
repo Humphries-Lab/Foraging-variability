@@ -21,8 +21,8 @@ switch study
         end
 
     case 'contrerashuerta'
-        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT.xlsx');
-        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta_exp2_LT_SD.xlsx');
+        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta/contrerashuerta_exp2_LT.xlsx');
+        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta/contrerashuerta_exp2_LT_SD.xlsx');
 
         nSub = height(data);
 
@@ -35,7 +35,7 @@ switch study
         end
 
     case 'kane'
-        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/kane2019-rats-fig-1-data.csv');
+        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/kane/kane2019-rats-fig-1-data.csv');
         % filter to only study we need
         data = data(contains(data.Experiment,'Travel'),:);
 
@@ -45,15 +45,14 @@ switch study
         subLT_mean = zeros([task.nEnviron,task.nPatch,nSub]);
         subLT_sd = zeros([task.nEnviron,task.nPatch,nSub]);
 
-        for iP = 1:nPatch
-            for iE = 1:nEnv
+        for iP = 1:task.nPatch
+            for iE = 1:task.nEnviron
                 for iS = 1:nSub
                     subjData = data(data.Subject == subID(iS), :);
-
                     % extract state where leave decision made, for each patch x env
                     % combination
-                    subLT_mean(iE,iP,iS) = mean(subjData.StateInPatch(subjData.Decision == 1 & subjData.Travel == envType(iE) & subjData.startVolume == patchType(iP)));
-                    subLT_sd(iE,iP,iS) = std(subjData.StateInPatch(subjData.Decision == 1 & subjData.Travel == envType(iE) & subjData.startVolume == patchType(iP)));
+                    subLT_mean(iE,iP,iS) = mean(subjData.StateInPatch(subjData.Decision == 1 & subjData.Travel == task.travelTime(iE)*10 & subjData.startVolume == task.r0(iP)/1000));
+                    subLT_sd(iE,iP,iS) = std(subjData.StateInPatch(subjData.Decision == 1 & subjData.Travel == task.travelTime(iE)*10 & subjData.startVolume == task.r0(iP)/1000));
                 end
             end
         end

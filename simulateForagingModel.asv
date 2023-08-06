@@ -9,10 +9,10 @@ addpath(genpath('~/Dropbox/foraging/code'))
 %% user options
 
 % study options
-study = 'kane'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1 so far 
+study = 'contrerashuerta'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1 so far 
 
 % model options
-modelNum = 1; % model type - see model table to check number to choose
+modelNum = 5; % model type - see model table to check number to choose
 modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
 
 % simulation options
@@ -21,8 +21,8 @@ simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one conti
 
 % options below will override if simulating already fit parameters
 simOptions.nSim = 50; 
-simOptions.params.rich = [0.04, 0.2, 0.0006, 1, 3, 0.2]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
-simOptions.params.poor = [0.06, 0.1, 0.0009, 1, 0.2, 0.2]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
+simOptions.params.rich = [0.11, 0.2, 0.0004, 1, 3, 0.2]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
+simOptions.params.poor = [0.20, 0.1, 0.0004, 1, 0.2, 0.2]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
 
 %% set up
 

@@ -17,7 +17,7 @@ modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.x
 
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
-fitOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+fitOptions.blockPresentation = 'separated'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 fitOptions.nStarts = 8; % how many starts/iterations for fmincon search
 
 %% set up model and task
