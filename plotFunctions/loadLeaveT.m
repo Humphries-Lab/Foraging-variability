@@ -1,5 +1,5 @@
 %% Plot participant data
-function plotLeaveTimes(study,task,modelLT)
+function [subLT_mean, subLT_sd] = loadLeaveT(study,task)
 
 switch study
 
@@ -57,42 +57,3 @@ switch study
             end
         end
 end
-
-% group averages
-subj_leave_data = mean(subLT_mean,3);
-
-model_leave_data = mean(modelLT,3);
-
-%% plot participant leaving times
-figure
-
-c_rich = [0.7 0.3 0.3];
-c_poor = [0.3 0.3 0.7];
-
-% plot the simulated data
-plot(model_leave_data(1,:),'.--', 'Color',c_rich,'LineWidth', 2, 'MarkerSize', 15), hold on
-plot(model_leave_data(2,:),'.--', 'Color',c_poor,'LineWidth', 2, 'MarkerSize', 15)
-
-% plot the actual experimental data
-plot(subj_leave_data(1,:),'.-', 'Color',c_rich,'LineWidth', 2, 'MarkerSize', 15)
-plot(subj_leave_data(2,:),'.-', 'Color',c_poor,'LineWidth', 2, 'MarkerSize', 15)
-
-set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 30])
-ylabel('Leaving time (s)')
-
-legend({'model - rich', 'model - poor', 'data - rich', 'data - poor'})
-
-% overlay optimal MVT predictions
-% % overlay MVT optimal times
-% RR_Leave = [21.8678 18.5632]; % this is the average background RR at which subjects should leave, for Rich and Poor env... -
-% ... respectively.
-%
-% clear optLT
-% A=[32.5 45 57.5];a=0.075;
-% for e=1:2 %each env
-%     for p=1:3 % each patch type
-%         optLT(e,p)=(log(RR_Leave(e)/A(p)))/-a;
-%     end
-% end
-% plot(optLT(1,:),'--','Color',c_rich)
-% plot(optLT(2,:),'--','Color',c_poor)

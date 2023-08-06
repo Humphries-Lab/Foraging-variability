@@ -42,7 +42,7 @@ model.paramNames = allParams.names;
 simOptions.nSim = size(allData.nStates,1); % refresh nSim if loaded fit data
 
 %% run simulations
-LT = zeros([task.nEnviron,task.nPatch,simOptions.nSim]); % store leaving times
+modelLT = zeros([task.nEnviron,task.nPatch,simOptions.nSim]); % store leaving times
 
 for iS = 1:simOptions.nSim
 
@@ -68,13 +68,36 @@ for iS = 1:simOptions.nSim
 
         % Extract leaving times (LT) for each patch and block type
         for iP = 1:task.nPatch
-            LT(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder == iP), 'omitnan');
+            modelLT(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder == iP), 'omitnan');
         end
 
     end
 end
 
-% plot against participant data
-plotLeaveTimes(study,task,LT)
 
+%% plot against participant data
+
+[dataLT] = loadLeaveT(study,task); % load mean leaving times for each subject x patch x env
+
+% summarise model data
+modelMean = mean(modelLT,3); 
+subjectMean = mean(dataLT,3);
+
+figure
+
+color.rich = [0.7 0.3 0.3];
+color.poor = [0.3 0.3 0.7];
+
+% plot the simulated data
+plot(modelMean(1,:),'.--', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15), hold on
+plot(modelMean(2,:),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+
+% plot the actual experimental data
+plot(subjectMean(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
+plot(subjectMean(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+
+set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 30])
+ylabel('Leaving time (s)')
+
+legend({'model - rich', 'model - poor', 'data - rich', 'data - poor'})
 

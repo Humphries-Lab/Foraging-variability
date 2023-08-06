@@ -14,23 +14,7 @@ study = 'kane'; % dataset to investigate. Options are:
 % 'kane' - rodent patch foraging
 
 % select patch decay parameters depending on study
-switch study
-    case 'leheron'
-        alpha = 0.075; % decay rate
-        r0 = [32.5 45 57.5]; % initial yield
-        t_step = 1;  % time-step at which to calculate estimates of E and VAR
 
-    case 'contrerashuerta'
-        alpha = 0.11;
-        r0 = [34.5, 57.5];
-        t_step = 1;
-
-    case 'kane'
-        alpha = 8;
-        r0 = [60, 90, 120];
-        t_step = 1;
-
-end
 
 action_policy = 'softmax'; % options are softmax or e-softmax
 

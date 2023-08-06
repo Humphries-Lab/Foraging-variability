@@ -12,7 +12,7 @@ switch study
         task.patchNames = {'low', 'medium', 'high'};
 
         task.decayRate = 0.075; % decay rate
-        task.decayFunction = 'exp';
+        task.rewardFunction = 'exponential';
         
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
@@ -49,7 +49,7 @@ switch study
         task.patchNames = {'low', 'high'};
 
         task.decayRate = 0.11; % decay rate
-        task.decayFunction = 'exp';
+        task.rewardFunction = 'exponential';
 
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
@@ -82,7 +82,7 @@ switch study
         task.patchNames = {'low', 'medium', 'high'};
 
         task.decayRate = 8; % decay rate
-        task.decayFunction = 'linear'; % linear or exponential
+        task.rewardFunction = 'linear'; % linear or exponential
 
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;

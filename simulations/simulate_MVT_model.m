@@ -39,8 +39,12 @@ for ii = 1:agent.nStates % for each second in the task
 
         end
 
-        % observe reward in current state
-        reward = reward_at_t(timeNow,task.r0(patchType),task.decayRate, task.decayFunction); % reward depends on time in patch and patch type
+        switch task.rewardFunction
+            case 'exponential'
+                reward = reward_at_t_exp(timeNow,task.r0(patchType),task.decayRate); % reward depends on time in patch and patch type
+            case 'linear'
+                reward = reward_at_t_linear(timeNow,task.r0(patchType),task.decayRate); % reward depends on time in patch and patch type
+        end
 
         % update MVT decision variables
         if model.learnPatchRR == 1
