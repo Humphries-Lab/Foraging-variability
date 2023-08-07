@@ -14,18 +14,12 @@ close all;
 study = 'leheron'; 
 
 % parameters of choice model
-model = 'softmax'; % 'softmax', 'e-greedy', 'lapse'
+model = 'e-greedy'; % 'softmax', 'e-greedy', 'lapse'
 explore_parameter = logspace(-3,0,100);  % space of softmax temperatures to calculate; 
                         % maximum of beta=1 here, as actual temperature is
                         % beta * task.r0         
 lapse_parameter = 0.1; % required for lapse model only 
 t_max = 100;   % maximum time in patch (for explicit calculations)
-
-% exporting plots
-export_path = '/Users/exs165/Dropbox/foraging/code/analyticalComputation/figs/';
-figsize = [20 20 7 7];
-color.rich = [0.7 0.7 0.7];
-color.poor = [0.8 0.7 0.5];
 
 switch study
     case 'leheron'
@@ -36,8 +30,11 @@ switch study
         task  = buildTask(study,'separate');
 end
 
+color.rich = [0.10,0.62,0.47];
+color.poor = [0.46,0.44,0.70];
+
 % parameters of E and VAR calculation
-t_step = 0.0001;  % time-step at which to calculate estimates of E and VAR; 1 = trials (discrete Bernoulli process); <1 = approximation to continuous time
+t_step = 1;  % time-step at which to calculate estimates of E and VAR; 1 = trials (discrete Bernoulli process); <1 = approximation to continuous time
 
 %% computes E and VAR as function of exploration parameter
 n_steps = round(t_max / t_step);  % number of time-steps
@@ -92,6 +89,15 @@ end
 SD_leave = sqrt(VAR_leave);
 CV_leave = E_leave ./ SD_leave;
 
+%% save data for paper figures 
+data.E_leave = E_leave;
+data.SD_leave = SD_leave;
+data.beta = explore_parameter;
+
+save_name = ['fig1_expectedLT_', model, '_',study, '.mat'];
+save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
+save([save_path, save_name],'data');
+
 %% plot results
 E_fig = figure;
 semilogx(explore_parameter,E_leave); hold on
@@ -104,7 +110,6 @@ switch model
 end
 
 ylabel('Expected leaving time (s)')
-exportPPTfig(gcf,['E_leave_' model '_' task.rewardFunction],export_path)
 
 SD_fig = figure;
 semilogx(explore_parameter,SD_leave); hold on
@@ -116,9 +121,8 @@ switch model
         %set(gca,'XDir','reverse')
 end
 ylabel('SD of leaving time (s)')
-exportPPTfig(gcf,['SD_leave_' model '_' task.rewardFunction],export_path)
 
-%% etract expected beta values for specific study
+%% extract expected beta values for specific study
 
 [subjectLT_mean, subjectLT_sd] = loadLeaveT(study,task); % load mean and std of leaving times for each subject x patch x env
 
@@ -139,14 +143,11 @@ beta_poor = explore_parameter(ixPoor);
 figure(E_fig)
 line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)],'Color',color.rich)
 line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor)
-exportPPTfig(gcf,['E_leave_lines_' model '_' task.rewardFunction],export_path)
 
 % plot lines on SD too...
 figure(SD_fig)
 line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)],'Color',color.rich)
 line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor)
-
-exportPPTfig(gcf,['SD_leave_lines_', study, '_', model '_' task.rewardFunction],export_path)
 
 %% plot expected leaving time for these beta values, compared to experimental data
 figure
@@ -154,6 +155,10 @@ plot(1:numel(task.r0),E_leave(ixRich,:),'.--','Color',color.rich,'LineWidth',1.5
 plot(1:numel(task.r0),E_leave(ixPoor,:),'.--','Color',color.poor,'LineWidth',1.5)
 
 % plot against experimental data
+% plot(1:numel(task.r0),mean_leave_data(1,:),'.-','Color',color.rich,'LineWidth',1.5); hold on
+% plot(1:numel(task.r0),mean_leave_data(2,:),'.-','Color',color.poor,'LineWidth',1.5)
+
+% plot against optimal MVT 
 plot(1:numel(task.r0),mean_leave_data(1,:),'.-','Color',color.rich,'LineWidth',1.5); hold on
 plot(1:numel(task.r0),mean_leave_data(2,:),'.-','Color',color.poor,'LineWidth',1.5)
 
@@ -162,7 +167,6 @@ title(sprintf('beta rich = %f, beta poor = %f', round(beta_rich,3),round(beta_po
 
 set(gca,'XTick',1:numel(task.r0),'XTickLabel',task.patchNames,'XLim',[0 4],'YLim',[0 inf])
 
-exportPPTfig(gcf,['Patch_and_env_effect_', study, '_', model '_' task.rewardFunction],export_path)
 
 %% compute SD predictions for model, compared to participant data
 
@@ -194,8 +198,6 @@ scatter(1:task.nPatch, squeeze(subjectLT_sd(2,:,:)),[],color.poor, 'filled', 'Ma
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames)
 ylabel('SD of leaving time (s)')
 
-exportPPTfig(gcf,['SD_leave_data_', study, '_', model '_' task.rewardFunction],export_path)
-
 %% plot between environment SD effects 
 figure
 
@@ -206,8 +208,6 @@ scatter(1:task.nPatch, squeeze(subjectLT_sd(2,:,:)-subjectLT_sd(1,:,:)),'k', 'fi
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames)
 ylabel('Change in SD leaving time (s) (poor - rich)')
 %legend({'Model' 'Data'})
-
-exportPPTfig(gcf,['SD_between_env_', study, '_', model '_' task.rewardFunction],export_path)
 
 %% plot within environment SD effects 
 figure
@@ -237,5 +237,3 @@ scatter(1:nPatchDiff, points_real_change_in_SD_within(:,:,2),[],color.poor, 'fil
 set(gca,'XLim',[0 4],'XTick',1:nPatchDiff,'XTickLabel',patchDiffNames)
 ylabel('Change in SD leaving time (s) (patch yield)')
 %legend({'Model - rich', 'Model - poor', 'Data - rich', 'Data - poor'})
-
-exportPPTfig(gcf,['SD_within_env_', study, '_', model '_' task.rewardFunction],export_path)

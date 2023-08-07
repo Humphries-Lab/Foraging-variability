@@ -8,8 +8,6 @@ function exportPPTfig(h,figID,exportpath,varargin)
 % bottom-up B on screen, and W wide and H high (in cm)
 %
 
-% exportpath = 'C:\Users\lpzmdh\Dropbox\My Talks\Nottingham\BehaviouralNeuroGroup_May2018\';
-
 % common parameters
 format = 'png'; %'tiffn' for submission
 color = 'rgb';

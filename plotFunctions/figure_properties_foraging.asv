@@ -1,0 +1,40 @@
+% figure properties for foraging paper
+
+% format = 'png'; % for panels tricky for EPS (e.g. Pcolor plots)
+% color = 'rgb';
+% dpi = 600;
+% brewermap('demo') 
+
+fontsize = 8;
+fontname = 'Arial';
+M = 3; % marker size for univariate scatter plots
+sym = 'o';  % markers for scatters and strip plots
+
+Units = 'centimeters';
+
+% line widths
+widths.plot = 0.75;
+widths.error = 0.5;
+widths.axis = 0.5;
+
+%figsize = [20 20 7 7];
+
+% panel sizes
+figsize.square = [4 4];
+
+% % colours for matrix plots
+% colourmaps.rate_map = brewermap(15,'Greys');
+% colourmaps.inhibit_map = brewermap(15,'Blues');
+% colourmaps.excite_map = brewermap(15,'OrRd');
+% colourmaps.PC_map = brewermap(10,'PuOr');
+
+% colours for lines
+tmp = brewermap(3,'Dark2');
+color.rich = tmp(1,:);
+color.poor = tmp(3,:);
+color.patch = brewermap(3,'OrRd');
+
+colours.text = [0.3 0.3 0.3];
+
+% exportpath
+exportpath = '../';
