@@ -37,13 +37,13 @@ switch funcOptions.type
             case 'contrerashuerta'
                 numSubjects = 29;
                 % assume half of participants see rich vs poor block first
-                BlockOrder = [repmat([1 2], [funcOptions.numSubjects/2, 1]); repmat([2 1], [funcOptions.numSubjects/2, 1])];
+                BlockOrder = [repmat([1 2], [30/2, 1]); repmat([2 1], [30/2, 1])];
                 % TO DO: LOAD experienced Avg RR from data
                 experiencedAvgRR = nan*zeros([numSubjects,2]); % set to nan for now.
             case 'kane'
                 numSubjects = 8;
                 % assume half of participants see rich vs poor block first
-                BlockOrder = [repmat([1 2], [funcOptions.numSubjects/2, 1]); repmat([2 1], [funcOptions.numSubjects/2, 1])];
+                BlockOrder = [repmat([1 2], [numSubjects/2, 1]); repmat([2 1], [numSubjects/2, 1])];
                 % TO DO: LOAD experienced Avg RR from data
                 experiencedAvgRR = nan*zeros([numSubjects,2]); % set to nan for now.        end
         end
@@ -59,8 +59,7 @@ switch funcOptions.type
             df.data{iB} = struct2table(df.data{iB});
         end
 
-        df.nStates = zeros([numSubjects, task.blockNum]);
-        % df.patchOrder = cell([numSubjects, task.blockNum]);
+        df.nStates = repmat(task.blockTime, [numSubjects 2]);
         df.experiencedAvgRR = experiencedAvgRR;
         df.blockOrder = BlockOrder;
 
@@ -98,7 +97,7 @@ switch funcOptions.type
                         a = cell([numel(leaveT),1]);
                         % transform leaving times into stay/leave actions for each state
                         for ii = 1:numel(leaveT)
-                            a{ii} = repelem([stay leave], [leaveT(ii) task.travelTime]);
+                            a{ii} = repelem([stay leave], [leaveT(ii) task.travelTime(env(ii))]);
                         end
 
                         A = cat(2, a{:})'; % concatenate all actions

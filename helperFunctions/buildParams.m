@@ -25,9 +25,9 @@ switch funcOptions.type
                     switch modelOptions.betaFunction
                         case 'fit'
                             agentParams.params{iB}.beta = tmp{iB}.beta;
-                        case {'linear', 'exponential'}
+                        case {'scalar', 'exponential', 'hyperbolic'}
                             agentParams.params{iB}.lambda = tmp{iB}.lambda;
-                        case {'twoLinear', 'twoExponential'}
+                        case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
                             agentParams.params{iB}.lambda = tmp{iB}.lambda;
                             agentParams.params{iB}.gamma = tmp{iB}.gamma;
                     end
@@ -57,16 +57,16 @@ switch funcOptions.type
 
     case 'simulate_fit'
 
-        switch study
-            case 'leheron'
-                load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d', funcOptions.blockPresentation, modelOptions.modelNumber), 'minNLLFitParams');
-                if contains(funcOptions.blockPresentation, 'separate')
-                    agentParams = minNLLFitParams;
-                elseif contains(funcOptions.blockPresentation, 'combined')
-                    agentParams = cat(3, minNLLFitParams, minNLLFitParams); % duplicate for aligned block indexing later
-                end
-            case 'contrerashuerta'
-            case 'kane'
+        if contains(funcOptions.blockPresentation, 'separate')
+            load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, study), 'minNLLFitParams_rich', 'minNLLFitParams_poor');
+            agentParams.params{1} = minNLLFitParams_rich;
+            agentParams.params{2} = minNLLFitParams_poor;
+            agentParams.names = agentParams.params{1}.Properties.VariableNames;
+
+        elseif contains(funcOptions.blockPresentation, 'combined')
+            load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, study), 'minNLLFitParams');
+            agentParams.params{1} = minNLLFitParams;
+            agentParams.names = agentParams.params{1}.Properties.VariableNames;
         end
 
     case 'fit'
@@ -80,15 +80,15 @@ switch funcOptions.type
                 switch modelOptions.betaFunction
                     case 'fit'
                         agentParams.params.beta = exprnd(3,[funcOptions.nStarts,1]);
-                    case {'linear', 'exponential'}
+                    case {'scalar', 'exponential', 'hyperbolic'}
                         agentParams.params.lambda = rand([funcOptions.nStarts,1]);
-                    case {'twoLinear', 'twoExponential'}
+                    case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
                         agentParams.params.lambda = rand([funcOptions.nStarts,1]);
                         agentParams.params.gamma = rand([funcOptions.nStarts,1]);
                 end
 
             case 'epsilon-greedy'
-                agentParams.params.epsilon= rand([funcOptions.nStarts,1]);
+                agentParams.params.epsilon = rand([funcOptions.nStarts,1]);
 
             case 'epsilon-softmax'
                 agentParams.params.beta = exprnd(3,[funcOptions.nStarts,1]);

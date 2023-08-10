@@ -5,38 +5,36 @@
 % dpi = 600;
 % brewermap('demo') 
 
-fontsize = 10;
+fontsize = 11;
 fontname = 'Arial';
-M = 3; % marker size for univariate scatter plots
-sym = 'o';  % markers for scatters and strip plots
+M_alpha = 0.6; % marker alpha for scatter plots
 
 Units = 'centimeters';
 
 % line widths
-widths.plot = 1.5;
+widths.plot = 2;
 widths.error = 0.5;
 widths.axis = 0.5;
+widths.betaLines = 2;
 
 % panel sizes
 figsize.square = [20 20 7 7];
 
-% % colours for matrix plots
-% colourmaps.rate_map = brewermap(15,'Greys');
-% colourmaps.inhibit_map = brewermap(15,'Blues');
-% colourmaps.excite_map = brewermap(15,'OrRd');
-% colourmaps.PC_map = brewermap(10,'PuOr');
-
 % colours for lines
 tmp = brewermap(9,'Set1');
-color.rich = tmp(3,:);
-color.poor = tmp(5,:);
-color.patch = brewermap(3,'Blues');
+color.rich = tmp(2,:); % green
+color.poor = tmp(3,:); % purple
+color.patch = brewermap(3,'Oranges');
+color.general = tmp(8,:); % pink
 
 color.text = [0.3 0.3 0.3];
 
 % line types 
 lines.model = '.--';
 lines.exp = '.-';
+
+marker.rich = color.rich + (1-color.rich) * 0.2;
+marker.poor = color.poor + (1-color.poor) * 0.2;
 
 % exportpath
 export_path = '../outputs/';

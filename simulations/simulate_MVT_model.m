@@ -81,30 +81,34 @@ for ii = 1:agent.nStates % for each second in the task
                 switch model.betaFunction
                     case 'fit'
                         beta = params.beta;
-                    case 'linear'
+                    case 'scalar'
                         beta = params.lambda * 1/experiencedAvgRR;
                     case 'exponential'
                         beta = 1/(experiencedAvgRR^params.lambda);
-                    case 'twoLinear'
-                        beta = params.lambda * 1/experiencedAvgRR*params.gamma;
+                    case 'hyperbolic'
+                        beta = 1/(1 + params.lambda * experiencedAvgRR);
+                    case 'twoScalar'
+                        beta = params.lambda * 1/(params.gamma * experiencedAvgRR);
                     case 'twoExponential'
-                        beta = 1/(experiencedAvgRR^params.lambda * params.gamma);
+                        beta = params.lambda * 1/(experiencedAvgRR^params.gamma);
+                    case 'twoHyperbolic'
+                        beta = params.lambda * 1/(1 + params.lambda * experiencedAvgRR);
                 end
 
                 pAction = softmaxConstrain(estPatchRR(ii+1), rho(ii+1), beta);
 
             case 'epsilon-greedy'
-                pAction(leave) = p_leave_egreedy(params.epsilon);
-                pAction(stay) = 1 - pAction(leave);
+                pAction = [params.epsilon, 1-params.epsilon]; % is this correct when rho does not equal 0? i.e. not just a coin flip on the patch reward rate now
             case 'epsilon-softmax'
                 pAction = epsilon_softmaxConstrain(estPatchRR(ii+1), rho(ii+1), params.beta, params.epsilon);
             case 'deterministic'
-                pAction(stay) = estPatchRR(ii+1) > rho(ii+1);
+                pAction(stay) = double(estPatchRR(ii+1) > rho(ii+1));
                 pAction(leave) = 1 - pAction(stay);
         end
 
         if strcmp(funcOptions.type, 'fit') % if fitting data
             pSelected = pAction(action(ii+1)); % what is probability of action they actually took
+            pSelected(pSelected == 0) = eps(0); % prevent log(pselected = 0) going to infinity 
             logLikelihood = logLikelihood + log(pSelected); % update log likelihood
         else
             action(ii+1) = discreteinvrnd(pAction,1,1) ; % simulate their actions based on probabilities

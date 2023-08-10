@@ -9,14 +9,14 @@ addpath(genpath('~/Dropbox/foraging/code'))
 %% user options
 
 % study options
-study = 'kane'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1 so far 
+study = 'leheron'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1 so far 
 
 % model options
 modelNum = 1; % model type - see model table to check number to choose
 modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
 
 % simulation options
-simOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
+simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
 simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 % options below will override if simulating already fit parameters
@@ -42,7 +42,8 @@ model.paramNames = allParams.names;
 simOptions.nSim = size(allData.nStates,1); % refresh nSim if loaded fit data
 
 %% run simulations
-modelLT = zeros([task.nEnviron,task.nPatch,simOptions.nSim]); % store leaving times
+modelLT_mean = zeros([task.nEnviron,task.nPatch,simOptions.nSim]); % store leaving times
+modelLT_sd = zeros([task.nEnviron,task.nPatch,simOptions.nSim]); % store leaving times
 
 for iS = 1:simOptions.nSim
 
@@ -68,19 +69,28 @@ for iS = 1:simOptions.nSim
 
         % Extract leaving times (LT) for each patch and block type
         for iP = 1:task.nPatch
-            modelLT(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder == iP), 'omitnan');
+            modelLT_mean(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder == iP), 'omitnan');
+            modelLT_sd(agent.currentBlock,iP,iS) = std(results.leaveT(results.patchOrder == iP), 'omitnan');
+
         end
 
     end
 end
 
+% save for paper figures
+subject_leave_times_simulated.mean = modelLT_mean;
+subject_leave_times_simulated.sd = modelLT_sd;
+
+save_name = ['modelLT_', study, '_M', sprintf('%d',modelNum), '.mat'];
+save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
+save([save_path, save_name],'subject_leave_times_simulated');
 
 %% plot against participant data
 
 [dataLT] = loadLeaveT(study,task); % load mean leaving times for each subject x patch x env
 
 % summarise model data
-modelMean = mean(modelLT,3); 
+modelMean = mean(modelLT_mean,3); 
 subjectMean = mean(dataLT,3);
 
 figure

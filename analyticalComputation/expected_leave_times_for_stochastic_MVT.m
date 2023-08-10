@@ -14,7 +14,7 @@ close all;
 study = 'leheron'; 
 
 % parameters of choice model
-model = 'e-greedy'; % 'softmax', 'e-greedy', 'lapse'
+model = 'softmax'; % 'softmax', 'e-greedy', 'lapse'
 explore_parameter = logspace(-3,0,100);  % space of softmax temperatures to calculate; 
                         % maximum of beta=1 here, as actual temperature is
                         % beta * task.r0         
@@ -94,7 +94,7 @@ data.E_leave = E_leave;
 data.SD_leave = SD_leave;
 data.beta = explore_parameter;
 
-save_name = ['fig1_expectedLT_', model, '_',study, '.mat'];
+save_name = ['expectedLT_', model, '_',study, '.mat'];
 save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
 save([save_path, save_name],'data');
 
@@ -125,6 +125,14 @@ ylabel('SD of leaving time (s)')
 %% extract expected beta values for specific study
 
 [subjectLT_mean, subjectLT_sd] = loadLeaveT(study,task); % load mean and std of leaving times for each subject x patch x env
+
+% save for paper figures
+subject_leave_times.mean = subjectLT_mean;
+subject_leave_times.sd = subjectLT_sd;
+
+save_name = ['subjectLT_', study, '.mat'];
+save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
+save([save_path, save_name],'subject_leave_times');
 
 % group averages 
 mean_leave_data = mean(subjectLT_mean,3); 

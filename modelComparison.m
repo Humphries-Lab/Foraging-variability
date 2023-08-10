@@ -5,10 +5,10 @@ clear
 %% user options 
 study = 'leheron'; % study to simulate/fit data to
 
-model = [1, 4:9]; % model numbers to compare 
+model = [8:19]; % model numbers to compare 
 modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
 
-blockPresentation = 'separate'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+blockPresentation = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 %% AIC/BIC
 
@@ -24,7 +24,7 @@ models_AIC = zeros(nModels, nBlock);
 models_BIC = zeros(nModels, nBlock);
 
 for m = 1:nModels
-    load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d_new', blockPresentation, model(m)));
+    load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d_%s', blockPresentation, model(m),study), '-mat', 'BIC', 'AIC');
     ppts_AIC(:,:,m) = AIC;
     ppts_BIC(:,:,m) = BIC;
     models_AIC(m,:) = sum(AIC);
@@ -43,12 +43,20 @@ xticklabels(model)
 ylabel('sum BIC')
 title('BIC comparison of models (rich and poor)')
 
-
 % find best model for each participant 
 meanBIC = squeeze(mean(ppts_BIC,2));
 
-bestModel = sum(meanBIC == min(meanBIC, [], 2))
+if strcmp(blockPresentation,'combined')
+    bestModel = sum(meanBIC == min(meanBIC, [], 2))
+    varNames = {'combined', 'modelN'};
+elseif strcmp(blockPresentation,'separate')
+    bestModelRich = sum(squeeze(ppts_BIC(:,1,:)) == min(squeeze(ppts_BIC(:,1,:)), [], 2))
+    bestModelPoor = sum(squeeze(ppts_BIC(:,2,:)) == min(squeeze(ppts_BIC(:,2,:)), [], 2))
+    varNames = {'rich', 'poor', 'modelN'};
+end
 
-bestModelRich = sum(squeeze(ppts_BIC(:,1,:)) == min(squeeze(ppts_BIC(:,1,:)), [], 2));
-
-bestModelPoor = sum(squeeze(ppts_BIC(:,2,:)) == min(squeeze(ppts_BIC(:,2,:)), [], 2));
+% save for paper figures 
+models_BIC = array2table(models_BIC); models_BIC.modelN = model'; models_BIC.Properties.VariableNames = varNames;
+save_name = ['BIC_', blockPresentation, '_', study, '.mat'];
+save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
+save([save_path, save_name],'models_BIC');
