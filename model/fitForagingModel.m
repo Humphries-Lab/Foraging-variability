@@ -1,0 +1,157 @@
+%% fitting models to foraging data
+% Emma Scholey 9 Jun 2022
+% latest update 4 August 2023
+
+clear
+close all
+addpath(genpath('~/Dropbox/foraging/code/'))
+
+%% user options
+
+% study options
+study = 'kane'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1-7 separate so far.  
+
+% model options
+%modelNum = 3; % model type - see model table to check number to choose
+modelTable = readtable('~/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
+
+% fitting options
+fitOptions.type = 'fit'; % not simulating data here
+fitOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+fitOptions.nStarts = 50; % how many starts/iterations for fmincon search
+
+%% set up model and task
+
+% load task
+task = buildTask(study,fitOptions.blockPresentation);
+
+% load participant data
+allData = buildData(study,task,fitOptions);
+nSub = size(allData.data,2);
+
+for modelNum = [8:25] % for all models
+    % load model
+    model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
+
+    % load random set of start parameters for fmincon search
+    allParams = buildParams(study,task,model,fitOptions);
+    model.paramNames = allParams.names;
+
+    %% test NLL function on one participant
+
+    % for iS = 1:nSub
+    %     subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
+    %
+    %     for iB = 1:task.blockNum
+    %         iS
+    %         subj.nStates = allData.nStates(iS,iB);
+    %         subj.data = allData.data{iS}{iB};
+    %         subj.patchOrder = allData.patchOrder{iS,iB};
+    %         subj.env = allData.env{iS,iB};
+    %         subjParams = table2array(allParams.params(iS,:));
+    %
+    %         [NLL, out] = simulate_MVT_model(task,model,subj,subjParams, fitOptions);
+    %     end
+    % end
+
+    %% fitting for each person in group with different starting points
+    options = optimoptions('fmincon','Display','none'); % don't display
+    lb = allParams.lb;
+    ub = allParams.ub;
+
+    % initialise containers
+    minNLL = zeros([nSub, task.blockNum]);
+    minNLLFitParams = zeros([nSub, allParams.nParams, task.blockNum]);
+    BIC = zeros([nSub, task.blockNum]);
+    AIC = zeros([nSub, task.blockNum]);
+
+    paramArray = table2array(allParams.params);
+
+    for iS = 1:nSub
+        subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
+
+        for iB = 1:task.blockNum
+            iS
+            subj.nStates = allData.nStates(iS,iB);
+            subj.data = allData.data{iS}{iB};
+            subj.patchOrder = allData.patchOrder{iS,iB};
+            subj.env = allData.env{iS,iB};
+
+            NLLEval = zeros([fitOptions.nStarts, 1]);
+            FitParams = zeros([fitOptions.nStarts, allParams.nParams]);
+
+            % Run fmincon
+            parfor ii = 1:fitOptions.nStarts
+                params0 =  paramArray(ii,:);
+
+                f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
+                [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
+            end
+
+            % Find the best fitting parameter values
+            minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
+            ix = find(minNLL == NLLEval);    % indices of location of minimum, to find the corresponding best fit parameters
+            minNLLFitParams(iS,:,iB) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
+
+            % Calculate BIC/AIC
+            BIC(iS,iB) = allParams.nParams * log(allData.nObservations(iS)) + 2*minNLL;
+            AIC(iS,iB) = 2/allData.nObservations(iS) * minNLL + 2 * allParams.nParams/allData.nObservations(iS);
+
+        end
+    end
+    clear FitParams NLLEval iS ix
+
+
+    %% plots
+
+%     close all
+% 
+%     if strcmp(fitOptions.blockPresentation,'separate')
+%         plotNames = task.environNames;
+%     elseif strcmp(fitOptions.blockPresentation,'combined')
+%         plotNames = {'combined'};
+%     end
+% 
+%     if allParams.nParams > 1
+%         combinations = nchoosek(1:allParams.nParams,2);
+% 
+%         for iB = 1:task.blockNum
+%             figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
+% 
+%             for i= 1:size(combinations,1)
+%                 nexttile;
+%                 scatter(minNLLFitParams(:,combinations(i,1),iB),minNLLFitParams(:,combinations(i,2),iB))
+%                 xlabel(sprintf('Fit %s', model.paramNames{:,combinations(i,1)}))
+%                 ylabel(sprintf('Fit %s', model.paramNames{:,combinations(i,2)}))
+%                 title(plotNames{iB})
+%             end
+%         end
+%         title(tl, 'Best fit parameter distributions')
+%     else
+%         figure
+%         tl = tiledlayout('flow', 'TileSpacing', 'Compact');
+%         for iB = 1:task.blockNum
+%             nexttile;
+%             boxchart(minNLLFitParams(:,:,iB))
+%             xlabel(sprintf('Fit %s', model.paramNames{1}))
+%             title(plotNames{iB})
+%         end
+%     end
+
+
+    %% save results
+    m = median(minNLLFitParams);
+
+    if strcmp(fitOptions.blockPresentation, 'separate')
+        minNLLFitParams_rich = array2table(minNLLFitParams(:,:,1), "VariableNames",model.paramNames);
+        minNLLFitParams_poor = array2table(minNLLFitParams(:,:,2), "VariableNames",model.paramNames);
+        save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d_%s', model.modelNumber,study);
+        save(save_name, 'AIC', 'BIC', 'minNLLFitParams_rich', 'minNLLFitParams_poor')
+    elseif strcmp(fitOptions.blockPresentation, 'combined')
+        minNLLFitParams = array2table(minNLLFitParams, "VariableNames",model.paramNames);
+        save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_combined_M%d_%s', model.modelNumber,study);
+        save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
+    end
+
+
+end

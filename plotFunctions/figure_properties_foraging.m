@@ -19,14 +19,17 @@ widths.betaLines = 2;
 
 % panel sizes
 figsize.square = [20 20 7 7];
+figsize.rectangle = [20 20 14 7];
 
 % colours for lines
-tmp = brewermap(9,'Set1');
-color.rich = tmp(2,:); % green
-color.poor = tmp(3,:); % purple
+tmp_set1 = brewermap(9,'Set1');
+color.rich = tmp_set1(2,:); % green
+color.poor = tmp_set1(3,:); % purple
 color.patch = brewermap(3,'Oranges');
-color.general = tmp(8,:); % pink
+color.general = tmp_set1(8,:); % pink
 
+tmp_accent = brewermap(8,'Accent');
+color.highlight = tmp_accent(6,:);
 color.text = [0.3 0.3 0.3];
 
 % line types 

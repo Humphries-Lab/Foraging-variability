@@ -1,0 +1,80 @@
+%%% Figure 4 foraging paper - beta function analysis
+% Emma Scholey 10 Aug 2023 
+
+clearvars; close all
+
+dataPath = '/Users/exs165/Dropbox/foraging/paper/figs/data/fig5/';
+
+run figure_properties_foraging.m
+
+
+%% Panel: BIC comparison for model
+load([dataPath 'BIC_combined_leheron.mat'])
+
+modelNames = {'scalar MVT', 'scalar block', 'scalar RW',...
+              'exp MVT', 'exp block', 'exp RW',...
+              'hyperbolic MVT', 'hyperbolic block', 'hyperbolic RW',...
+              '2 scalar MVT', '2 scalar block', '2 scalar RW',...
+              '2 exp MVT', '2 exp block', '2 exp RW'};
+
+h = figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.rectangle);
+bar(models_BIC.combined(1:15,:),'FaceColor',color.general, 'EdgeColor', color.general); hold on
+
+% find best model and highlight
+minBIC = min(models_BIC.combined);
+bestModel = find(models_BIC.combined == minBIC);
+bar(bestModel,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
+ylabel('BIC (sum)')
+set(gca,'XTick',[1:15],'XTickLabel',modelNames, 'YLim', [12000, 13000],'XTickLabelRotation',90)
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_beta_function_BIC'],'-dsvg')
+
+%% Panel: participant leave times vs best fit beta function model
+
+load([dataPath 'subjectLT_leheron'])
+meanLT = mean(subject_leave_times.mean,3);
+meanSD = mean(subject_leave_times.sd,3);
+subjSEM = std(subject_leave_times.mean, [], 3)./sqrt(size(subject_leave_times.mean,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanLT(1,:),subjSEM(1,:),lines.exp,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanLT(2,:),subjSEM(2,:),lines.exp,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('Patch leaving time (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig2_LeHeron_subjectLT_softmax'],'-dsvg')
+
+load([dataPath 'modelLT_leheron_M9'])
+meanLT_simulated = mean(subject_leave_times_simulated.mean,3);
+simSEM = std(subject_leave_times_simulated.mean, [], 3)./sqrt(size(subject_leave_times_simulated.mean,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanLT_simulated(1,:),simSEM(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanLT_simulated(2,:),simSEM(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('Patch leaving time (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_LeHeron_simulatedLT_beta_function'],'-dsvg')
+
+
+%% Panel: correlation of lambda fit with LT for each environment
+load([dataPath 'fitting_results_combined_M9_leheron.mat'])
+
+meanLT_subj = squeeze(mean(mean(subject_leave_times.mean(:,:,:),1),2));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+scatter(minNLLFitParams.lambda, meanLT_subj,'MarkerFaceColor',color.general,'MarkerEdgeColor', color.general, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+set(gca,'XScale', 'log','YLim', [0 50])
+xlabel('Fit lambda (higher = exploit)')
+ylabel('Patch leaving time (s)')
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_LeHeron_fit_lambda_LT_correlation'],'-dsvg')
+
+% statistics
+[pearson_coeff, p_val]  = corr(minNLLFitParams.lambda, meanLT_subj)

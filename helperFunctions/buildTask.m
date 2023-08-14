@@ -102,7 +102,24 @@ switch study
         % patch order in poor environment
         task.patchOrder{2} = repmat([2 3 1 2 1 3 1 2 3 1 3 2 1 2 3 3 1 2 1 3 2], [1,40]);
 
-        % TO DO: find opt average reward rate 
-        %task.optAvgRR(1) = 23.7388; % optimal average RR in rich environment
-        %task.optAvgRR(2) = 19.2564; % optimal average RR in poor environment
+        % each subject in Kane's dataset has a different optimal MVT, so
+        % calculate this from their data
+
+        T = readtable('~/Dropbox/foraging/raw_data/replication_datasets/kane/kane2019-rats-fig-1-data.csv');
+        T = T(contains(T.Experiment,'Travel'),:); % only looking at travel time experiment
+
+        numSubjects = size(unique(T.Subject),1);
+        subID = unique(unique(T.Subject));
+
+        for iS = 1:numSubjects
+            subjLT = T(T.Subject == subID(iS),:); % extract their summarised leaving times
+            for iE = 1:task.nEnviron % for each environment, find their average reward rate
+                % take the average of averageRR across the 5
+                % testing days
+                currentEnv = subjLT(subjLT.Travel == task.travelTime(iE)*10,:);
+                task.allOptAvgRR(iS,iE) = mean(unique(currentEnv.CumulativeRate)); % their optimal average RR
+            end
+        end
+
+        task.optAvgRR = mean(task.allOptAvgRR); % just take average across all subjects to keep consistent with other datasets for now
 end

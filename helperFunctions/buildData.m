@@ -12,7 +12,7 @@ switch funcOptions.type
 
         % generate fake agent session
         df.blockOrder = [repmat([1 2], [funcOptions.nSim/2, 1]); repmat([2 1], [funcOptions.nSim/2, 1])];
-        df.experiencedAvgRR = zeros([funcOptions.nSim,2]);
+        df.experiencedAvgRR = repmat([task.optAvgRR], [funcOptions.nSim,1]); % just assume experiencedAvgRR is the same as optimal, if simulating from scratch 
         df.nStates = repmat(task.blockTime, [funcOptions.nSim 2]);
 
         % set up empty container to store their data
@@ -44,8 +44,31 @@ switch funcOptions.type
                 numSubjects = 8;
                 % assume half of participants see rich vs poor block first
                 BlockOrder = [repmat([1 2], [numSubjects/2, 1]); repmat([2 1], [numSubjects/2, 1])];
-                % TO DO: LOAD experienced Avg RR from data
-                experiencedAvgRR = nan*zeros([numSubjects,2]); % set to nan for now.        end
+
+                T = readtable('~/Dropbox/foraging/raw_data/replication_datasets/kane/kane2019-rats-fig-1-data.csv');
+                T = T(contains(T.Experiment,'Travel'),:); % only looking at travel time experiment
+
+                numSubjects = size(unique(T.Subject),1);
+                subID = unique(unique(T.Subject));
+
+                for iS = 1:numSubjects % for each subject
+                    subjLT = T(T.Subject == subID(iS),:); % extract their summarised leaving times
+                    % load each subjects' experienced AvgRR for combined fitting
+                    for iE = 1:task.nEnviron % for each environment, find their average reward rate
+                        % take the average of averageRR across the 5
+                        % testing days
+                        currentEnv = subjLT(subjLT.Travel == task.travelTime(iE)*10,:);
+                        endTrials = find(currentEnv.X == 1)-1; % find indices for the last trial of each session
+                        endTrials = endTrials(2:end); % remove first trial
+                        endTrials(end+1) = numel(currentEnv.X); % add on last trial
+
+                        % find experienced avgRR for each day 
+                        currentAvgRR = currentEnv.CumulativeReward_mL(endTrials)./currentEnv.CumulativeTime(endTrials);
+                        % average over the 5 testing days 
+                        experiencedAvgRR(iS,iE) = mean(currentAvgRR); 
+                    end
+                end
+
         end
 
         % set up empty container to store their data
@@ -175,16 +198,9 @@ switch funcOptions.type
                 numSubjects = size(unique(T.Subject),1);
                 subID = unique(unique(T.Subject));
 
-                % load experiencedAvgRR
-                df.experiencedAvgRR = nan*zeros([numSubjects,2]); % set to nan for now as not fitting this model
-
                 for iS = 1:numSubjects % for each subject
 
                     subjLT = T(T.Subject == subID(iS),:); % extract their summarised leaving times
-
-                    % PressPatch = state 1:8. Add [1 2 3] on at the end for
-                    % travel time. FOr moelling do all days, assuming
-                    % continous (like with Sebs task)
 
                     for iB = 1:task.blockNum  % 1 if fitting together, 2 if fitting separately
 
@@ -231,9 +247,25 @@ switch funcOptions.type
                         df.data{iS}{iB}.estPatchRR = zeros(numel(A)+1,1); % estimated patchRR
 
                         df.data{iS}{iB} = struct2table(df.data{iS}{iB});
+                   
                     end
 
+                    for iE = 1:task.nEnviron % for each environment, find their average reward rate
+                        % take the average of averageRR across the 5
+                        % testing days
+                        currentEnv = subjLT(subjLT.Travel == task.travelTime(iE)*10,:);
+                        endTrials = find(currentEnv.X == 1)-1; % find indices for the last trial of each session
+                        endTrials = endTrials(2:end); % remove first trial
+                        endTrials(end+1) = numel(currentEnv.X); % add on last trial
+
+                        % find experienced avgRR for each day 
+                        currentAvgRR = currentEnv.CumulativeReward_mL(endTrials)./currentEnv.CumulativeTime(endTrials);
+                        % average over the 5 testing days 
+                        df.experiencedAvgRR(iS,iE) = mean(currentAvgRR); 
+                    end                                   
                 end
+
+
         end
 
 end

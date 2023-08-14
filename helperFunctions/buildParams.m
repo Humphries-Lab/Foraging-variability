@@ -66,6 +66,7 @@ switch funcOptions.type
         elseif contains(funcOptions.blockPresentation, 'combined')
             load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, study), 'minNLLFitParams');
             agentParams.params{1} = minNLLFitParams;
+            agentParams.params{2} = minNLLFitParams; % replicate for '2nd' simulation block
             agentParams.names = agentParams.params{1}.Properties.VariableNames;
         end
 
