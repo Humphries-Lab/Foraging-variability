@@ -1,98 +1,129 @@
-%% parameter recovery
+%% ---- Script to recover MVT model for patch foraging tasks ---- %%
+% Emma Scholey
+% latest update 14 August 2023
 
 clear
-close all;
-addpath(genpath('./foraging/code'))
+close all
+
+addpath('./helperFunctions')
+addpath('./analyticalComputation')
 
 %% user options
-model = 5; % model type - see model table to check number to choose
-blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
-% note that if choosing 'separate', select below which block to look at
-% (rich 1 or poor 2) 
-block = 1;
 
-nSim = 250; % number of iterations to recover
+% study options
+study = 'leheron'; % study to simulate/fit data to.
 
-%% set up agent and task
-SetUpEnviron % get the environment parameters
-blockOrder = [1 2]; 
+% model options
+modelNum = 1; % model type - see model table to check number to choose
+modelTable = readtable('./foragingModelTable.xlsx'); 
 
-[~, ~, paramsIndex] = buildForagingModel(model);
-numParams = sum(paramsIndex);
+% simulation options
+funcOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
+funcOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+funcOptions.nSim = 100;
 
-blockNames = {'rich', 'poor'};
-paramNames = {'alpha patch/Q', 'alpha rho', 'beta'};
-paramNames = paramNames(paramsIndex);
+%% set up
 
-%% fmincon options
-lowerBounds = [0, 0, 0];lowerBounds = lowerBounds(paramsIndex);
-upperBounds = [1, 1, 100];upperBounds = upperBounds(paramsIndex);
-options = optimoptions('fmincon','Display','none'); % don't display
+% load task
+task = buildTask(study,funcOptions.blockPresentation); % set up task
 
-nStarts = 5; % how many starting locations to begin fitting (avoid local minima)
+% load dataframe container for simulations
+allData = buildData(study,task,funcOptions);
 
-minNLLFitParams = zeros([nSim, numParams]);
-simParams = zeros([nSim, numParams]);
+% load model
+model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
-for ii = 1:nSim
-    ii
+% load agent parameters 
+funcOptions.type = 'fit'; % we want to generate new parameters from scratch, not load existing. Temporarily change flag.
+allParams = buildParams(study,task,model,funcOptions); clear params
+model.paramNames = allParams.names;
+funcOptions.type = 'simulate_new'; % revert back 
 
-    %% simulate data
-    simData = table; % container table for simulated data
+%% run simulations
 
-    % agent parameters - same parameters for both blocks
-    params = [defineBoundedParam(0, 1), defineBoundedParam(0, 0.05), exprnd(1)];
-    params = params(paramsIndex);
-    simParams(ii,:) = params;
+for iS = 1:funcOptions.nSim
 
-    for blockI = 1:2
+    for iB = 1:task.nEnviron
 
-        blockType = blockOrder(blockI); % for recovery, assume always seen rich block first (same order as blockI)
-        Env.BlockPatchOrder = Env.PatchOrder{blockType}; % set the current patch order
+        iS
 
-        if blockI == 2 && contains(blockFlag, 'combined') % we need to specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
-            startValues.Rho = out.Rho(end); % first value is last value from previous block
-            startValues.EstimatedPatchRR = out.EstimatedPatchRR(end);
-        else
-            startValues.Rho = 0;
-            startValues.EstimatedPatchRR = 0;
+        % what is the agent data for this block?
+        agent.currentBlock = allData.blockOrder(iS,iB); % get current block for this subject based on their block order
+
+        agent.experiencedAvgRR = allData.experiencedAvgRR(iS,:); 
+        agent.nStates = allData.nStates(iS,agent.currentBlock);
+        agent.data = allData.data{agent.currentBlock}; % empty generic container
+        agent.patchOrder = task.patchOrder{agent.currentBlock}'; % generic patch order for all participants
+
+        agentParams = table2array(allParams.params(iS,:)); % specific for the subject. Use same parameter combo for each block
+
+        if iB == 2 && strcmp(funcOptions.blockPresentation, 'combined') % specify start values if it's the 2nd block and we're doing combined fitting of both blocks together
+            agent.data.rho(1) = out.rho(end);
         end
 
-        sim_f = buildForagingModel(model, Env, [], startValues); % get function handle for this model
-        out = sim_f(params); % simulate with the parameters
+        [~,results,out] = simulate_MVT_model(task,model,agent,agentParams,funcOptions);
 
-        % make a table of simulated data, similar to the real participant
-        % data (whilst it's a bit clunky, it helps for understanding if/how NLL is working differently to
-        % simulation script) 
-        tmp = table; 
-        tmp.leaveT = out.LeavingTime;
-        tmp.patch = out.PatchOrder';
-        tmp.env = repelem(blockI,numel(tmp.leaveT))'; 
-
-        simData = [simData; tmp]; % concatenate onto previous block 
+        simData.data{iS}{iB} = out; 
+        simData.results{iS}{iB} = results;
+        simData.nObservations(iS,iB) = sum(out.action == 2);
     end
-    
-    simSubjData = PrepSubjData(simData, block, Env, blockFlag); % transform into state actions ready for fitting
-
-    %% fit back to the simulated data 
-
-    [~, NLL_f] = buildForagingModel(model, Env, simSubjData); % need to update NLL function with new subject data each time
-
-    NLLEval = zeros([nStarts, 1]);
-    fitParams = zeros([nStarts, numParams]);
-
-    % recover data
-    parfor mm = 1:nStarts
-        params0 = [defineBoundedParam(0, 1), defineBoundedParam(0, 1), exprnd(1)];
-        params0 = params0(paramsIndex);
-        [fitParams(mm,:),NLLEval(mm)] = fmincon(NLL_f,params0,[],[],[],[],lowerBounds, upperBounds,[],options);
-    end
-
-    minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
-    ix = find(minNLL == NLLEval);    % indices of location of minimum, to find the corresponding best fit parameters
-    minNLLFitParams(ii,:) = fitParams(ix(1),:); % get corresponding parameter values at lowest NLL - take 1st index if two lowest NLL
-
 end
+
+%% fit back to the simulated data 
+funcOptions.type = 'fit'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
+funcOptions.nSim = 5; % how many search points 
+
+% load random set of start parameters for fmincon search
+searchParams = buildParams(study,task,model,funcOptions);
+paramArray = table2array(allParams.params);
+
+options = optimoptions('fmincon','Display','none'); % don't display
+lb = allParams.lb;
+ub = allParams.ub;
+
+% initialise containers
+minNLL = zeros([numel(simData.data), task.blockNum]);
+minNLLFitParams = zeros([numel(simData.data), allParams.nParams, task.blockNum]);
+BIC = zeros([numel(simData.data), task.blockNum]);
+AIC = zeros([numel(simData.data), task.blockNum]);
+
+for iS = 1:numel(simData.data) % for all simulated combinations
+
+    subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); 
+
+    for iB = 1:task.blockNum
+        iS
+        subj.nStates = allData.nStates(iS,iB);
+        subj.data = simData.data{iS}{iB};
+        subj.data.estPatchRR = zeros(subj.nStates+1,1);   % refresh for recovery
+        subj.data.rho = zeros(subj.nStates+1,1);    % refresh for recovery
+        subj.patchOrder = simData.results{iS}{iB}.patchOrder;
+        subj.env = simData.results{iS}{iB}.env;
+
+        NLLEval = zeros([funcOptions.nSim, 1]);
+        FitParams = zeros([funcOptions.nSim, allParams.nParams]);
+
+        % Run fmincon
+        for ii = 1:funcOptions.nSim
+            params0 =  paramArray(ii,:);
+
+            f = @(x0)simulate_MVT_model(task,model,subj,x0,funcOptions);
+            [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
+        end
+
+        % Find the best fitting parameter values
+        minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
+        ix = find(minNLL == NLLEval);    % indices of location of minimum, to find the corresponding best fit parameters
+        minNLLFitParams(iS,:,iB) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
+
+        % Calculate BIC/AIC
+        BIC(iS,iB) = allParams.nParams * log(simData.nObservations(iS,iB)) + 2*minNLL;
+        AIC(iS,iB) = 2/simData.nObservations(iS,iB) * minNLL + 2 * allParams.nParams/simData.nObservations(iS,iB);
+
+    end
+end
+clear FitParams NLLEval iS ix
+
 
 %% plot correlation - simulated value versus actual value
 close all

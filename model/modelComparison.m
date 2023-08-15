@@ -3,10 +3,10 @@
 clear  
 
 %% user options 
-study = 'leheron'; % study to simulate/fit data to
+study = 'contrerashuerta'; % study to simulate/fit data to
 
 model = [8:22]; % model numbers to compare 
-modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
+modelTable = readtable('./foragingModelTable.xlsx'); 
 
 blockPresentation = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
@@ -24,7 +24,7 @@ models_AIC = zeros(nModels, nBlock);
 models_BIC = zeros(nModels, nBlock);
 
 for m = 1:nModels
-    load(sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_%s_M%d_%s', blockPresentation, model(m),study), '-mat', 'BIC', 'AIC');
+    load(sprintf('../data/fitting_data/fitting_results_%s_M%d_%s', blockPresentation, model(m),study), '-mat', 'BIC', 'AIC');
     ppts_AIC(:,:,m) = AIC;
     ppts_BIC(:,:,m) = BIC;
     models_AIC(m,:) = sum(AIC);
@@ -33,7 +33,7 @@ end
 
 % compute posterior probabilities 
 meanBICs = mean(models_BIC,2);
-posteriorProbabilities = BICposterior(meanBICs);
+%posteriorProbabilities = BICposterior(meanBICs);
 
 % plot
 
@@ -58,5 +58,5 @@ end
 % save for paper figures 
 models_BIC = array2table(models_BIC); models_BIC.modelN = model'; models_BIC.Properties.VariableNames = varNames;
 save_name = ['BIC_', blockPresentation, '_', study, '.mat'];
-save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
+save_path = '../data/fig_data/';
 save([save_path, save_name],'models_BIC');

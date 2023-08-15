@@ -4,16 +4,18 @@
 
 clear
 close all
-addpath('.\Main\Sub')
+
+addpath('./helperFunctions')
+addpath('./analyticalComputation')
 
 %% user options
 
 % study options
-study = 'kane'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1 so far
+study = 'kane'; % study to simulate/fit data to. 
 
 % model options
 modelNum = 1; % model type - see model table to check number to choose
-modelTable = readtable('/Users/exs165/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
+modelTable = readtable('./foragingModelTable.xlsx'); 
 
 % simulation options
 simOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
@@ -82,7 +84,7 @@ subject_leave_times_simulated.mean = modelLT_mean;
 subject_leave_times_simulated.sd = modelLT_sd;
 
 save_name = ['modelLT_', study, '_M', sprintf('%d',modelNum), '.mat'];
-save_path = '/Users/exs165/Dropbox/foraging/paper/figs/data/';
+save_path = '../data/simulation_data/';
 save([save_path, save_name],'subject_leave_times_simulated');
 
 %% plot against participant data

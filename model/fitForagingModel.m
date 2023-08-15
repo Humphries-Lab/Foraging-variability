@@ -4,21 +4,23 @@
 
 clear
 close all
-addpath(genpath('~/Dropbox/foraging/code/'))
+
+addpath('./helperFunctions')
+addpath('./analyticalComputation')
 
 %% user options
 
 % study options
-study = 'kane'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1-7 separate so far.  
+study = 'contrerashuerta'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1-7 separate so far.  
 
 % model options
 %modelNum = 3; % model type - see model table to check number to choose
-modelTable = readtable('~/Dropbox/foraging/code/foragingModelTable.xlsx'); % change directory
+modelTable = readtable('./foragingModelTable.xlsx'); 
 
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
 fitOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
-fitOptions.nStarts = 50; % how many starts/iterations for fmincon search
+fitOptions.nSim = 1; % how many starts/iterations for fmincon search
 
 %% set up model and task
 
@@ -39,20 +41,20 @@ for modelNum = [8:25] % for all models
 
     %% test NLL function on one participant
 
-    % for iS = 1:nSub
-    %     subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
-    %
-    %     for iB = 1:task.blockNum
-    %         iS
-    %         subj.nStates = allData.nStates(iS,iB);
-    %         subj.data = allData.data{iS}{iB};
-    %         subj.patchOrder = allData.patchOrder{iS,iB};
-    %         subj.env = allData.env{iS,iB};
-    %         subjParams = table2array(allParams.params(iS,:));
-    %
-    %         [NLL, out] = simulate_MVT_model(task,model,subj,subjParams, fitOptions);
-    %     end
-    % end
+%     for iS = 1:nSub
+%         subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
+%     
+%         for iB = 1:task.blockNum
+%             iS
+%             subj.nStates = allData.nStates(iS,iB);
+%             subj.data = allData.data{iS}{iB};
+%             subj.patchOrder = allData.patchOrder{iS,iB};
+%             subj.env = allData.env{iS,iB};
+%             subjParams = table2array(allParams.params(iS,:));
+%     
+%             [NLL, out] = simulate_MVT_model(task,model,subj,subjParams, fitOptions);
+%         end
+%     end
 
     %% fitting for each person in group with different starting points
     options = optimoptions('fmincon','Display','none'); % don't display
@@ -77,11 +79,11 @@ for modelNum = [8:25] % for all models
             subj.patchOrder = allData.patchOrder{iS,iB};
             subj.env = allData.env{iS,iB};
 
-            NLLEval = zeros([fitOptions.nStarts, 1]);
-            FitParams = zeros([fitOptions.nStarts, allParams.nParams]);
+            NLLEval = zeros([fitOptions.nSim, 1]);
+            FitParams = zeros([fitOptions.nSim, allParams.nParams]);
 
             % Run fmincon
-            parfor ii = 1:fitOptions.nStarts
+            parfor ii = 1:fitOptions.nSim
                 params0 =  paramArray(ii,:);
 
                 f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
@@ -94,8 +96,8 @@ for modelNum = [8:25] % for all models
             minNLLFitParams(iS,:,iB) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
 
             % Calculate BIC/AIC
-            BIC(iS,iB) = allParams.nParams * log(allData.nObservations(iS)) + 2*minNLL;
-            AIC(iS,iB) = 2/allData.nObservations(iS) * minNLL + 2 * allParams.nParams/allData.nObservations(iS);
+            BIC(iS,iB) = allParams.nParams * log(allData.nObservations(iS,iB)) + 2*minNLL;
+            AIC(iS,iB) = 2/allData.nObservations(iS,iB) * minNLL + 2 * allParams.nParams/allData.nObservations(iS,iB);
 
         end
     end
@@ -145,11 +147,11 @@ for modelNum = [8:25] % for all models
     if strcmp(fitOptions.blockPresentation, 'separate')
         minNLLFitParams_rich = array2table(minNLLFitParams(:,:,1), "VariableNames",model.paramNames);
         minNLLFitParams_poor = array2table(minNLLFitParams(:,:,2), "VariableNames",model.paramNames);
-        save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_separate_M%d_%s', model.modelNumber,study);
+        save_name = sprintf('../data/fitting_data/fitting_results_separate_M%d_%s', model.modelNumber,study);
         save(save_name, 'AIC', 'BIC', 'minNLLFitParams_rich', 'minNLLFitParams_poor')
     elseif strcmp(fitOptions.blockPresentation, 'combined')
         minNLLFitParams = array2table(minNLLFitParams, "VariableNames",model.paramNames);
-        save_name = sprintf('~/Dropbox/foraging/outputs/fitting/fitting_results_combined_M%d_%s', model.modelNumber,study);
+        save_name = sprintf('../data/fitting_data/fitting_results_combined_M%d_%s', model.modelNumber,study);
         save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
     end
 

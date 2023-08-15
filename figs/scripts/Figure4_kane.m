@@ -3,7 +3,9 @@
 
 clearvars; close all
 
-dataPath = '/Users/exs165/Dropbox/foraging/paper/figs/data/fig4/';
+dataPath = '../../data/fig_data/fig4/';
+
+addpath('./plotFunctions')
 
 run figure_properties_foraging.m
 

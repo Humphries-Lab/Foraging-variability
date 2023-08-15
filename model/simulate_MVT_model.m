@@ -118,6 +118,7 @@ for ii = 1:agent.nStates % for each second in the task
         if action(ii+1) == leave
             t = task.timeStep; % if next action is leave, then reset travel time counter
             leaveT(patchN,1) = timeNow; % log the patch leaving time
+            cB(patchN,1) = currentBlock; % log the environment for this patch (for recovery purposes) 
         end
 
         timeNow = timeNow+task.timeStep; % time in patch increases
@@ -156,14 +157,13 @@ for ii = 1:agent.nStates % for each second in the task
 
 end
 
-
 out.rho = rho;
 out.estPatchRR = estPatchRR;
 out.action = action;
 
-results.patchOrder = agent.patchOrder(1:numel(leaveT));
+results.patchOrder = agent.patchOrder(1:numel(leaveT)+1); % account for extra patch they may have been in before task simulation ended
 results.leaveT = leaveT;
-results = struct2table(results);
+results.env = [cB,currentBlock];
 
 negLL = -logLikelihood;
 

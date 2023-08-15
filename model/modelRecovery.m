@@ -1,8 +1,10 @@
 % model recovery of foraging models
 % Emma Scholeyl, 17 March 2023
-clearvars
-close all;
+clear
+close all
 
+addpath('./helperFunctions')
+addpath('./analyticalComputation')
 %% user options
 allModels = 1:5;
 blockFlag = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
