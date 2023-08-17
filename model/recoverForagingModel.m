@@ -11,18 +11,19 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-study = 'leheron'; % study to simulate/fit data to.
+study = 'kane'; % study to simulate/fit data to.
 
 % model options
-modelNum = 1; % model type - see model table to check number to choose
+modelNum = 5; % model type - see model table to check number to choose
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
 % simulation options
-funcOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
 funcOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
-funcOptions.nSim = 100;
 
 %% set up
+% simulation options
+funcOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
+funcOptions.nSim = 100;
 
 % load task
 task = buildTask(study,funcOptions.blockPresentation); % set up task
@@ -75,7 +76,7 @@ funcOptions.nSim = 5; % how many search points
 
 % load random set of start parameters for fmincon search
 searchParams = buildParams(study,task,model,funcOptions);
-paramArray = table2array(allParams.params);
+paramArray = table2array(searchParams.params);
 
 options = optimoptions('fmincon','Display','none'); % don't display
 lb = allParams.lb;
@@ -104,7 +105,7 @@ for iS = 1:numel(simData.data) % for all simulated combinations
         FitParams = zeros([funcOptions.nSim, allParams.nParams]);
 
         % Run fmincon
-        for ii = 1:funcOptions.nSim
+        parfor ii = 1:funcOptions.nSim
             params0 =  paramArray(ii,:);
 
             f = @(x0)simulate_MVT_model(task,model,subj,x0,funcOptions);
@@ -125,63 +126,51 @@ end
 clear FitParams NLLEval iS ix
 
 
-%% plot correlation - simulated value versus actual value
+%% plots
 close all
-figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
-% find 'bad' alpha rho values
-%thresh = 0.25;
-%ind = abs(simParams(:,2) - minNLLFitParams(:,2)) > thresh;
-
-% for each parameter, plot sim vs fit
-for i= 1:numParams
-    ax = nexttile;
-    plot(simParams(:,i), minNLLFitParams(:,i), 'o', 'markersize', 8, 'linewidth', 1); hold on;
-    %plot(simParams(ind, i), minNLLFitParams(ind,i), 'o', 'color', 'blue', 'markersize', 8, 'linewidth', 1,'markerfacecolor', [1 1 1]*0.5)
-    title(paramNames{i})
-    xlabel(sprintf('Simulated %s', paramNames{i}))
-    ylabel(sprintf('Fit %s', paramNames{i}))
-    if contains(paramNames{i},'beta')
-        corrcoef(log(simParams(:,i)),log(minNLLFitParams(:,i))) % do correlation between logs of beta's
-        set(ax,'yscale' ,'log'); set(ax,'xscale' ,'log')
-    else
-        corrcoef(simParams(:,i),minNLLFitParams(:,i))
-    end
+if strcmp(funcOptions.blockPresentation,'separate')
+    plotNames = task.environNames;
+elseif strcmp(funcOptions.blockPresentation,'combined')
+    plotNames = {'combined'};
 end
-title(tl, 'Parameter recovery')
 
-% plot trade off between parameters
+%fitIndex = allParams.params{:,1} < 1;
+% plot simulated value versus actual value
+for iB = 1:task.blockNum
+        figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
-figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
-ax = nexttile;
-plot(minNLLFitParams(:,1), minNLLFitParams(:,2), 'o', 'markersize', 8, 'linewidth', 1)
-title('fit alpha patch/Q vs alpha rho')
-xlabel('fit alpha patch/Q')
-ylabel('fit alpha rho')
-set(ax,'yscale' ,'log')
+        for i= 1:allParams.nParams
+            nexttile;
+            scatter(allParams.params{:,i},minNLLFitParams(:,i,iB))
+            xlabel(['Simulated ' , model.paramNames{i}])
+            ylabel(['Fit ' , model.paramNames{i}])
+            title(plotNames{iB})
+            if strcmp(model.paramNames{i},'beta')
+                corr([log(allParams.params{:,i}), log(minNLLFitParams(:,i,iB))])
+            else
+                corr([allParams.params{:,i}, minNLLFitParams(:,i,iB)])
+            end
+        end
+end
 
-ax = nexttile;
-plot(minNLLFitParams(:,1), minNLLFitParams(:,3), 'o', 'markersize', 8, 'linewidth', 1)
-title('fit alpha patch/Q vs fit beta')
-xlabel('fit alpha patch/Q')
-ylabel('fit beta')
 
-ax = nexttile;
-plot(minNLLFitParams(:,2), minNLLFitParams(:,3), 'o', 'markersize', 8, 'linewidth', 1)
-title('fit alpha rho vs fit beta')
-xlabel('fit alpha rho')
-ylabel('fit beta')
-set(ax,'yscale' ,'log')
+% plot trade off between parameters 
+if allParams.nParams > 1
+    combinations = nchoosek(1:allParams.nParams,2);
 
-%% checks - simulation and fitting scripts end up with the same outputs
+    for iB = 1:task.blockNum
+        figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
-%  TestParams = [0.4, 0.1, 1];
-% % 
-% % % simulate data
-% block = 1; 
-%  out = simulate_MVT_full_RW_softmax(TestParams, block, Env); % change this depending on model to test
-%  [SubjNLLEval, RecoveredData] = NLL_MVT_full_RW_softmax(TestParams, Env, out);
-% out.PAction == RecoveredData.PAction
-% out.Q == RecoveredData.Q
-% out.Rho == RecoveredData.Rho
-% out.NextPatch == RecoveredData.NextPatch
+        for i= 1:size(combinations,1)
+            nexttile;
+            scatter(minNLLFitParams(:,combinations(i,1),iB),minNLLFitParams(:,combinations(i,2),iB))
+            xlabel(sprintf('Fit %s', model.paramNames{:,combinations(i,1)}))
+            ylabel(sprintf('Fit %s', model.paramNames{:,combinations(i,2)}))
+            title(plotNames{iB})
+        end
+    end
+    title(tl, 'Best fit parameter distributions')
+end
+
+

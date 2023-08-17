@@ -14,12 +14,12 @@ addpath('./analyticalComputation')
 study = 'kane'; % study to simulate/fit data to. 
 
 % model options
-modelNum = 1; % model type - see model table to check number to choose
+modelNum = 9; % model type - see model table to check number to choose
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
 % simulation options
-simOptions.type = 'simulate_new'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
-simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating new parameters, 'simulate_fit' if simulating already fit parameters for each subject
+simOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 % options below will override if simulating already fit parameters
 simOptions.nSim = 50;
@@ -71,8 +71,8 @@ for iS = 1:simOptions.nSim
 
         % Extract leaving times (LT) for each patch and block type
         for iP = 1:task.nPatch
-            modelLT_mean(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder == iP), 'omitnan');
-            modelLT_sd(agent.currentBlock,iP,iS) = std(results.leaveT(results.patchOrder == iP), 'omitnan');
+            modelLT_mean(agent.currentBlock,iP,iS) = mean(results.leaveT(results.patchOrder(1:end-1) == iP), 'omitnan');
+            modelLT_sd(agent.currentBlock,iP,iS) = std(results.leaveT(results.patchOrder(1:end-1) == iP), 'omitnan');
 
         end
 

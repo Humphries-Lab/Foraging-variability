@@ -114,107 +114,107 @@
       >Patch leaving time (s)</text
     ></g
     ><g style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:round; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
-    ><line y2="102.2584" style="fill:none;" x1="71.75" x2="71.75" y1="96.2658"
-      /><line y2="84.5205" style="fill:none;" x1="107.5" x2="107.5" y1="78.3974"
-      /><line y2="68.5377" style="fill:none;" x1="143.25" x2="143.25" y1="62.7874"
-      /><line y2="90.2732" style="fill:none;" x1="71.75" x2="71.75" y1="96.2658"
-      /><line y2="72.2742" style="fill:none;" x1="107.5" x2="107.5" y1="78.3974"
-      /><line y2="57.0372" style="fill:none;" x1="143.25" x2="143.25" y1="62.7874"
-      /><path style="fill:none; stroke-miterlimit:1; stroke-dasharray:8,8; fill-rule:evenodd; stroke-linejoin:bevel;" d="M71.75 96.2658 L107.5 78.3974 L143.25 62.7874"
-      /><circle transform="translate(71.75,96.2658)" style="stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:none; stroke-miterlimit:1;" r="1" cx="0" cy="0"
+    ><line y2="104.1053" style="fill:none;" x1="71.75" x2="71.75" y1="98.8225"
+      /><line y2="86.5163" style="fill:none;" x1="107.5" x2="107.5" y1="81.216"
+      /><line y2="68.2825" style="fill:none;" x1="143.25" x2="143.25" y1="62.6588"
+      /><line y2="93.5397" style="fill:none;" x1="71.75" x2="71.75" y1="98.8225"
+      /><line y2="75.9157" style="fill:none;" x1="107.5" x2="107.5" y1="81.216"
+      /><line y2="57.035" style="fill:none;" x1="143.25" x2="143.25" y1="62.6588"
+      /><path style="fill:none; stroke-miterlimit:1; stroke-dasharray:8,8; fill-rule:evenodd; stroke-linejoin:bevel;" d="M71.75 98.8225 L107.5 81.216 L143.25 62.6588"
+      /><circle transform="translate(71.75,98.8225)" style="stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:none; stroke-miterlimit:1;" r="1" cx="0" cy="0"
     /></g
-    ><g style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(107.5,78.3974)"
+    ><g style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(107.5,81.216)"
     ><circle r="1" style="stroke:none;" cx="0" cy="0"
     /></g
-    ><g style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(143.25,62.7874)"
+    ><g style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(143.25,62.6588)"
     ><circle r="1" style="stroke:none;" cx="0" cy="0"
     /></g
-    ><g transform="translate(71.75,102.2584)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
+    ><g transform="translate(71.75,104.1053)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(71.75,102.2584)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(71.75,104.1053)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,84.5205)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
+    ><g transform="translate(107.5,86.5163)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,84.5205)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(107.5,86.5163)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,68.5377)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
+    ><g transform="translate(143.25,68.2825)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,68.5377)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(143.25,68.2825)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(71.75,90.2732)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
+    ><g transform="translate(71.75,93.5397)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(71.75,90.2732)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(71.75,93.5397)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,72.2742)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
+    ><g transform="translate(107.5,75.9157)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,72.2742)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(107.5,75.9157)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,57.0372)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
+    ><g transform="translate(143.25,57.035)" style="fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(55,126,184);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,57.0372)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(143.25,57.035)" style="stroke-linecap:butt; fill:rgb(55,126,184); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(55,126,184); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
     ><g style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:round; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
-    ><line y2="88.5486" style="fill:none;" x1="71.75" x2="71.75" y1="83.8302"
-      /><line y2="70.263" style="fill:none;" x1="107.5" x2="107.5" y1="65.2339"
-      /><line y2="51.3889" style="fill:none;" x1="143.25" x2="143.25" y1="46.6273"
-      /><line y2="79.1118" style="fill:none;" x1="71.75" x2="71.75" y1="83.8302"
-      /><line y2="60.2047" style="fill:none;" x1="107.5" x2="107.5" y1="65.2339"
-      /><line y2="41.8656" style="fill:none;" x1="143.25" x2="143.25" y1="46.6273"
-      /><path style="fill:none; stroke-miterlimit:1; stroke-dasharray:8,8; fill-rule:evenodd; stroke-linejoin:bevel;" d="M71.75 83.8302 L107.5 65.2339 L143.25 46.6273"
-      /><circle transform="translate(71.75,83.8302)" style="stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:none; stroke-miterlimit:1;" r="1" cx="0" cy="0"
+    ><line y2="90.1435" style="fill:none;" x1="71.75" x2="71.75" y1="85.3467"
+      /><line y2="69.4266" style="fill:none;" x1="107.5" x2="107.5" y1="64.7145"
+      /><line y2="52.2515" style="fill:none;" x1="143.25" x2="143.25" y1="46.9244"
+      /><line y2="80.5499" style="fill:none;" x1="71.75" x2="71.75" y1="85.3467"
+      /><line y2="60.0024" style="fill:none;" x1="107.5" x2="107.5" y1="64.7145"
+      /><line y2="41.5972" style="fill:none;" x1="143.25" x2="143.25" y1="46.9244"
+      /><path style="fill:none; stroke-miterlimit:1; stroke-dasharray:8,8; fill-rule:evenodd; stroke-linejoin:bevel;" d="M71.75 85.3467 L107.5 64.7145 L143.25 46.9244"
+      /><circle transform="translate(71.75,85.3467)" style="stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:none; stroke-miterlimit:1;" r="1" cx="0" cy="0"
     /></g
-    ><g style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(107.5,65.2339)"
+    ><g style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(107.5,64.7145)"
     ><circle r="1" style="stroke:none;" cx="0" cy="0"
     /></g
-    ><g style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(143.25,46.6273)"
+    ><g style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; image-rendering:optimizeQuality; color-rendering:optimizeQuality; stroke-linejoin:bevel; stroke-dasharray:8,8; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2; stroke-miterlimit:1;" transform="translate(143.25,46.9244)"
     ><circle r="1" style="stroke:none;" cx="0" cy="0"
     /></g
-    ><g transform="translate(71.75,88.5486)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
+    ><g transform="translate(71.75,90.1435)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(71.75,88.5486)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(71.75,90.1435)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,70.263)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
+    ><g transform="translate(107.5,69.4266)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,70.263)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(107.5,69.4266)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,51.3889)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
+    ><g transform="translate(143.25,52.2515)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,51.3889)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(143.25,52.2515)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(71.75,79.1118)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
+    ><g transform="translate(71.75,80.5499)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(71.75,79.1118)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(71.75,80.5499)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,60.2047)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
+    ><g transform="translate(107.5,60.0024)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(107.5,60.2047)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(107.5,60.0024)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,41.8656)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
+    ><g transform="translate(143.25,41.5972)" style="fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; color-interpolation:linearRGB; stroke:rgb(77,175,74);"
     ><path style="stroke:none;" d="M-3 0 L3 0"
     /></g
-    ><g transform="translate(143.25,41.8656)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
+    ><g transform="translate(143.25,41.5972)" style="stroke-linecap:butt; fill:rgb(77,175,74); text-rendering:geometricPrecision; color-rendering:optimizeQuality; image-rendering:optimizeQuality; stroke:rgb(77,175,74); color-interpolation:linearRGB; stroke-width:2;"
     ><path style="fill:none;" d="M-3 0 L3 0"
     /></g
   ></g

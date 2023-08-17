@@ -142,7 +142,7 @@ errorbar(1,mean(minNLLFitParams_rich.beta),betaSEM_rich,'LineStyle', 'none','Lin
 errorbar(2,mean(minNLLFitParams_poor.beta),betaSEM_poor,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
 
 
-[H0_reject, p_val_t_test] = ttest(log(minNLLFitParams_rich.beta), log(minNLLFitParams_poor.beta))
+[H0_reject, p_val_t_test, ~, stats] = ttest(log(minNLLFitParams_rich.beta), log(minNLLFitParams_poor.beta))
 
 set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'}, 'YScale', 'log')
 ylabel('Fit beta (higher = exploit)')

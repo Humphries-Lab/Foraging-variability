@@ -47,7 +47,7 @@ ylabel('Patch leaving time (s)')
 set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig2_LeHeron_subjectLT_softmax'],'-dsvg')
+print([export_path 'fig5_LeHeron_subjectLT_beta_function'],'-dsvg')
 
 load([dataPath 'modelLT_leheron_M9'])
 meanLT_simulated = mean(subject_leave_times_simulated.mean,3);
@@ -80,3 +80,153 @@ print([export_path 'fig5_LeHeron_fit_lambda_LT_correlation'],'-dsvg')
 
 % statistics
 [pearson_coeff, p_val]  = corr(minNLLFitParams.lambda, meanLT_subj)
+
+%% Panel: Participant SD vs fit softmax model 
+
+meanLT_SD_simulated = mean(subject_leave_times_simulated.sd,3);
+
+subjSE_SD = std(subject_leave_times.sd, [], 3)./sqrt(size(subject_leave_times.sd,3));
+simSE_SD = std(subject_leave_times_simulated.sd, [], 3)./sqrt(size(subject_leave_times_simulated.sd,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanSD(1,:),subjSE_SD(1,:),lines.exp,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanSD(2,:),subjSE_SD(2,:),lines.exp,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('SD leaving times (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 10])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_LeHeron_subjectLT_SD_beta_function'],'-dsvg')
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanLT_SD_simulated(1,:),simSE_SD(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanLT_SD_simulated(2,:),simSE_SD(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('SD leaving times (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 10])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_LeHeron_simulatedLT_SD_beta_function'],'-dsvg')
+
+
+% statistics - SD LT - confirms novel SD predictions 
+rich_sd = squeeze(subject_leave_times.sd(1,:,:))';
+poor_sd = squeeze(subject_leave_times.sd(2,:,:))';
+
+sd_table = [rich_sd;poor_sd];
+
+[p_val, tbl] = anova2(sd_table,size(rich_sd,1)); 
+
+% statistics - SD LT SIMULATIONS
+rich_sd = squeeze(subject_leave_times_simulated.sd(1,:,:))';
+poor_sd = squeeze(subject_leave_times_simulated.sd(2,:,:))';
+
+sd_table = [rich_sd;poor_sd];
+
+[p_val, tbl] = anova2(sd_table,size(rich_sd,1)); 
+
+
+%% SUPPLEMENTARY Panel: BIC comparison for contreras-huerta datasest 
+load([dataPath 'BIC_combined_contrerashuerta.mat'])
+
+modelNames = {'scalar MVT', 'scalar block', 'scalar RW',...
+              'exp MVT', 'exp block', 'exp RW',...
+              'hyperbolic MVT', 'hyperbolic block', 'hyperbolic RW',...
+              '2 scalar MVT', '2 scalar block', '2 scalar RW',...
+              '2 exp MVT', '2 exp block', '2 exp RW'};
+
+h = figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.rectangle);
+bar(models_BIC.combined(1:15,:),'FaceColor',color.general, 'EdgeColor', color.general); hold on
+
+% find best model and highlight
+minBIC = min(models_BIC.combined);
+bestModel = find(models_BIC.combined == minBIC);
+bar(bestModel,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
+ylabel('BIC (sum)')
+set(gca,'XTick',[1:15],'XTickLabel',modelNames, 'YLim',[18500, 19500],'XTickLabelRotation',90)
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_beta_function_BIC_contrerashuerta'],'-dsvg')
+
+%% SUPPLEMENTARY Panel: BIC comparison for kane datasest 
+load([dataPath 'BIC_combined_kane.mat'])
+
+modelNames = {'scalar MVT', 'scalar block', 'scalar RW',...
+              'exp MVT', 'exp block', 'exp RW',...
+              'hyperbolic MVT', 'hyperbolic block', 'hyperbolic RW',...
+              '2 scalar MVT', '2 scalar block', '2 scalar RW',...
+              '2 exp MVT', '2 exp block', '2 exp RW'};
+
+h = figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.rectangle);
+bar(models_BIC.combined(1:15,:),'FaceColor',color.general, 'EdgeColor', color.general); hold on
+
+% find best model and highlight
+minBIC = min(models_BIC.combined);
+bestModel = find(models_BIC.combined == minBIC);
+bar(bestModel,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
+ylabel('BIC (sum)')
+set(gca,'XTick',[1:15],'XTickLabel',modelNames, 'YLim',[11000, 11500],'XTickLabelRotation',90)
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_beta_function_BIC_kane'],'-dsvg')
+
+%% SUPPLEMENTARY Panel: contrerashuerta participant leave times vs best fit beta function model
+load([dataPath 'modelLT_contrerashuerta_M9'])
+meanLT_simulated = mean(subject_leave_times_simulated.mean,3);
+simSEM = std(subject_leave_times_simulated.mean, [], 3)./sqrt(size(subject_leave_times_simulated.mean,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:2,meanLT_simulated(1,:),simSEM(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:2,meanLT_simulated(2,:),simSEM(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('Patch leaving time (s)')
+set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 30])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_ContrerasHuerta_simulatedLT_beta_function'],'-dsvg')
+
+
+% Look at variance too 
+meanLT_SD_simulated = mean(subject_leave_times_simulated.sd,3);
+simSE_SD = std(subject_leave_times_simulated.sd, [], 3)./sqrt(size(subject_leave_times_simulated.sd,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:2,meanLT_SD_simulated(1,:),simSE_SD(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:2,meanLT_SD_simulated(2,:),simSE_SD(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('SD leaving times (s)')
+set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 10])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_ContrerasHuerta_simulatedLT_SD_beta_function'],'-dsvg')
+
+
+%% SUPPLEMENTARY Panel: kane leave times vs best fit beta function model
+load([dataPath 'modelLT_kane_M9'])
+meanLT_simulated = mean(subject_leave_times_simulated.mean,3);
+simSEM = std(subject_leave_times_simulated.mean, [], 3)./sqrt(size(subject_leave_times_simulated.mean,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanLT_simulated(1,:),simSEM(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanLT_simulated(2,:),simSEM(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('Patch leaving time (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_Kane_simulatedLT_beta_function'],'-dsvg')
+
+% Look at variance too 
+meanLT_SD_simulated = mean(subject_leave_times_simulated.sd,3);
+simSE_SD = std(subject_leave_times_simulated.sd, [], 3)./sqrt(size(subject_leave_times_simulated.sd,3));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanLT_SD_simulated(1,:),simSE_SD(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanLT_SD_simulated(2,:),simSE_SD(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+xlabel('Patch yield')
+ylabel('SD leaving times (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 5])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig5_Kane_simulatedLT_SD_beta_function'],'-dsvg')
+

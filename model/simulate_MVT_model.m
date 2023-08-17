@@ -163,7 +163,7 @@ out.action = action;
 
 results.patchOrder = agent.patchOrder(1:numel(leaveT)+1); % account for extra patch they may have been in before task simulation ended
 results.leaveT = leaveT;
-results.env = [cB,currentBlock];
+results.env = [cB;currentBlock];
 
 negLL = -logLikelihood;
 

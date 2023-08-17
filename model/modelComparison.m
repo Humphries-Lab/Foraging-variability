@@ -3,7 +3,7 @@
 clear  
 
 %% user options 
-study = 'contrerashuerta'; % study to simulate/fit data to
+study = 'kane'; % study to simulate/fit data to
 
 model = [8:22]; % model numbers to compare 
 modelTable = readtable('./foragingModelTable.xlsx'); 

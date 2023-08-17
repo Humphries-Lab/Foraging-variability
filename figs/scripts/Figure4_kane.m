@@ -221,3 +221,50 @@ poor_sd = squeeze(subject_leave_times_simulated.sd(2,:,:))';
 sd_table = [rich_sd;poor_sd];
 
 [p_val, tbl] = anova2(sd_table,size(rich_sd,1)); 
+
+%% SUPPLEMENTARY FIGURES %%%%%%%%%%%%%%%%%%%%%%%%
+%% Panel: distribution of alphaRho fit with LT for each environment
+load([dataPath 'fitting_results_separate_M5_kane.mat'])
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+bar(1,mean(minNLLFitParams_rich.alphaRho),'FaceColor',color.rich, 'EdgeColor',color.rich); hold on 
+bar(2,mean(minNLLFitParams_poor.alphaRho),'FaceColor',color.poor, 'EdgeColor',color.poor); 
+
+% plot individual points
+scatter(ones(size(minNLLFitParams_rich.alphaRho)), minNLLFitParams_rich.alphaRho,'o','MarkerFaceColor', marker.rich,'MarkerEdgeColor', marker.rich,'MarkerEdgeAlpha', M_alpha,'MarkerFaceAlpha', M_alpha); 
+scatter(2*ones(size(minNLLFitParams_poor.alphaRho)), minNLLFitParams_poor.alphaRho,'o','MarkerFaceColor', marker.poor,'MarkerEdgeColor', marker.poor,'MarkerEdgeAlpha', M_alpha,'MarkerFaceAlpha', M_alpha); 
+
+% plot error bars 
+alphaSEM_rich = std(minNLLFitParams_rich.alphaRho)./sqrt(numel(minNLLFitParams_rich.alphaRho));
+alphaSEM_poor = std(minNLLFitParams_poor.alphaRho)./sqrt(numel(minNLLFitParams_poor.alphaRho));
+
+errorbar(1,mean(minNLLFitParams_rich.alphaRho),alphaSEM_rich,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
+errorbar(2,mean(minNLLFitParams_poor.alphaRho),alphaSEM_poor,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
+
+set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'})
+ylabel('Fit alpha_\rho')
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig4_Kane_fit_alphaRho_LT_group'],'-dsvg')
+
+%% Panel: correlation of alphaRho fit with LT for each environment
+
+meanLT_rich = mean(squeeze(subject_leave_times.mean(1,:,:)));
+meanLT_poor = mean(squeeze(subject_leave_times.mean(2,:,:)));
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+scatter(minNLLFitParams_rich.alphaRho, meanLT_rich,'MarkerFaceColor',color.rich,'MarkerEdgeColor', color.rich, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+scatter(minNLLFitParams_poor.alphaRho, meanLT_poor,'MarkerFaceColor',color.poor,'MarkerEdgeColor', color.poor, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+%set(gca,'XLim', [0 0.3])
+xlabel('Fit alpha_\rho')
+ylabel('Patch leaving time (s)')
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig4_Kane_fit_alphaRho_LT_correlation'],'-dsvg')
+
+% statistics
+[spearman_coeff_rich, p_val_rich]  = corr(minNLLFitParams_rich.alphaRho, meanLT_rich')
+[spearman_coeff_poor, p_val_poor]  = corr(minNLLFitParams_poor.alphaRho, meanLT_poor')
+
+% assume unequal variances 
+[H0_reject, p_val_t_test, ~, stats] = ttest(minNLLFitParams_rich.alphaRho, minNLLFitParams_poor.alphaRho) % not gaussian

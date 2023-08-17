@@ -13,14 +13,14 @@ close all;
 addpath('../helperFunctions')
 
 % specify study
-study = 'kane'; 
+study = 'leheron'; 
 
 % parameters of choice model
-model = 'softmax'; % 'softmax', 'e-greedy', 'lapse'
+model = 'lapse'; % 'softmax', 'e-greedy', 'lapse'
 explore_parameter = logspace(-3,0,100);  % space of softmax temperatures to calculate; 
                         % maximum of beta=1 here, as actual temperature is
                         % beta * task.r0         
-lapse_parameter = 0.1; % required for lapse model only 
+lapse_parameter = 0.04; % required for lapse model only 
 t_max = 100;   % maximum time in patch (for explicit calculations)
 
 switch study
@@ -96,7 +96,7 @@ data.E_leave = E_leave;
 data.SD_leave = SD_leave;
 data.beta = explore_parameter;
 
-save_name = ['expectedLT_', model, '_',study, '.mat'];
+save_name = ['expectedLT_', model, '_',study,'_04', '.mat'];
 save_path = '../../data/analytical_data/';
 save([save_path, save_name],'data');
 

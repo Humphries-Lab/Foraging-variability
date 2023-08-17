@@ -40,7 +40,7 @@ switch funcOptions.type
                 BlockOrder = [repmat([1 2], [30/2, 1]); repmat([2 1], [30/2, 1])];
 
                 experiencedAvgRR = readtable('../data/experiment_data/contrerashuerta_experiencedAvgRR.csv'); % load their real average RR in the 2 blocks
-                df.experiencedAvgRR = [experiencedAvgRR.Rich_Self,experiencedAvgRR.Poor_Self];
+                experiencedAvgRR = [experiencedAvgRR.Rich_Self,experiencedAvgRR.Poor_Self];
 
             case 'kane'
                 numSubjects = 8;
