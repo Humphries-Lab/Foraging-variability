@@ -18,7 +18,7 @@ switch funcOptions.type
         df.blockOrder = blockOrder(randi(size(blockOrder,1),[df.nSim 1]),:); % for each fake participant, create fake block order based on real participant data
         df.experiencedAvgRR = repmat([task.optAvgRR], [funcOptions.nSim,1]); % just assume experiencedAvgRR is the same as optimal, if simulating from scratch
 
-    case {'simulate_fit','fit'}
+    case 'simulate_fit'
         df.nSim = size(blockOrder,1);
         df.blockOrder = blockOrder;
         df.experiencedAvgRR = experiencedAvgRR;
@@ -83,6 +83,10 @@ end
 %             case 'leheron'
 %                 % get subject data
 %                 subj = [1:23 25:40];
+%                 numSubjects = size(subj,2);
+% 
+%                 load('../data/experiment_data/leheron_experiencedAvgRR.mat'); % load their real average RR in the 2 blocks
+%                 df.experiencedAvgRR = experiencedAvgRR;
 % 
 %                 load ../data/experiment_data/leheron_t_young.mat % load patch leaving times for each participant
 % 
@@ -131,7 +135,12 @@ end
 % 
 %                 T = readtable('../data/experiment_data/contrerashuerta_trialbytrial_exp2.csv');
 %                 T = T(T.ben == 1,:); % self condition only
-%              
+%                 numSubjects = size(unique(T.sub),1);
+% 
+% 
+%                 experiencedAvgRR = readtable('../data/experiment_data/contrerashuerta_experiencedAvgRR.csv'); % load their real average RR in the 2 blocks
+%                 df.experiencedAvgRR = [experiencedAvgRR.Rich_Self,experiencedAvgRR.Poor_Self];
+% 
 %                 for iS = 1:numSubjects % for each subject
 % 
 %                     subjLT = T(T.sub == iS,:); % extract their summarised leaving times
@@ -178,6 +187,7 @@ end
 %                 T = readtable('../data/experiment_data/kane2019-rats-fig-1-data.csv');
 %                 T = T(contains(T.Experiment,'Travel'),:); % only looking at travel time experiment
 % 
+%                 numSubjects = size(unique(T.Subject),1);
 %                 subID = unique(unique(T.Subject));
 % 
 %                 for iS = 1:numSubjects % for each subject

@@ -11,7 +11,7 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-study = 'leheron'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
+simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx'); 
@@ -29,16 +29,16 @@ simOptions.params.poor = [5, 0, 0.01, 1, 0, 0]; % {'beta', 'epsilon', 'alphaRho'
 %% set up
 
 % load task
-task = buildTask(study,simOptions.blockPresentation); % set up task structure 
+task = buildTask(simOptions.study,simOptions.blockPresentation); % set up task structure 
 
 % load dataframe container for simulations, according to 
-allData = buildData(study,task,simOptions);
+allData = buildData(task,simOptions);
 
 % load model
 model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
 % load agent parameters
-allParams = buildParams(study,task,model,simOptions); clear params
+allParams = buildParams(task,model,simOptions); clear params
 model.paramNames = allParams.names;
 
 simOptions.nSim = size(allData.nStates,1); % refresh nSim if loaded fit data
@@ -89,13 +89,13 @@ end
 subject_leave_times_simulated.mean = modelLT_mean;
 subject_leave_times_simulated.sd = modelLT_sd;
 
-save_name = ['modelLT_', study,'_',simOptions.blockPresentation, '_M', sprintf('%d',modelNum), '.mat'];
+save_name = ['modelLT_', simOptions.study,'_',simOptions.blockPresentation, '_M', sprintf('%d',modelNum), '.mat'];
 save_path = '../data/simulation_data/';
 save([save_path, save_name],'subject_leave_times_simulated');
 
 %% plot against participant data
 
-[dataLT] = loadLeaveT(study,task); % load mean leaving times for each subject x patch x env
+[dataLT] = loadLeaveT(simOptions.study,task); % load mean leaving times for each subject x patch x env
 
 % summarise model data
 modelMean = mean(modelLT_mean,3);

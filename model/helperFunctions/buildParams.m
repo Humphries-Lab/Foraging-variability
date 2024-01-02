@@ -1,4 +1,4 @@
-function [agentParams] = buildParams(study,task,modelOptions,funcOptions)
+function [agentParams] = buildParams(task,modelOptions,funcOptions)
 
 switch funcOptions.type
     case 'simulate_new'
@@ -58,13 +58,13 @@ switch funcOptions.type
     case 'simulate_fit'
 
         if contains(funcOptions.blockPresentation, 'separate')
-            load(sprintf('../data/fitting_data/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, study), 'minNLLFitParams_rich', 'minNLLFitParams_poor');
+            load(sprintf('../data/fitting_data/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, funcOptions.study), 'minNLLFitParams_rich', 'minNLLFitParams_poor');
             agentParams.params{1} = minNLLFitParams_rich;
             agentParams.params{2} = minNLLFitParams_poor;
             agentParams.names = agentParams.params{1}.Properties.VariableNames;
 
         elseif contains(funcOptions.blockPresentation, 'combined')
-            load(sprintf('../data/fitting_data/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, study), 'minNLLFitParams');
+            load(sprintf('../data/fitting_data/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, funcOptions.study), 'minNLLFitParams');
             agentParams.params{1} = minNLLFitParams;
             agentParams.params{2} = minNLLFitParams; % replicate for '2nd' simulation block
             agentParams.names = agentParams.params{1}.Properties.VariableNames;

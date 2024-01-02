@@ -16,6 +16,7 @@ switch study
         
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
+        task.nBlocks = 2;
         task.nPatch = numel(task.r0);
 
         switch blockPresentation
@@ -53,6 +54,7 @@ switch study
 
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
+        task.nBlocks = 12;
         task.nPatch = numel(task.r0);
 
         switch blockPresentation
@@ -86,6 +88,7 @@ switch study
 
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
+        %task.nBlocks = ?;
         task.nPatch = numel(task.r0);
 
         switch blockPresentation
