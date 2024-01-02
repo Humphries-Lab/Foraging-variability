@@ -41,7 +41,7 @@ switch funcOptions.type
             end
 
             % set up learning rates for average RR
-            if modelOptions.learnRho || strcmp(modelOptions.rhoFunction, 'rw')
+            if modelOptions.learnRho
                 agentParams.params{iB}.alphaRho = tmp{iB}.alphaRho;
             end
 
@@ -97,7 +97,7 @@ switch funcOptions.type
         end
 
         % set up learning rates for average RR
-        if modelOptions.learnRho || strcmp(modelOptions.rhoFunction, 'rw')
+        if modelOptions.learnRho
             agentParams.params.alphaRho = rand([funcOptions.nSim,1]);
         end
 

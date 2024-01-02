@@ -16,26 +16,26 @@ color.rich = [0.7 0.7 0.7];
 color.poor = [0.8 0.7 0.5];
 
 % parameters of choice model
-model = 'softmax'; % 'e-greedy', 
-explore_parameter = logspace(-3,0);  % space of softmax temperatures to calculate; 
-                        % maximum of beta=1 here, as actual temperature is
-                        % beta * r0            
-t_max = 100;   % maximum time in patch (for explicit calculations)
+% model = 'softmax'; % 'e-greedy', 
+% explore_parameter = logspace(-3,0);  % space of softmax temperatures to calculate; 
+%                         % maximum of beta=1 here, as actual temperature is
+%                         % beta * r0            
+% t_max = 100;   % maximum time in patch (for explicit calculations)
                         
-% model = 'e-greedy';
-% explore_parameter = logspace(-2,0);   % fixed probability of leaving 
-% t_max = 1000;   % maximum time in patch (for explicit calculations)
+ model = 'e-greedy';
+ explore_parameter = logspace(-2,0);   % fixed probability of leaving 
+ t_max = 1000;   % maximum time in patch (for explicit calculations)
 
 % task parameters: LeHeron et al 2020
-% reward_function = 'exponential';
-% alpha = 0.075;  % decay rate from LeHeron et al 2020
-% r0 = [32.5 45 57.5];  % initial patch values from LeHeron et al 2020
+ reward_function = 'exponential';
+ alpha = 0.075;  % decay rate from LeHeron et al 2020
+ r0 = [32.5 45 57.5];  % initial patch values from LeHeron et al 2020
 
 
 % task parameters: rat foraging study of Kane et al 2019 eLife
-reward_function = 'linear';
-alpha = 8;  % muL
-r0 = [60, 90, 120];  % muL
+% reward_function = 'linear';
+% alpha = 8;  % muL
+% r0 = [60, 90, 120];  % muL
 
 % parameters of E and VAR calculation
 t_step = 1;  % time-step at which to calculate estimates of E and VAR; 1 = trials (discrete Bernoulli process); <1 = approximation to continuous time

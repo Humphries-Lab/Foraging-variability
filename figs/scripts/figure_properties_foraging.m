@@ -25,7 +25,8 @@ figsize.rectangle = [20 20 14 7];
 tmp_set1 = brewermap(9,'Set1');
 color.rich = tmp_set1(2,:); % green
 color.poor = tmp_set1(3,:); % purple
-color.patch = brewermap(3,'Oranges');
+tmp_oranges = brewermap(13,'Oranges');
+color.patch = tmp_oranges([4, 7, 11],:);
 color.general = tmp_set1(8,:); % pink
 
 tmp_accent = brewermap(8,'Accent');

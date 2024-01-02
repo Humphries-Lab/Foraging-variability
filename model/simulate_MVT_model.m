@@ -19,6 +19,8 @@ arrive = 1; % start by arriving at new patch
 
 logLikelihood = 0;
 
+logged_betas = [];
+
 for ii = 1:agent.nStates % for each second in the task
 
     if action(ii) == stay % take action to stay
@@ -37,6 +39,15 @@ for ii = 1:agent.nStates % for each second in the task
                 currentBlock = agent.currentBlock;
             end
 
+            if patchN == 1 || ismember(patchN,agent.blockSwitchPatchN) % if at first patch of a new block, re-initialise estimates
+
+                if model.learnRho == 1
+                    rho(ii) = task.optAvgRR(currentBlock); % initialise to the MVT optimal avg reward rate 
+                elseif strcmp(model.rhoFunction, 'mvt') || strcmp(model.rhoFunction, 'block')
+                    rho(ii) = agent.experiencedAvgRR(currentBlock);
+                end
+
+            end
         end
 
         switch task.rewardFunction
@@ -61,19 +72,6 @@ for ii = 1:agent.nStates % for each second in the task
             rho(ii+1) = rho(ii);
         end
 
-        % compute experiencedAvgRR for beta function models
-        switch model.rhoFunction
-            case 'mvt'
-                experiencedAvgRR = task.optAvgRR(currentBlock); % MVT optimal
-            case 'block'
-                experiencedAvgRR = agent.experiencedAvgRR(currentBlock); % real experienced avgRR
-            case 'rw'
-                if timeNow == 1 % if first started the session, then initialise experiencedAvgRR in right range for the task
-                    experiencedAvgRR = task.optAvgRR(currentBlock);
-                end
-                experiencedAvgRR = experiencedAvgRR + params.alphaRho*(reward - experiencedAvgRR); % rescorla wagner rule to update avgRR estimate
-        end
-
         % make choice
         switch model.actionPolicy
             case 'softmax'
@@ -82,33 +80,40 @@ for ii = 1:agent.nStates % for each second in the task
                     case 'fit'
                         beta = params.beta;
                     case 'scalar'
-                        beta = params.lambda * 1/experiencedAvgRR;
+                        beta = params.lambda * 1/rho(ii+1);
                     case 'exponential'
-                        beta = 1/(experiencedAvgRR^params.lambda);
+                        beta = 1/(rho(ii+1)^params.lambda);
                     case 'hyperbolic'
-                        beta = 1/(1 + params.lambda * experiencedAvgRR);
+                        beta = 1/(1 + params.lambda * rho(ii+1));
                     case 'twoScalar'
-                        beta = params.lambda * 1/(params.gamma * experiencedAvgRR);
+                        beta = params.lambda * 1/(params.gamma * rho(ii+1));
                     case 'twoExponential'
-                        beta = params.lambda * 1/(experiencedAvgRR^params.gamma);
+                        beta = params.lambda * 1/(rho(ii+1)^params.gamma);
                     case 'twoHyperbolic'
-                        beta = params.lambda * 1/(1 + params.lambda * experiencedAvgRR);
+                        beta = params.lambda * 1/(1 + params.lambda * rho(ii+1));
                 end
 
-                pAction = softmaxConstrain(estPatchRR(ii+1), rho(ii+1), beta);
+                logged_betas = [logged_betas, beta];
+
+                if strcmp(model.betaFunction,'fit')
+                    pAction = softmaxConstrain(estPatchRR(ii+1), rho(ii+1), beta);
+                else
+                    pAction = softmaxConstrain(estPatchRR(ii+1), 0, beta); % don't pass rho to the function - use instead to modulate beta
+                end
 
             case 'epsilon-greedy'
                 pAction = [params.epsilon, 1-params.epsilon]; % is this correct when rho does not equal 0? i.e. not just a coin flip on the patch reward rate now
             case 'epsilon-softmax'
-                pAction = epsilon_softmaxConstrain(estPatchRR(ii+1), rho(ii+1), params.beta, params.epsilon);
-            case 'deterministic'
-                pAction(stay) = double(estPatchRR(ii+1) > rho(ii+1));
-                pAction(leave) = 1 - pAction(stay);
+                if strcmp(model.betaFunction,'fit')
+                    pAction = epsilon_softmaxConstrain(estPatchRR(ii+1), rho(ii+1), params.beta, params.epsilon);
+                else
+                    pAction = epsilon_softmaxConstrain(estPatchRR(ii+1), 0, params.beta, params.epsilon); % don't pass rho to the function - use instead to modulate beta
+                end
         end
 
         if strcmp(funcOptions.type, 'fit') % if fitting data
             pSelected = pAction(action(ii+1)); % what is probability of action they actually took
-            pSelected(pSelected == 0) = eps(0); % prevent log(pselected = 0) going to infinity 
+            pSelected(pSelected == 0) = eps(0); % prevent log(pselected = 0) going to infinity
             logLikelihood = logLikelihood + log(pSelected); % update log likelihood
         else
             action(ii+1) = discreteinvrnd(pAction,1,1) ; % simulate their actions based on probabilities
@@ -118,7 +123,7 @@ for ii = 1:agent.nStates % for each second in the task
         if action(ii+1) == leave
             t = task.timeStep; % if next action is leave, then reset travel time counter
             leaveT(patchN,1) = timeNow; % log the patch leaving time
-            cB(patchN,1) = currentBlock; % log the environment for this patch (for recovery purposes) 
+            cB(patchN,1) = currentBlock; % log the environment for this patch (for recovery purposes)
         end
 
         timeNow = timeNow+task.timeStep; % time in patch increases
@@ -160,8 +165,9 @@ end
 out.rho = rho;
 out.estPatchRR = estPatchRR;
 out.action = action;
+out.beta = logged_betas;
 
-results.patchOrder = agent.patchOrder(1:numel(leaveT)+1); % account for extra patch they may have been in before task simulation ended
+results.patchOrder = agent.patchOrder(1:numel(leaveT)); % account for extra patch they may have been in before task simulation ended
 results.leaveT = leaveT;
 results.env = [cB;currentBlock];
 

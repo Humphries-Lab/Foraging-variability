@@ -26,8 +26,8 @@ plot(r_t_series,'LineWidth', widths.plot)
 ylabel('Patch reward rate (units/s)')
 xlabel('Time in patch (s)')
 
-line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(1) optimalAvgRR(1)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', '--')
-line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(2) optimalAvgRR(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', '--')
+line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(1) optimalAvgRR(1)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', ':')
+line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(2) optimalAvgRR(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', ':')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig1_MVT_RR_deterministic'],'-dsvg')
@@ -126,7 +126,7 @@ colororder(color.patch);
 semilogx(data.beta,data.SD_leave,'LineWidth',widths.plot); hold on
 xlabel('Beta (higher = exploit)')
 ylabel('SD leaving times (s)')
-ylim([0 15])
+ylim([0 10])
 % plot overharvesting betas 
 line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', '--')
 line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', '--')
@@ -148,12 +148,8 @@ beta_poor = data.beta(ixPoor);
 figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
 colororder(color.patch);
 semilogx(data.beta,data.E_leave,'LineWidth',widths.plot); hold on
-xlabel('Beta (higher = exploit)')
+xlabel('Epsilon (higher = explore)')
 ylabel('Expected leaving time (s)')
-
-% plot overharvesting betas 
-line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', '--')
-line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', '--')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig1_LT_beta_range_e_greedy_overharvesting'],'-dsvg')

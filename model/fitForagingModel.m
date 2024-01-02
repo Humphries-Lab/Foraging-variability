@@ -11,15 +11,14 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-study = 'contrerashuerta'; % study to simulate/fit data to. TO DO: If contreras-huerta or kane, then only checked working with model 1-7 separate so far.  
+study = 'leheron'; % study to simulate/fit data to. 
 
 % model options
-%modelNum = 3; % model type - see model table to check number to choose
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
-fitOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+fitOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 fitOptions.nSim = 1; % how many starts/iterations for fmincon search
 
 %% set up model and task
@@ -31,30 +30,13 @@ task = buildTask(study,fitOptions.blockPresentation);
 allData = buildData(study,task,fitOptions);
 nSub = size(allData.data,2);
 
-for modelNum = [8:25] % for all models
+for modelNum = 5 % for all models
     % load model
     model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
     % load random set of start parameters for fmincon search
     allParams = buildParams(study,task,model,fitOptions);
     model.paramNames = allParams.names;
-
-    %% test NLL function on one participant
-
-%     for iS = 1:nSub
-%         subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
-%     
-%         for iB = 1:task.blockNum
-%             iS
-%             subj.nStates = allData.nStates(iS,iB);
-%             subj.data = allData.data{iS}{iB};
-%             subj.patchOrder = allData.patchOrder{iS,iB};
-%             subj.env = allData.env{iS,iB};
-%             subjParams = table2array(allParams.params(iS,:));
-%     
-%             [NLL, out] = simulate_MVT_model(task,model,subj,subjParams, fitOptions);
-%         end
-%     end
 
     %% fitting for each person in group with different starting points
     options = optimoptions('fmincon','Display','none'); % don't display
@@ -70,20 +52,29 @@ for modelNum = [8:25] % for all models
     paramArray = table2array(allParams.params);
 
     for iS = 1:nSub
-        subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % hand model rho for both blocks, not just one
 
-        for iB = 1:task.blockNum
+        % initialise experienced avgRR depending on model
+        switch model.rhoFunction
+            case 'mvt'
+                subj.experiencedAvgRR = task.optAvgRR; % MVT optimal
+            case 'block'
+                subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR
+        end
+
+        for iB = 1:task.blockNum % will always be in order rich-poor for separate fitting
             iS
+
             subj.nStates = allData.nStates(iS,iB);
             subj.data = allData.data{iS}{iB};
             subj.patchOrder = allData.patchOrder{iS,iB};
             subj.env = allData.env{iS,iB};
+            subj.blockSwitchPatchN = find(diff(subj.env) ~= 0)+1; % only applies for combined fitting
 
             NLLEval = zeros([fitOptions.nSim, 1]);
             FitParams = zeros([fitOptions.nSim, allParams.nParams]);
 
             % Run fmincon
-            parfor ii = 1:fitOptions.nSim
+            for ii = 1:fitOptions.nSim
                 params0 =  paramArray(ii,:);
 
                 f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);

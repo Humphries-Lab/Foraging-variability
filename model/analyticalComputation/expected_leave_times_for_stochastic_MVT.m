@@ -13,15 +13,15 @@ close all;
 addpath('../helperFunctions')
 
 % specify study
-study = 'leheron'; 
+study = 'kane'; 
 
 % parameters of choice model
-model = 'lapse'; % 'softmax', 'e-greedy', 'lapse'
+model = 'softmax'; % 'softmax', 'e-greedy', 'lapse'
 explore_parameter = logspace(-3,0,100);  % space of softmax temperatures to calculate; 
                         % maximum of beta=1 here, as actual temperature is
                         % beta * task.r0         
-lapse_parameter = 0.04; % required for lapse model only 
-t_max = 100;   % maximum time in patch (for explicit calculations)
+%lapse_parameter = 0.04; % required for lapse model only 
+t_max = 1000;   % maximum time in patch (for explicit calculations)
 
 switch study
     case 'leheron'
@@ -126,7 +126,7 @@ ylabel('SD of leaving time (s)')
 
 %% extract expected beta values for specific study
 
-[subjectLT_mean, subjectLT_sd] = loadLeaveT(study,task); % load mean and std of leaving times for each subject x patch x env
+[subjectLT_mean, subjectLT_sd, subjectRR_mean] = loadLeaveT(study,task); % load mean and std of leaving times for each subject x patch x env
 
 % save for paper figures
 subject_leave_times.mean = subjectLT_mean;
@@ -247,3 +247,42 @@ scatter(1:nPatchDiff, points_real_change_in_SD_within(:,:,2),[],color.poor, 'fil
 set(gca,'XLim',[0 4],'XTick',1:nPatchDiff,'XTickLabel',patchDiffNames)
 ylabel('Change in SD leaving time (s) (patch yield)')
 %legend({'Model - rich', 'Model - poor', 'Data - rich', 'Data - poor'})
+
+%% reward rate predictions - plot reward rates for range of explore parameter
+for iR = 1:numel(task.r0)
+    switch task.rewardFunction
+        case 'exponential'
+            RR_leave(:,iR) = reward_at_t_exp(E_leave(:,iR),task.r0(iR),task.decayRate);
+        case 'linear'
+            RR_leave(:,iR) = reward_at_t_linear(E_leave(:,iR),task.r0(iR),task.decayRate); 
+        otherwise
+            error('Unrecognised reward function')
+    end
+end
+
+RR_fig = figure;
+semilogx(explore_parameter,RR_leave); hold on
+switch model
+    case {'softmax','lapse'}
+        xlabel('Beta (higher = exploit)')
+    case 'e-greedy'
+        xlabel('\epsilon (higher = explore)')
+        %set(gca,'XDir','reverse')
+end
+ylabel('Reward rate at expected leaving time (s)')
+
+line([beta_rich beta_rich],[0 RR_fig.Children.YLim(2)],'Color',color.rich)
+line([beta_poor beta_poor],[0 RR_fig.Children.YLim(2)],'Color',color.poor)
+legend({'low','medium','high'})
+
+% plot Kane's dataset reward rates 
+
+figure 
+
+mean_leave_RR_data = mean(subjectRR_mean,3); 
+plot(1:numel(task.r0),mean_leave_RR_data(1,:),'.-','Color',color.rich,'LineWidth',1.5); hold on
+plot(1:numel(task.r0),mean_leave_RR_data(2,:),'.-','Color',color.poor,'LineWidth',1.5)
+
+ylabel('Reward rate at expected leaving time (ml)')
+
+set(gca,'XTick',1:numel(task.r0),'XTickLabel',task.patchNames,'XLim',[0 4],'YLim',[0 0.12])

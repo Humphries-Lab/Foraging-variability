@@ -26,8 +26,8 @@ plot(r_t_series,'LineWidth', widths.plot)
 ylabel('Patch reward rate (units/s)')
 xlabel('Time in patch (s)')
 
-line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(1) optimalAvgRR(1)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', '--')
-line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(2) optimalAvgRR(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', '--')
+line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(1) optimalAvgRR(1)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', ':')
+line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(2) optimalAvgRR(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', ':')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig2_LeHeron_RR'],'-dsvg')
@@ -65,7 +65,7 @@ colororder(color.patch);
 semilogx(data.beta,data.SD_leave,'LineWidth',widths.plot); hold on
 xlabel('Beta (higher = exploit)')
 ylabel('SD leaving times (s)')
-ylim([0 15])
+ylim([0 10])
 % plot overharvesting betas 
 line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', '--')
 line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', '--')
@@ -84,41 +84,63 @@ xlabel('Patch yield')
 ylabel('Patch leaving time (s)')
 set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
 
-FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig2_LeHeron_subjectLT_softmax'],'-dsvg')
+% add on MVT predictions to show overharvesting effect 
+for e=1:2 %each env
+    for p=1:3 % each patch type
+        optLT(e,p)=(log(optimalAvgRR(e)/r0(p)))/-a; 
+    end
+end
+plot(1:3,optLT(1,:),':','Color',color.rich,'LineWidth',widths.plot); 
+plot(1:3,optLT(2,:),':','Color',color.poor,'LineWidth',widths.plot)
+
+% FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+% print([export_path 'fig2_LeHeron_subjectLT_softmax'],'-dsvg')
 
 
-load([dataPath 'modelLT_leheron_M1'])
+load([dataPath 'modelLT_leheron_separate_M1'])
 meanLT_simulated = mean(subject_leave_times_simulated.mean,3);
 simSEM = std(subject_leave_times_simulated.mean, [], 3)./sqrt(size(subject_leave_times_simulated.mean,3));
 
-figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+% figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
 errorbar(1:3,meanLT_simulated(1,:),simSEM(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
 errorbar(1:3,meanLT_simulated(2,:),simSEM(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
-xlabel('Patch yield')
-ylabel('Patch leaving time (s)')
-set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
+% xlabel('Patch yield')
+% ylabel('Patch leaving time (s)')
+% set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
+% 
+% % add on MVT predictions to show overharvesting effect 
+% for e=1:2 %each env
+%     for p=1:3 % each patch type
+%         optLT(e,p)=(log(optimalAvgRR(e)/r0(p)))/-a; 
+%     end
+% end
+% 
+% plot(1:3,optLT(1,:),':','Color',color.rich,'LineWidth',widths.plot); hold on
+% plot(1:3,optLT(2,:),':','Color',color.poor,'LineWidth',widths.plot)
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig2_LeHeron_simulatedLT_softmax'],'-dsvg')
 
 
 %% Panel: BIC comparison for model
-load([dataPath 'BIC_separate_leheron.mat'])
+load([dataPath 'BIC_separate_leheron_choice_policy.mat'])
+sumBIC = sum(models_BIC{:,1:2},2); % sum across environments
 
-meanBIC = mean(models_BIC{:,1:2},2); % take average across environments if separate fitting
-modelNames = {'softmax', 'e-greedy','lapse', 'RW AvgRR', 'RW Patch+AvgRR', 'RW PatchRR'};
+load([dataPath 'BIC_combined_leheron_fixedbeta.mat']) % append fixed beta model BIC
+sumBIC = [sumBIC; models_BIC{:,1}]; 
+
+modelNames = {'softmax', 'e-greedy','lapse', 'softmax fixed'};
 
 figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-bar(meanBIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
+bar(sumBIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
 
 % find best model and highlight
-minBIC = min(meanBIC);
-bestModel = find(meanBIC == minBIC);
+minBIC = min(sumBIC);
+bestModel = find(sumBIC == minBIC);
 bar(bestModel,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
 
 ylabel('BIC (sum)')
-set(gca,'XTickLabel',modelNames, 'YLim', [5500 8000], 'XTickLabelRotation',50)
+set(gca,'XTickLabel',modelNames, 'YLim', [11000 17000], 'XTickLabelRotation',50)
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig2_LeHeron_BIC'],'-dsvg')
@@ -141,16 +163,15 @@ betaSEM_poor = std(minNLLFitParams_poor.beta)./sqrt(numel(minNLLFitParams_poor.b
 errorbar(1,mean(minNLLFitParams_rich.beta),betaSEM_rich,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
 errorbar(2,mean(minNLLFitParams_poor.beta),betaSEM_poor,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
 
-
-[H0_reject, p_val_t_test, ~, stats] = ttest(log(minNLLFitParams_rich.beta), log(minNLLFitParams_poor.beta))
+[h,p] = kstest(log(minNLLFitParams_rich.beta)); % data not normal even if we log transform
+[h,p] = kstest(log(minNLLFitParams_poor.beta)); % data not normal even if we log transform
+[p_val,H0_reject, stats] = signrank(minNLLFitParams_rich.beta, minNLLFitParams_poor.beta)
 
 set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'}, 'YScale', 'log')
 ylabel('Fit beta (higher = exploit)')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig2_LeHeron_fit_beta_LT_group'],'-dsvg')
-
-
 
 %% Panel: correlation of beta fit with LT for each environment
 
@@ -168,8 +189,7 @@ FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig2_LeHeron_fit_beta_LT_correlation'],'-dsvg')
 
 % statistics
-[pearson_coeff_rich, p_val_rich]  = corr(minNLLFitParams_rich.beta, meanLT_rich')
-[pearson_coeff_poor, p_val_poor]  = corr(minNLLFitParams_poor.beta, meanLT_poor')
+[corr_coeff, p_val]  = corr([minNLLFitParams_rich.beta; minNLLFitParams_poor.beta], [meanLT_rich'; meanLT_poor'],'type','Spearman')
 
 %% Panel: Participant SD vs fit softmax model 
 
@@ -185,11 +205,11 @@ xlabel('Patch yield')
 ylabel('SD leaving times (s)')
 set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 10])
 
-FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig2_LeHeron_subjectLT_SD_softmax'],'-dsvg')
+% FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+% print([export_path 'fig2_LeHeron_subjectLT_SD_softmax'],'-dsvg')
 
-figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-errorbar(1:3,meanLT_SD_simulated(1,:),simSE_SD(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); hold on
+% figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+errorbar(1:3,meanLT_SD_simulated(1,:),simSE_SD(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot); 
 errorbar(1:3,meanLT_SD_simulated(2,:),simSE_SD(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
 xlabel('Patch yield')
 ylabel('SD leaving times (s)')
@@ -198,11 +218,55 @@ set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig2_LeHeron_simulatedLT_SD_softmax'],'-dsvg')
 
+%% SUPPLEMENTARY FIGURES %%%%%%%%%%%%%%%%%%%%%%%%
+%% Panel: participant leave times vs fixed softmax model
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+% participant data
+errorbar(1:3,meanLT(1,:),subjSEM(1,:),lines.exp,'Color',color.rich,'LineWidth',widths.plot); hold on
+errorbar(1:3,meanLT(2,:),subjSEM(2,:),lines.exp,'Color',color.poor,'LineWidth',widths.plot)
+
+load([dataPath 'modelLT_leheron_combined_M1'])
+% bad model data
+meanLT_simulated = mean(subject_leave_times_simulated.mean,3);
+simSEM = std(subject_leave_times_simulated.mean, [], 3)./sqrt(size(subject_leave_times_simulated.mean,3));
+
+errorbar(1:3,meanLT_simulated(1,:),simSEM(1,:),lines.model,'Color',color.rich,'LineWidth',widths.plot)
+errorbar(1:3,meanLT_simulated(2,:),simSEM(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
+
+xlabel('Patch yield')
+ylabel('Patch leaving time (s)')
+set(gca,'XTick',1:3,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 4],'YLim',[0 30])
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig2_LeHeron_simulatedLT_softmax_fixedbeta'],'-dsvg')
+
+%% Panel: lapse fits are near to 0 and do not correlate with leaving times 
+load([dataPath 'fitting_results_separate_M4_leheron.mat'])
+
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+scatter(minNLLFitParams_rich.epsilon, meanLT_rich,'MarkerFaceColor',color.rich,'MarkerEdgeColor', color.rich, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+scatter(minNLLFitParams_poor.epsilon, meanLT_poor,'MarkerFaceColor',color.poor,'MarkerEdgeColor', color.poor, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+set(gca,'XScale', 'log')
+xlabel('Fit epsilon (higher = more lapses)')
+ylabel('Patch leaving time (s)')
+
+FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+print([export_path 'fig2_LeHeron_fit_lapse_LT_correlation'],'-dsvg')
+
+%% STATISTICS %%%%%%%%%%%%%%%%%%%%
 % statistics - mean LT - confirms le heron results
 rich_mean = squeeze(subject_leave_times.mean(1,:,:))';
 poor_mean = squeeze(subject_leave_times.mean(2,:,:))';
 
 mean_table = [rich_mean;poor_mean];
+
+%%% test assumptions
+
+% normality - fine 
+figure, hist(rich_mean(:,1))
+% homogeneity of  variance - fine
+vartestn([rich_mean,poor_mean]); 
 
 [p_val, tbl] = anova2(mean_table,size(rich_mean,1)); 
 
@@ -211,6 +275,12 @@ rich_sd = squeeze(subject_leave_times.sd(1,:,:))';
 poor_sd = squeeze(subject_leave_times.sd(2,:,:))';
 
 sd_table = [rich_sd;poor_sd];
+
+%normality - not fine
+figure, hist(rich_sd(:,3))
+figure, hist(poor_sd(:,3))
+% homogeneity of  variance - fine
+vartestn([rich_sd,poor_sd]); 
 
 [p_val, tbl] = anova2(sd_table,size(rich_sd,1)); 
 
