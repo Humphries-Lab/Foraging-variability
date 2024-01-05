@@ -3,10 +3,14 @@ function [subLT_mean, subLT_sd, subRR_mean] = loadLeaveT(study,task)
 
 switch study
 
-    case 'leheron'
-        load('~/Dropbox/foraging/raw_data/summary/young_variables/t_young.mat') % load real data
+    case {'leheron', 'contrerashuerta'}
+        trialLeaveT = readtable(sprintf('../data/experiment_data/%s_trialbytrial.csv',study));
 
-        nSub = numel(unique(t_young.subj));
+        if strcmp(study, 'contrerashuerta')
+            trialLeaveT = trialLeaveT(trialLeaveT.ben == 1,:); % exclude other condition
+        end
+
+        nSub = numel(unique(trialLeaveT.sub));
 
         subLT_mean = zeros([task.nEnviron,task.nPatch,nSub]);
         subLT_sd = zeros([task.nEnviron,task.nPatch,nSub]);
@@ -15,29 +19,12 @@ switch study
         for iS = 1:nSub
             for iP = 1:task.nPatch
                 for iE = 1:task.nEnviron
-                    subLT_mean(iE,iP,iS) = mean(t_young.leaveT(t_young.subj == iS & t_young.env == iE & t_young.patch == iP));
-                    subLT_sd(iE,iP,iS) = std(t_young.leaveT(t_young.subj == iS & t_young.env == iE & t_young.patch == iP));
+                    subLT_mean(iE,iP,iS) = mean(trialLeaveT.leaveT(trialLeaveT.sub == iS & trialLeaveT.env == iE & trialLeaveT.patch == iP));
+                    subLT_sd(iE,iP,iS) = std(trialLeaveT.leaveT(trialLeaveT.sub == iS & trialLeaveT.env == iE & trialLeaveT.patch == iP));
                     subRR_mean(iE,iP,iS) = 0;
 
                 end
             end
-        end
-
-    case 'contrerashuerta'
-        data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta/contrerashuerta_exp2_LT.xlsx');
-        sd_data = readtable('~/Dropbox/foraging/raw_data/replication_datasets/contrerashuerta/contrerashuerta_exp2_LT_SD.xlsx');
-
-        nSub = height(data);
-
-        subLT_mean = zeros([task.nEnviron,task.nPatch,nSub]);
-        subLT_sd = zeros([task.nEnviron,task.nPatch,nSub]);
-        subRR_mean = zeros([task.nEnviron,task.nPatch,nSub]);
-
-        for iS = 1:nSub
-            subLT_mean(:,:,iS) = reshape(table2array(data(iS,1:4)),[2,2])';
-            subLT_sd(:,:,iS) = reshape(table2array(sd_data(iS,1:4)),[2,2])';
-            subRR_mean(:,:,iS) = 0;
-
         end
 
     case 'kane'

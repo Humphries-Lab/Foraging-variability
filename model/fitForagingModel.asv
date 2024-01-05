@@ -19,7 +19,7 @@ modelTable = readtable('./foragingModelTable.xlsx');
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
 fitOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
-fitOptions.nSim = 50; % how many starts/iterations for fmincon search
+fitOptions.nSim = 1; % how many starts/iterations for fmincon search
 
 %% set up model and task
 
@@ -67,22 +67,28 @@ for modelNum = 5 % for all models
             NLLEval = zeros([fitOptions.nSim, 1]);
             FitParams = zeros([fitOptions.nSim, allParams.nParams]);
 
-            % Run fmincon
-            parfor ii = 1:fitOptions.nSim
-                params0 =  paramArray(ii,:);
+            % test run with first set of parameters
+            [NLL,~,~] = simulate_MVT_model(task,model,subj,paramArray(1,:),fitOptions);
 
-                f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
-                [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
-            end
-
-            % Find the best fitting parameter values
-            minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
-            ix = find(minNLL == NLLEval);    % indices of location of minimum, to find the corresponding best fit parameters
-            minNLLFitParams(iS,:,iB) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
-
-            % Calculate BIC/AIC
-            BIC(iS,iB) = allParams.nParams * log(allData.nObservations(iS,iB)) + 2*minNLL;
-            AIC(iS,iB) = 2/allData.nObservations(iS,iB) * minNLL + 2 * allParams.nParams/allData.nObservations(iS,iB);
+            % test that simulation with the same parametters produces
+            % similar results
+            
+%             % Run fmincon
+%             for ii = 1:fitOptions.nSim
+%                 params0 =  paramArray(ii,:);
+% 
+%                 f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
+%                 [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
+%             end
+% 
+%             % Find the best fitting parameter values
+%             minNLL = min(NLLEval);   % minimum negative log likelihood over all starting positions
+%             ix = find(minNLL == NLLEval);    % indices of location of minimum, to find the corresponding best fit parameters
+%             minNLLFitParams(iS,:,iB) = FitParams(ix(1),:); % get corresponding parameter values at lowest NLL
+% 
+%             % Calculate BIC/AIC
+%             BIC(iS,iB) = allParams.nParams * log(allData.nObservations(iS,iB)) + 2*minNLL;
+%             AIC(iS,iB) = 2/allData.nObservations(iS,iB) * minNLL + 2 * allParams.nParams/allData.nObservations(iS,iB);
 
         end
     end
@@ -132,12 +138,12 @@ for modelNum = 5 % for all models
     if strcmp(fitOptions.blockPresentation, 'separate')
         minNLLFitParams_rich = array2table(minNLLFitParams(:,:,1), "VariableNames",model.paramNames);
         minNLLFitParams_poor = array2table(minNLLFitParams(:,:,2), "VariableNames",model.paramNames);
-         save_name = sprintf('../data/fitting_data_240104/fitting_results_separate_M%d_%s', model.modelNumber,fitOptions.study);
-         save(save_name, 'AIC', 'BIC', 'minNLLFitParams_rich', 'minNLLFitParams_poor')
+        save_name = sprintf('../data/fitting_data/fitting_results_separate_M%d_%s', model.modelNumber,fitOptions.study);
+        save(save_name, 'AIC', 'BIC', 'minNLLFitParams_rich', 'minNLLFitParams_poor')
     elseif strcmp(fitOptions.blockPresentation, 'combined')
         minNLLFitParams = array2table(minNLLFitParams, "VariableNames",model.paramNames);
-        save_name = sprintf('../data/fitting_data_240104/fitting_results_combined_M%d_%s', model.modelNumber,fitOptions.study);
-         save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
+        save_name = sprintf('../data/fitting_data/fitting_results_combined_M%d_%s', model.modelNumber,fitOptions.study);
+        save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
     end
 
 

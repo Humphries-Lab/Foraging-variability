@@ -9,13 +9,13 @@ switch funcOptions.type
 
         % convert rich parameters to table to index by name 
         T = array2table(repmat(funcOptions.params.rich,[funcOptions.nSim,1])); 
-        T.Properties.VariableNames = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}; tmp{1} = T;
+        T.Properties.VariableNames = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}; tmp{1} = T;
         
         % convert poor parameters to table to index by name 
         T = array2table(repmat(funcOptions.params.poor,[funcOptions.nSim,1])); 
-        T.Properties.VariableNames = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}; tmp{2} = T; clear T
+        T.Properties.VariableNames = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}; tmp{2} = T; clear T
 
-        for iB = 1:numel(task.environNames)
+        for iE = 1:task.nEnviron
 
             % set up action policy parameters
             switch modelOptions.actionPolicy
@@ -24,33 +24,38 @@ switch funcOptions.type
 
                     switch modelOptions.betaFunction
                         case 'fit'
-                            agentParams.params{iB}.beta = tmp{iB}.beta;
+                            agentParams.params{iE}.beta = tmp{iE}.beta;
                         case {'scalar', 'exponential', 'hyperbolic'}
-                            agentParams.params{iB}.lambda = tmp{iB}.lambda;
+                            agentParams.params{iE}.lambda = tmp{iE}.lambda;
                         case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
-                            agentParams.params{iB}.lambda = tmp{iB}.lambda;
-                            agentParams.params{iB}.gamma = tmp{iB}.gamma;
+                            agentParams.params{iE}.lambda = tmp{iE}.lambda;
+                            agentParams.params{iE}.gamma = tmp{iE}.gamma;
                     end
 
                 case 'epsilon-greedy'
-                    agentParams.params{iB}.epsilon = tmp{iB}.epsilon;
+                    agentParams.params{iE}.epsilon = tmp{iE}.epsilon;
 
                 case 'epsilon-softmax'
-                    agentParams.params{iB}.beta = tmp{iB}.beta;
-                    agentParams.params{iB}.epsilon = tmp{iB}.epsilon;
+                    agentParams.params{iE}.beta = tmp{iE}.beta;
+                    agentParams.params{iE}.epsilon = tmp{iE}.epsilon;
             end
 
             % set up learning rates for average RR
             if modelOptions.learnRho
-                agentParams.params{iB}.alphaRho = tmp{iB}.alphaRho;
+                agentParams.params{iE}.alphaRho = tmp{iE}.alphaRho;
             end
 
             % set up learning rates for patch RR
             if modelOptions.learnPatchRR
-                agentParams.params{iB}.alphaPatch = tmp{iB}.alphaPatch;
+                agentParams.params{iE}.alphaPatch = tmp{iE}.alphaPatch;
             end
 
-            agentParams.params{iB} = struct2table(agentParams.params{iB});
+            % set up bias (intercept) parameter for softmax
+            if modelOptions.bias
+                agentParams.params{iE}.bias = tmp{iE}.bias;
+            end
+
+            agentParams.params{iE} = struct2table(agentParams.params{iE});
 
         end
             agentParams.names = agentParams.params{1}.Properties.VariableNames; 
@@ -106,12 +111,17 @@ switch funcOptions.type
             agentParams.params.alphaPatch = rand([funcOptions.nSim,1]);
         end
 
+                % set up bias (intercept) parameter
+        if modelOptions.bias
+            agentParams.params.bias = rand([funcOptions.nSim,1]);
+        end
+
         agentParams.params = struct2table(agentParams.params);
         agentParams.names = agentParams.params.Properties.VariableNames; 
 
         % set lower and upper bounds for fmincon search
-        lb = array2table([0,0,0,0,0,0]); lb.Properties.VariableNames =  {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'};
-        ub = array2table([50,50,1,1,50,50]); ub.Properties.VariableNames =  {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'};
+        lb = array2table([0,0,0,0,0,0, -20]); lb.Properties.VariableNames =  {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'};
+        ub = array2table([50,50,1,1,50,50, 20]); ub.Properties.VariableNames =  {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'};
 
         agentParams.lb = table2array(lb(:,agentParams.names)); % only get the parameters we need for this model
         agentParams.ub = table2array(ub(:,agentParams.names));

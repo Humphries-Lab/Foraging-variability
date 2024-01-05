@@ -19,15 +19,6 @@ switch study
         task.nBlocks = 2;
         task.nPatch = numel(task.r0);
 
-        switch blockPresentation
-            case 'combined'
-                task.blockNum = 1; % how many blocks to fit separately
-                task.duration = task.blockTime * 2;
-            case 'separate'
-                task.blockNum = 2;
-                task.duration = task.blockTime;
-        end
-
         % specify which patch the agent enters. This trial order was set by
         % CLH for cabergoline data, where every 10 patches leads to correct
         % proportions of low, medium or high patches based on the environment type
@@ -45,7 +36,7 @@ switch study
         % task parameters
         task.travelTime = [3, 5]; % delay in s between patches [rich env, poor env] 
         task.timeStep = 1;  % T, seconds (discretising continuous time)
-        task.blockTime = 900; % seconds in block
+        task.blockTime = 300; % seconds in block
         task.r0 = [34.5, 57.5]; % starting reward rate
         task.patchNames = {'low', 'high'};
 
@@ -54,17 +45,8 @@ switch study
 
         task.environNames = {'rich', 'poor'};
         task.nEnviron = 2;
-        task.nBlocks = 12;
+        task.nBlocks = 6;
         task.nPatch = numel(task.r0);
-
-        switch blockPresentation
-            case 'combined'
-                task.blockNum = 1; % how many blocks to fit separately
-                task.duration = task.blockTime * 2;
-            case 'separate'
-                task.blockNum = 2;
-                task.duration = task.blockTime;
-        end
 
         % patch order in rich environment
         task.patchOrder{1} = repmat([2,2,1,1,2,1,2,1,2,1], [1,40]); % assume same random patch order in both environments
@@ -91,15 +73,6 @@ switch study
         %task.nBlocks = ?;
         task.nPatch = numel(task.r0);
 
-        switch blockPresentation
-            case 'combined'
-                task.blockNum = 1; % how many blocks to fit separately
-                task.duration = task.blockTime * 2;
-            case 'separate'
-                task.blockNum = 2;
-                task.duration = task.blockTime;
-        end
-
         % patch order in rich environment
         task.patchOrder{1} = repmat([2 3 1 2 1 3 1 2 3 1 3 2 1 2 3 3 1 2 1 3 2], [1,40]); % assume same random patch order in both environments
         % patch order in poor environment
@@ -110,4 +83,13 @@ switch study
         % just take average across all subjects to keep consistent with other datasets for now
         task.optAvgRR(1) = 59; % optimal average RR in rich environment
         task.optAvgRR(2) = 45; % optimal average RR in poor environment
+end
+
+switch blockPresentation
+    case 'combined'
+        task.numFitBlocks = 1; % how many blocks to fit separately
+        task.duration = task.blockTime * 2;
+    case 'separate'
+        task.numFitBlocks = 2;
+        task.duration = task.blockTime;
 end
