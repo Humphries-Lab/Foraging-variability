@@ -18,8 +18,8 @@ modelTable = readtable('./foragingModelTable.xlsx');
 
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
-fitOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
-fitOptions.nSim = 50; % how many starts/iterations for fmincon search
+fitOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+fitOptions.nSim = 8; % how many starts/iterations for fmincon search
 
 %% set up model and task
 
@@ -30,7 +30,7 @@ task = buildTask(fitOptions.study,fitOptions.blockPresentation);
 allData = buildData(task,fitOptions);
 nSub = size(allData.data,2);
 
-for modelNum = 5 % for all models
+for modelNum = 27 % for all models
     % load model
     model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
@@ -70,9 +70,12 @@ for modelNum = 5 % for all models
             % Run fmincon
             parfor ii = 1:fitOptions.nSim
                 params0 =  paramArray(ii,:);
-
-                f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
-                [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
+                
+                % test code (check negLL computed correctly) 
+                %[NLL, results, out] = simulate_MVT_model(task,model,subj,[0.31, 0.0076,-1.99],fitOptions);
+              
+                 f = @(x0)simulate_MVT_model(task,model,subj,x0,fitOptions);
+                 [FitParams(ii,:),NLLEval(ii)] = fmincon(f,params0,[],[],[],[],lb,ub,[],options);
             end
 
             % Find the best fitting parameter values

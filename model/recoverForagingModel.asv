@@ -75,10 +75,10 @@ lb = allParams.lb;
 ub = allParams.ub;
 
 % initialise containers
-minNLL = zeros([length(simData.data), task.nBlocks]);
-minNLLFitParams = zeros([length(simData.data), allParams.nParams, task.nBlocks]);
-BIC = zeros([length(simData.data), task.nBlocks]);
-AIC = zeros([length(simData.data), task.nBlocks]);
+minNLL = zeros([numel(simData.data), task.nBlocks]);
+minNLLFitParams = zeros([numel(simData.data), allParams.nParams, task.nBlocks]);
+BIC = zeros([numel(simData.data), task.nBlocks]);
+AIC = zeros([numel(simData.data), task.nBlocks]);
 
 for iS = 1:length(simData.data) % for all simulated combinations
 
@@ -90,9 +90,9 @@ for iS = 1:length(simData.data) % for all simulated combinations
         subj.data = simData.data{iS,iB};
         subj.data.estPatchRR = zeros(subj.nStates+1,1);   % refresh for recovery
         subj.data.rho = zeros(subj.nStates+1,1);    % refresh for recovery
-        subj.patchOrder = agent.patchOrder; % use task generated patchOrder, to allow for fitting model visiting +1 patch compared to simulated model. 
-        subj.env = [simData.results{iS,iB}.env;simData.results{iS,iB}.env(1)];
-        subj.switchIndex = subj.patchOrder*0; % dummy index since we're fitting block by block here 
+        subj.patchOrder = agent.patchOrder; % use task generated patchOrder, to allow for fitting 
+        subj.env = simData.results{iS,iB}.env;
+        subj.switchIndex = simData.results{iS,iB}.patchOrder.*0; % dummy index since we're fitting block by block here 
         NLLEval = zeros([funcOptions.nSim, 1]);
         FitParams = zeros([funcOptions.nSim, allParams.nParams]);
 
@@ -129,7 +129,7 @@ end
 
 %fitIndex = allParams.params{:,1} < 1;
 % plot simulated value versus actual value
-for iB = 1:task.nBlocks
+for iB = 1:task.blockNum
         figure; tl = tiledlayout('flow', 'TileSpacing', 'Compact');
 
         for i= 1:allParams.nParams

@@ -47,7 +47,7 @@ for ii = 1:agent.nStates % for each second in the task
 
                 switch model.rhoFunction
                     case {'mvt', 'rw'}
-                        rho(ii) = task.optAvgRR(currentEnv); % initialise rho to the MVT optimal avg reward rate
+                        rho(ii) = mean(task.optAvgRR); % initialise rho to the MVT optimal avg reward rate
                     case 'block'
                         rho(ii) = agent.experiencedAvgRR(currentEnv); % set rho to agents' estimate of experiencedAvgRR.
                     case 'none'
@@ -173,9 +173,9 @@ out.estPatchRR = estPatchRR;
 out.action = action;
 out.beta = logged_betas;
 
-results.patchOrder = agent.patchOrder(1:numel(leaveT)); % account for extra patch they may have been in before task simulation ended
+results.patchOrder = agent.patchOrder(1:numel(leaveT));
 results.leaveT = leaveT;
-results.env = cE;
+results.env = cE; % add on extra row to account for recovery
 results = struct2table(results);
 
 negLL = -logLikelihood;

@@ -3,10 +3,10 @@
 clear  
 
 %% user options 
-study = 'kane'; % study to simulate/fit data to
+study = 'contrerashuerta'; % study to simulate/fit data to
 
 %model = [8, 9, 11, 12, 14, 15, 17, 18, 20, 21];
-model = [10,13,16,19,22]; % model numbers to compare 
+model = [1,5:10,26,27]; % model numbers to compare 
 %model = [8:10]
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
@@ -26,7 +26,7 @@ models_AIC = zeros(nModels, nBlock);
 models_BIC = zeros(nModels, nBlock);
 
 for m = 1:nModels
-    load(sprintf('../data/fitting_data/fitting_results_%s_M%d_%s', blockPresentation, model(m),study), '-mat', 'BIC', 'AIC');
+    load(sprintf('../data/fitting_data_240104/fitting_results_%s_M%d_%s', blockPresentation, model(m),study), '-mat', 'BIC', 'AIC');
     ppts_AIC(:,:,m) = AIC;
     ppts_BIC(:,:,m) = BIC;
     models_AIC(m,:) = sum(AIC);
@@ -60,7 +60,7 @@ elseif strcmp(blockPresentation,'separate')
 end
 
 % save for paper figures 
-models_BIC = array2table(models_BIC); models_BIC.modelN = model'; models_BIC.Properties.VariableNames = varNames;
-save_name = ['BIC_', blockPresentation, '_', study, '_',num2str(model), '.mat'];
-save_path = '../data/fig_data/';
-save([save_path, save_name],'models_BIC');
+% models_BIC = array2table(models_BIC); models_BIC.modelN = model'; models_BIC.Properties.VariableNames = varNames;
+% save_name = ['BIC_', blockPresentation, '_', study, '_',num2str(model), '.mat'];
+% save_path = '../data/fig_data/';
+% save([save_path, save_name],'models_BIC');

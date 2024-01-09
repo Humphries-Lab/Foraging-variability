@@ -116,24 +116,17 @@ plot(1:3,data.E_leave(ixPoor,:),lines.model,'Color',color.poor,'LineWidth',width
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig1_MVT_expectedLT_softmax_overharvesting'],'-dsvg')
 
-%% Panel: expected standard deviation of leave times for range of beta when beta = overharvesting (softmax model) 
-
-beta_rich = 0.22; ixRich = find(round(data.beta,2) == beta_rich,1,"first");
-beta_poor = 0.28; ixPoor = find(round(data.beta,2) == beta_poor,1,"first");
+%% Panel: expected standard deviation of leave times for range of beta (softmax model)
 
 figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
 colororder(color.patch);
 semilogx(data.beta,data.SD_leave,'LineWidth',widths.plot); hold on
 xlabel('Beta (higher = exploit)')
-ylabel('SD leaving times (s)')
+ylabel('Leaving time variability (SD)'); 
 ylim([0 10])
-% plot overharvesting betas 
-line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)],'Color',color.rich, 'LineWidth',widths.plot, 'LineStyle', '--')
-line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor, 'LineWidth',widths.plot, 'LineStyle', '--')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig1_SD_LT_beta_range_softmax_overharvesting'],'-dsvg')
-
+print([export_path 'fig1_SD_LT_beta_range_softmax'],'-dsvg')
 
 %% Panel: expected leave times for range of epsilon for E-GREEDY model
 
@@ -249,7 +242,7 @@ SD_fig = figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',
 colororder(color.patch);
 semilogx(data.beta,data.SD_leave,'LineWidth',widths.plot); hold on
 xlabel('Beta (higher = exploit)')
-ylabel('SD leaving times (s)')
+ylabel('Leaving time variability (SD)')
 ylim([0 15])
 
 % plot overharvesting betas 
@@ -271,7 +264,7 @@ SD_fig = figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',
 colororder(color.patch);
 semilogx(data.beta,data.SD_leave,'LineWidth',widths.plot); hold on
 xlabel('Beta (higher = exploit)')
-ylabel('SD leaving times (s)')
+ylabel('Leaving time variability (SD)')
 ylim([0 15])
 
 % plot overharvesting betas 
@@ -293,7 +286,7 @@ SD_fig = figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',
 colororder(color.patch);
 semilogx(data.beta,data.SD_leave,'LineWidth',widths.plot); hold on
 xlabel('Beta (higher = exploit)')
-ylabel('SD leaving times (s)')
+ylabel('Leaving time variability (SD)')
 ylim([0 15])
 
 % plot overharvesting betas 

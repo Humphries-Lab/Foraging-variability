@@ -155,8 +155,9 @@ betaSEM_poor = std(minNLLFitParams_poor.beta)./sqrt(numel(minNLLFitParams_poor.b
 errorbar(1,mean(minNLLFitParams_rich.beta),betaSEM_rich,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
 errorbar(2,mean(minNLLFitParams_poor.beta),betaSEM_poor,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
 
-set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'}, 'YScale', 'log')
+set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'}, 'YScale', 'log', 'YLim', [0,1])
 ylabel('Fit beta (higher = exploit)')
+title('Model 1')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_fit_beta_LT_group'],'-dsvg')
@@ -177,7 +178,7 @@ FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_fit_beta_LT_correlation'],'-dsvg')
 
 % statistics
-[pearson_coeff_rich, p_val_rich]  = corr(log([minNLLFitParams_rich.beta; minNLLFitParams_poor.beta]), [meanLT_rich'; meanLT_poor'])
+[pearson_coeff, p_val]  = corr(log([minNLLFitParams_rich.beta; minNLLFitParams_poor.beta]), [meanLT_rich'; meanLT_poor'])
 
 [H0_reject, p_val_t_test, ~, stats] = ttest(log(minNLLFitParams_rich.beta), log(minNLLFitParams_poor.beta))
 

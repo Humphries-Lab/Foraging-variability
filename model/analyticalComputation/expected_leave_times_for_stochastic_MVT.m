@@ -13,7 +13,7 @@ close all;
 addpath('../helperFunctions')
 
 % specify study
-study = 'kane'; 
+study = 'contrerashuerta'; 
 
 % parameters of choice model
 model = 'softmax'; % 'softmax', 'e-greedy', 'lapse'
@@ -21,6 +21,7 @@ explore_parameter = logspace(-3,0,100);  % space of softmax temperatures to calc
                         % maximum of beta=1 here, as actual temperature is
                         % beta * task.r0         
 %lapse_parameter = 0.04; % required for lapse model only 
+bias_parameter = 0; % required for softmax model - intercept for over/under-harvesting
 t_max = 1000;   % maximum time in patch (for explicit calculations)
 
 switch study
@@ -59,7 +60,7 @@ for iR = 1:numel(task.r0)
     for iB = 1:numel(explore_parameter)
         switch model
             case 'softmax'
-                p_leave_at_n = p_leave_softmax(reward_ts,explore_parameter(iB));
+                p_leave_at_n = p_leave_softmax(reward_ts,explore_parameter(iB), bias_parameter);
             case 'e-greedy'
                 p_leave_at_n = explore_parameter(iB) * ones(size(reward_ts)); 
             case 'lapse'
@@ -96,9 +97,9 @@ data.E_leave = E_leave;
 data.SD_leave = SD_leave;
 data.beta = explore_parameter;
 
-save_name = ['expectedLT_', model, '_',study,'_04', '.mat'];
-save_path = '../../data/analytical_data/';
-save([save_path, save_name],'data');
+% save_name = ['expectedLT_', model, '_',study,'_04', '.mat'];
+% save_path = '../../data/analytical_data/';
+% save([save_path, save_name],'data');
 
 %% plot results
 E_fig = figure;
@@ -132,9 +133,9 @@ ylabel('SD of leaving time (s)')
 subject_leave_times.mean = subjectLT_mean;
 subject_leave_times.sd = subjectLT_sd;
 
-save_name = ['subjectLT_', study, '.mat'];
-save_path = '../../data/analytical_data/';
-save([save_path, save_name],'subject_leave_times');
+% save_name = ['subjectLT_', study, '.mat'];
+% save_path = '../../data/analytical_data/';
+% save([save_path, save_name],'subject_leave_times');
 
 % group averages 
 mean_leave_data = mean(subjectLT_mean,3); 

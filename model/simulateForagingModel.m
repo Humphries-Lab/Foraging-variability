@@ -15,16 +15,16 @@ simOptions.study = 'contrerashuerta'; % study to simulate/fit data to. Options a
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx'); 
-modelNum = 5; % model type - choose from foragingModelTable 
+modelNum = 27; % model type - choose from foragingModelTable 
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
-simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor environments as separate blocks)
+simOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor environments as separate blocks)
 
 % set parameters - options below will override if simulating already fit parameters
 simOptions.nSim = 50;
-simOptions.params.rich = [5, 0, 0.01, 1, 0, 0]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
-simOptions.params.poor = [5, 0, 0.01, 1, 0, 0]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma'}
+simOptions.params.rich = [0.28, 0, 0.007, 1, 0, 0, -3]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
+simOptions.params.poor = [0.31, 0, 0.0003, 1, 0, 0, -3]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
 
 %% set up
 
@@ -85,11 +85,12 @@ subject_leave_times_simulated.sd = modelLT_sd;
 
 %% plot against participant data
 
-[dataLT] = loadLeaveT(simOptions.study,task); % load mean leaving times for each subject x patch x env
+[dataLT, dataLT_SD] = loadLeaveT(simOptions.study,task); % load mean leaving times for each subject x patch x env
 
 % summarise model data
 modelMean = mean(modelLT_mean,3);
 subjectMean = mean(dataLT,3);
+subjectSD = mean(dataLT_SD,3);
 
 figure
 
@@ -105,15 +106,20 @@ plot(subjectMean(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15
 plot(subjectMean(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 30])
-ylabel('Leaving time (s)')
-
+ylabel('Mean leaving time (s)')
+title('Model', modelNum)
 legend({'model - rich', 'model - poor', 'data - rich', 'data - poor'})
 
 % SD figure 
 figure
-plot(mean(modelLT_sd(1,:,:),3),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15); hold on
-plot(mean(modelLT_sd(2,:,:),3),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(mean(modelLT_sd(1,:,:),3),'.--', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15); hold on
+plot(mean(modelLT_sd(2,:,:),3),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(subjectSD(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
+plot(subjectSD(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 10])
+title('Model', modelNum)
+ylabel('Mean SD of leaving time (s)')
+
 
 %% plot avgRR and beta 
 % REQUIRES UPDATING NOW THAT MORE BLOCKS HAVE BEEN ADDED FOR CH/Kane
