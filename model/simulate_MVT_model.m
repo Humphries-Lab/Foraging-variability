@@ -5,6 +5,14 @@ function [negLL,results,out] = simulate_MVT_model(task,model,agent,agentParams,f
 % convert parameter array to table to allow indexing
 params = array2table(agentParams); params.Properties.VariableNames = model.paramNames;
 
+switch model.bias
+    case 'null' 
+        params.bias = 0;
+    case 'separate'
+
+    case 'single'
+end
+
 if model.bias == 0
     params.bias = 0; % set bias to 0 for models that don't require it 
 end
@@ -102,9 +110,11 @@ for ii = 1:agent.nStates % for each second in the task
                 logged_betas = [logged_betas, beta];
 
                 if strcmp(model.betaFunction,'fit')
-                    pAction = softmax(estPatchRR(ii+1), rho(ii+1), beta, params.bias); % note that rho will only be non-zero for models including bias term
+                    pLeave = p_leave_softmax(estPatchRR(ii+1), beta, params.bias, rho(ii+1)); % note that rho will only be non-zero for models including bias term
+                    pAction = [pLeave, 1-pLeave];
                 else
-                    pAction = softmax(estPatchRR(ii+1), 0, beta, 0); % don't pass rho to the function - use instead to modulate beta
+                    pLeave = p_leave_softmax(estPatchRR(ii+1), beta, 0, 0); % don't pass rho to the function - use instead to modulate beta
+                    pAction = [pLeave, 1-pLeave];
                 end
 
             case 'epsilon-greedy'

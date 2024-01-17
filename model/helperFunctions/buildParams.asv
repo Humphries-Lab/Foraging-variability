@@ -94,8 +94,8 @@ switch funcOptions.type
                     case 'single' 
                         agentParams.params.beta = exprnd(1,[funcOptions.nSim,1]);
                     case 'separate'
-                        agentParams.params.beta(1) = exprnd(1,[funcOptions.nSim,1]);
-                        agentParams.params.beta(2) = exprnd(1,[funcOptions.nSim,1]);
+                        agentParams.params.beta = exprnd(1,[funcOptions.nSim,1]);
+                        agentParams.params.beta_two = exprnd(1,[funcOptions.nSim,1]);
                     case {'scalar', 'exponential', 'hyperbolic'}
                         agentParams.params.lambda = rand([funcOptions.nSim,1]);
                     case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
@@ -123,11 +123,8 @@ switch funcOptions.type
 
         % set up bias (intercept) parameter
         switch modelOptions.bias
-            case 'single'
+            case {'single', 'separate'}
                 agentParams.params.bias = rand([funcOptions.nSim,1]);
-            case 'separate'
-                agentParams.params.bias{1} = rand([funcOptions.nSim,1]);
-                agentParams.params.bias{2} = rand([funcOptions.nSim,1]);
         end
 
         agentParams.params = struct2table(agentParams.params);

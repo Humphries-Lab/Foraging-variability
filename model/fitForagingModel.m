@@ -18,7 +18,7 @@ modelTable = readtable('./foragingModelTable.xlsx');
 
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
-fitOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
+fitOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 fitOptions.nSim = 8; % how many starts/iterations for fmincon search
 
 %% set up model and task
@@ -55,7 +55,7 @@ for modelNum = 27 % for all models
 
         subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR
 
-        for iB = 1:task.numFitBlocks % will always be in order rich-poor for separate fitting
+        for iB = 1:task.numFitBlocks 
             iS
 
             subj.nStates = allData.nStates(iS,iB);

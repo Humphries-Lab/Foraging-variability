@@ -15,16 +15,16 @@ simOptions.study = 'contrerashuerta'; % study to simulate/fit data to. Options a
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx'); 
-modelNum = 27; % model type - choose from foragingModelTable 
+modelNum = 26; % model type - choose from foragingModelTable 
 
 % simulation options
-simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
-simOptions.blockPresentation = 'combined'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor environments as separate blocks)
+simOptions.type = 'simulate_new'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
+simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor environments as separate blocks)
 
 % set parameters - options below will override if simulating already fit parameters
 simOptions.nSim = 50;
-simOptions.params.rich = [0.28, 0, 0.007, 1, 0, 0, -3]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
-simOptions.params.poor = [0.31, 0, 0.0003, 1, 0, 0, -3]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
+simOptions.params.rich = [0.4, 0, 0.007, 1, 0, 0, -5]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
+simOptions.params.poor = [0.5, 0, 0.0003, 1, 0, 0, -5]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
 
 %% set up
 
