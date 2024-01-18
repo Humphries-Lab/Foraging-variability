@@ -11,25 +11,23 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-simOptions.study = 'contrerashuerta'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
+simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx'); 
-modelNum = 26; % model type - choose from foragingModelTable 
+modelNum = 27; % model type - choose from foragingModelTable 
 
 % simulation options
-simOptions.type = 'simulate_new'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
-simOptions.blockPresentation = 'separate'; % either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor environments as separate blocks)
+simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
 
 % set parameters - options below will override if simulating already fit parameters
 simOptions.nSim = 50;
-simOptions.params.rich = [0.4, 0, 0.007, 1, 0, 0, -5]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
-simOptions.params.poor = [0.5, 0, 0.0003, 1, 0, 0, -5]; % {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'}
+simOptions.params = [0 0.107 0.15 0 0 0 0 0 0 0 0]; % {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'}
 
 %% set up
 
 % load task
-task = buildTask(simOptions.study,simOptions.blockPresentation); % set up task structure 
+task = buildTask(simOptions.study); % set up task structure 
 
 % load dataframe container for simulations, according to 
 allData = buildData(task,simOptions);
@@ -54,7 +52,7 @@ for iS = 1:allData.nSubj
 
         agent.patchOrder = task.patchOrder{agent.currentEnv}'; % generic patch order for all participants
 
-        agentParams = table2array(allParams.params{allData.blockOrder(iS,iB)}(iS,:)); % specific for the subject, depending on environment
+        agentParams = allParams.params{iS,:}; % specific for the subject, depending on environment
   
         [NLL,simLT{iS,iB},simData{iS,iB}] = simulate_MVT_model(task,model,agent,agentParams,simOptions);
     end
@@ -79,7 +77,7 @@ end
 subject_leave_times_simulated.mean = modelLT_mean;
 subject_leave_times_simulated.sd = modelLT_sd;
 
-% save_name = ['modelLT_', simOptions.study,'_',simOptions.blockPresentation, '_M', sprintf('%d',modelNum), '.mat'];
+% save_name = ['modelLT_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
 % save_path = '../data/simulation_data/';
 % save([save_path, save_name],'subject_leave_times_simulated');
 

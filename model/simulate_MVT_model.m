@@ -5,18 +5,6 @@ function [negLL,results,out] = simulate_MVT_model(task,model,agent,agentParams,f
 % convert parameter array to table to allow indexing
 params = array2table(agentParams); params.Properties.VariableNames = model.paramNames;
 
-switch model.bias
-    case 'null' 
-        params.bias = 0;
-    case 'separate'
-
-    case 'single'
-end
-
-if model.bias == 0
-    params.bias = 0; % set bias to 0 for models that don't require it 
-end
-
 % possible actions
 leave = 1;
 stay = 2;
@@ -30,8 +18,6 @@ patchN = 0; % start outside the patch
 arrive = 1; % start by arriving at new patch
 
 logLikelihood = 0;
-
-logged_betas = [];
 
 for ii = 1:agent.nStates % for each second in the task
 
@@ -91,30 +77,43 @@ for ii = 1:agent.nStates % for each second in the task
             case 'softmax'
                 % compute beta
                 switch model.betaFunction
-                    case 'fit'
-                        beta = params.beta;
+                    case 'single'
+                        current_beta = params.beta;
+                    case 'separate'
+                        betas = [params.beta_rich, params.beta_poor];
+                        current_beta = betas(currentEnv);
                     case 'scalar'
-                        beta = params.lambda * 1/rho(ii+1);
+                        current_beta = params.lambda * 1/rho(ii+1);
                     case 'exponential'
-                        beta = 1/(rho(ii+1)^params.lambda);
+                        current_beta = 1/(rho(ii+1)^params.lambda);
                     case 'hyperbolic'
-                        beta = 1/(1 + params.lambda * rho(ii+1));
+                        current_beta = 1/(1 + params.lambda * rho(ii+1));
                     case 'twoScalar'
-                        beta = params.lambda * 1/(params.gamma * rho(ii+1));
+                        current_beta = params.lambda * 1/(params.gamma * rho(ii+1));
                     case 'twoExponential'
-                        beta = params.lambda * 1/(rho(ii+1)^params.gamma);
+                        current_beta = params.lambda * 1/(rho(ii+1)^params.gamma);
                     case 'twoHyperbolic'
-                        beta = params.lambda * 1/(1 + params.lambda * rho(ii+1));
+                        current_beta = params.lambda * 1/(1 + params.lambda * rho(ii+1));
                 end
 
-                logged_betas = [logged_betas, beta];
+                % set bias depending on environment and model
+                switch model.bias
+                    case 'null'
+                        bias = 0; % set bias to 0 for models that don't require it
+                    case 'single'
+                        bias = params.bias;
+                    case 'separate'
+                        biases = [params.bias_rich, params.bias_poor];
+                        bias = biases(currentEnv);
+                end
 
-                if strcmp(model.betaFunction,'fit')
-                    pLeave = p_leave_softmax(estPatchRR(ii+1), beta, params.bias, rho(ii+1)); % note that rho will only be non-zero for models including bias term
-                    pAction = [pLeave, 1-pLeave];
-                else
-                    pLeave = p_leave_softmax(estPatchRR(ii+1), beta, 0, 0); % don't pass rho to the function - use instead to modulate beta
-                    pAction = [pLeave, 1-pLeave];
+                switch model.betaFunction
+                    case {'single', 'separate'}
+                        pLeave = p_leave_softmax(estPatchRR(ii+1), current_beta, bias, rho(ii+1)); % note that rho will only be non-zero for models that include bias term
+                        pAction = [pLeave, 1-pLeave];
+                    otherwise
+                        pLeave = p_leave_softmax(estPatchRR(ii+1), current_beta, bias, 0); % don't pass rho to the function - use instead to modulate beta
+                        pAction = [pLeave, 1-pLeave];
                 end
 
             case 'epsilon-greedy'
@@ -181,7 +180,6 @@ end
 out.rho = rho;
 out.estPatchRR = estPatchRR;
 out.action = action;
-out.beta = logged_betas;
 
 results.patchOrder = agent.patchOrder(1:numel(leaveT));
 results.leaveT = leaveT;

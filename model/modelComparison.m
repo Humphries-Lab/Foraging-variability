@@ -3,30 +3,23 @@
 clear  
 
 %% user options 
-study = 'contrerashuerta'; % study to simulate/fit data to
+study = 'leheron'; % study to simulate/fit data to
 
 %model = [8, 9, 11, 12, 14, 15, 17, 18, 20, 21];
-model = [1,5:10,26,27]; % model numbers to compare 
+model = [1,26:29]; % model numbers to compare 
 %model = [8:10]
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
-blockPresentation = 'combined'; %% either 'combined' (fit as one continuous task) or 'separate' (fit rich and poor as separate blocks)
 
 %% AIC/BIC
 
-if contains(blockPresentation, 'combined')
-    nBlock = 1; 
-elseif contains(blockPresentation, 'separate')
-    nBlock = 2; 
-end 
-
 nModels = size(model,2);
 
-models_AIC = zeros(nModels, nBlock);
-models_BIC = zeros(nModels, nBlock);
+models_AIC = zeros(nModels, 1);
+models_BIC = zeros(nModels, 1);
 
 for m = 1:nModels
-    load(sprintf('../data/fitting_data_240104/fitting_results_%s_M%d_%s', blockPresentation, model(m),study), '-mat', 'BIC', 'AIC');
+    load(sprintf('../data/fitting_data_240117/fitting_results_M%d_%s', model(m),study), '-mat', 'BIC', 'AIC');
     ppts_AIC(:,:,m) = AIC;
     ppts_BIC(:,:,m) = BIC;
     models_AIC(m,:) = sum(AIC);
@@ -37,6 +30,7 @@ end
 sumBICs = sum(models_BIC,2);
 %posteriorProbabilities = BICposterior(sumBICs);
 
+sumAICs = sum(models_AIC,2);
 % plot
 
 figure
@@ -45,18 +39,27 @@ xticklabels(model)
 ylabel('sum BIC')
 title('BIC comparison of models (rich and poor)')
 ylim([min(sumBICs)-200,max(sumBICs)+200])
+xticklabels({'softmax (no c)', 'vary \beta vary c', 'vary \beta fix c', 'fix \beta vary c', 'fix \beta fix c'})
 
 % find best model for each participant 
 meanBIC = squeeze(mean(ppts_BIC,2));
 
-if strcmp(blockPresentation,'combined')
-    subjectBestModelBIC = meanBIC == min(meanBIC, [], 2);
-    bestModel = sum(subjectBestModelBIC)
-    varNames = {'combined', 'modelN'};
-elseif strcmp(blockPresentation,'separate')
-    bestModelRich = sum(squeeze(ppts_BIC(:,1,:)) == min(squeeze(ppts_BIC(:,1,:)), [], 2))
-    bestModelPoor = sum(squeeze(ppts_BIC(:,2,:)) == min(squeeze(ppts_BIC(:,2,:)), [], 2))
-    varNames = {'rich', 'poor', 'modelN'};
+subjectBestModelBIC = meanBIC == min(meanBIC, [], 2);
+bestModel = sum(subjectBestModelBIC)
+varNames = {'combined', 'modelN'};
+
+%% formatting
+fontsize = 14;
+fontname = 'Arial';
+htext = findobj(gca, 'type', 'text');
+set(htext,'FontName',fontname,'FontSize',fontsize);
+
+
+hAxes = findobj(gca, 'type', 'axes');
+for i=1:numel(hAxes)
+    set(get(hAxes(i),'XLabel'),'FontName',fontname,'FontSize',fontsize);
+    set(get(hAxes(i),'YLabel'),'FontName',fontname,'FontSize',fontsize);
+    set(hAxes(i),'FontName',fontname,'FontSize',fontsize);
 end
 
 % save for paper figures 

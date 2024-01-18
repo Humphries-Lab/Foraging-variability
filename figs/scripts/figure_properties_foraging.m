@@ -7,7 +7,6 @@
 
 fontsize = 11;
 fontname = 'Arial';
-M_alpha = 0.6; % marker alpha for scatter plots
 
 Units = 'centimeters';
 
@@ -37,8 +36,6 @@ color.text = [0.3 0.3 0.3];
 lines.model = '.--';
 lines.exp = '.-';
 
-marker.rich = color.rich + (1-color.rich) * 0.2;
-marker.poor = color.poor + (1-color.poor) * 0.2;
-
 % exportpath
 export_path = '../';
+overleaf_path = '/Users/exs165/Dropbox/Apps/Overleaf/230710 - stochastic foraging paper draft/figures/';

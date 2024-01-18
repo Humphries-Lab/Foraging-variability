@@ -1,4 +1,4 @@
-function task = buildTask(study, blockPresentation)
+function task = buildTask(study)
 
 switch study
 
@@ -83,13 +83,4 @@ switch study
         % just take average across all subjects to keep consistent with other datasets for now
         task.optAvgRR(1) = 59; % optimal average RR in rich environment
         task.optAvgRR(2) = 45; % optimal average RR in poor environment
-end
-
-switch blockPresentation
-    case 'combined'
-        task.numFitBlocks = 1; % how many blocks to fit separately
-        task.duration = task.blockTime * 2;
-    case 'separate'
-        task.numFitBlocks = 2;
-        task.duration = task.blockTime;
 end

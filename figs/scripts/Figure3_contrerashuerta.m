@@ -31,6 +31,7 @@ line([0 RR_fig.Children.XLim(2)],[optimalAvgRR(2) optimalAvgRR(2)],'Color',color
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_RR'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_RR'],'-dsvg')
 
 %% Panel: expected leave times for range of beta (softmax model) vs ContrerasHuerta data
 
@@ -57,6 +58,7 @@ line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor, 'LineW
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_expectedLT'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_expectedLT'],'-dsvg')
 
 %% Panel: expected standard deviation for range of beta (softmax model) vs contrerashuerta data
 
@@ -72,6 +74,7 @@ line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)],'Color',color.poor, 'LineW
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_expectedSD'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_expectedSD'],'-dsvg')
 
 
 %% Panel: participant leave times vs fit softmax model
@@ -83,7 +86,7 @@ errorbar(1:2,meanLT(1,:),subjSEM(1,:),lines.exp,'Color',color.rich,'LineWidth',w
 errorbar(1:2,meanLT(2,:),subjSEM(2,:),lines.exp,'Color',color.poor,'LineWidth',widths.plot)
 xlabel('Patch yield')
 ylabel('Patch leaving time (s)')
-set(gca,'XTick',1:2,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 3],'YLim',[0 30])
+set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 30])
 
 % FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 % print([export_path 'fig3_ContrerasHuerta_subjectLT_softmax'],'-dsvg')
@@ -107,10 +110,11 @@ errorbar(1:2,meanLT_simulated(1,:),simSEM(1,:),lines.model,'Color',color.rich,'L
 errorbar(1:2,meanLT_simulated(2,:),simSEM(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
 xlabel('Patch yield')
 ylabel('Patch leaving time (s)')
-set(gca,'XTick',1:2,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 3],'YLim',[0 30])
+set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 30])
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_simulatedLT_softmax'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_simulatedLT_softmax'],'-dsvg')
 
 
 %% Panel: BIC comparison for model
@@ -118,9 +122,9 @@ load([dataPath 'BIC_separate_contrerashuerta_choice_policy.mat'])
 sumBIC = sum(models_BIC{:,1:2},2); % sum across environments
 
 load([dataPath 'BIC_combined_contrerashuerta_fixedbeta.mat']) % append fixed beta model BIC
-sumBIC = [sumBIC; models_BIC{:,1}]; 
+sumBIC = [sumBIC(1:2); models_BIC{:,1}]; 
 
-modelNames = {'softmax', 'e-greedy','lapse', 'softmax fixed'};
+modelNames = {'softmax', 'greedy', 'softmax fixed'};
 
 figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
 bar(sumBIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
@@ -135,52 +139,52 @@ set(gca,'XTickLabel',modelNames, 'YLim', [18000 25000], 'XTickLabelRotation',50)
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_BIC'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_BIC'],'-dsvg')
 
 
 %% Panel: distribution of beta fit with LT for each environment
 load([dataPath 'fitting_results_separate_M1_contrerashuerta.mat'])
 
-figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-bar(1,mean(minNLLFitParams_rich.beta),'FaceColor',color.rich, 'EdgeColor',color.rich); hold on 
-bar(2,mean(minNLLFitParams_poor.beta),'FaceColor',color.poor, 'EdgeColor',color.poor); 
+figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square); hold on
 
-% plot individual points
-scatter(ones(size(minNLLFitParams_rich.beta)), minNLLFitParams_rich.beta,'o','MarkerFaceColor', marker.rich,'MarkerEdgeColor', marker.rich,'MarkerEdgeAlpha', M_alpha,'MarkerFaceAlpha', M_alpha); 
-scatter(2*ones(size(minNLLFitParams_poor.beta)), minNLLFitParams_poor.beta,'o','MarkerFaceColor', marker.poor,'MarkerEdgeColor', marker.poor,'MarkerEdgeAlpha', M_alpha,'MarkerFaceAlpha', M_alpha); 
+plot individual points
+scatter(ones(size(minNLLFitParams_rich.beta)), minNLLFitParams_rich.beta,'o','MarkerFaceColor', color.rich,'MarkerEdgeColor', 'w'); 
+scatter(2*ones(size(minNLLFitParams_poor.beta)), minNLLFitParams_poor.beta,'o','MarkerFaceColor', color.poor,'MarkerEdgeColor', 'w'); 
 
-% plot error bars 
+plot error bars 
 betaSEM_rich = std(minNLLFitParams_rich.beta)./sqrt(numel(minNLLFitParams_rich.beta));
 betaSEM_poor = std(minNLLFitParams_poor.beta)./sqrt(numel(minNLLFitParams_poor.beta));
 
-errorbar(1,mean(minNLLFitParams_rich.beta),betaSEM_rich,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
-errorbar(2,mean(minNLLFitParams_poor.beta),betaSEM_poor,'LineStyle', 'none','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
+errorbar(1,mean(minNLLFitParams_rich.beta),betaSEM_rich, '_', 'LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
+errorbar(2,mean(minNLLFitParams_poor.beta),betaSEM_poor, '_','LineWidth',widths.plot,'Color',[0.1 0.1 0.1],'CapSize', 0); 
 
-set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'}, 'YScale', 'log', 'YLim', [0,1])
+set(gca,'XTick',1:2, 'XTickLabel', {'Rich', 'Poor'}, 'XLim', [0,3] ,'YScale', 'log', 'YLim', [0,1])
 ylabel('Fit beta (higher = exploit)')
-title('Model 1')
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig3_ContrerasHuerta_fit_beta_LT_group'],'-dsvg')
+print([export_path 'fig3_ContrerasHuerta_fit_beta'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_fit_beta'],'-dsvg')
 
 %% Panel: correlation of beta fit with LT for each environment
 
-meanLT_rich = mean(squeeze(subject_leave_times.mean(1,:,:)));
-meanLT_poor = mean(squeeze(subject_leave_times.mean(2,:,:)));
-
-figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-scatter(minNLLFitParams_rich.beta, meanLT_rich,'MarkerFaceColor',color.rich,'MarkerEdgeColor', color.rich, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
-scatter(minNLLFitParams_poor.beta, meanLT_poor,'MarkerFaceColor',color.poor,'MarkerEdgeColor', color.poor, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
-set(gca,'XLim', [0 2],'XScale', 'log','XTick', [10^-2, 10^-1, 10^0, 10^1])
-xlabel('Fit beta (higher = exploit)')
-ylabel('Patch leaving time (s)')
-
-FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig3_ContrerasHuerta_fit_beta_LT_correlation'],'-dsvg')
-
-% statistics
-[pearson_coeff, p_val]  = corr(log([minNLLFitParams_rich.beta; minNLLFitParams_poor.beta]), [meanLT_rich'; meanLT_poor'])
-
-[H0_reject, p_val_t_test, ~, stats] = ttest(log(minNLLFitParams_rich.beta), log(minNLLFitParams_poor.beta))
+% meanLT_rich = mean(squeeze(subject_leave_times.mean(1,:,:)));
+% meanLT_poor = mean(squeeze(subject_leave_times.mean(2,:,:)));
+% 
+% figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+% scatter(minNLLFitParams_rich.beta, meanLT_rich,'MarkerFaceColor',color.rich,'MarkerEdgeColor', color.rich, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+% scatter(minNLLFitParams_poor.beta, meanLT_poor,'MarkerFaceColor',color.poor,'MarkerEdgeColor', color.poor, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+% set(gca,'XLim', [0 2],'XScale', 'log','XTick', [10^-2, 10^-1, 10^0, 10^1])
+% xlabel('Fit beta (higher = exploit)')
+% ylabel('Patch leaving time (s)')
+% 
+% FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+% print([export_path 'fig3_ContrerasHuerta_fit_beta_LT_correlation'],'-dsvg')
+% 
+% % statistics
+% [pearson_coeff, p_val]  = corr(log([minNLLFitParams_rich.beta; minNLLFitParams_poor.beta]), [meanLT_rich'; meanLT_poor'])
+% 
+% [H0_reject, p_val_t_test, ~, stats] = ttest(log(minNLLFitParams_rich.beta), log(minNLLFitParams_poor.beta))
+% print([export_path 'fig3_ContrerasHuerta_fit_beta_LT_correlation'],'-dsvg')
 
 %% Panel: Participant SD vs fit softmax model 
 
@@ -194,7 +198,7 @@ errorbar(1:2,meanSD(1,:),subjSE_SD(1,:),lines.exp,'Color',color.rich,'LineWidth'
 errorbar(1:2,meanSD(2,:),subjSE_SD(2,:),lines.exp,'Color',color.poor,'LineWidth',widths.plot)
 xlabel('Patch yield')
 ylabel('SD leaving time (s)')
-set(gca,'XTick',1:2,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 3],'YLim',[0 10])
+set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 10])
 
 % % FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 % print([export_path 'fig3_ContrerasHuerta_subjectLT_SD'],'-dsvg')
@@ -204,10 +208,11 @@ errorbar(1:2,meanLT_SD_simulated(1,:),simSE_SD(1,:),lines.model,'Color',color.ri
 errorbar(1:2,meanLT_SD_simulated(2,:),simSE_SD(2,:),lines.model,'Color',color.poor,'LineWidth',widths.plot)
 xlabel('Patch yield')
 ylabel('SD leaving time (s)')
-set(gca,'XTick',1:2,'XTickLabel',{'Low', 'Medium', 'High'},'XLim',[0 3],'YLim',[0 10])
+set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 10])
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_simulatedLT_SD'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_simulatedLT_SD_softmax'],'-dsvg')
 
 
 %% SUPPLEMENTARY FIGURES %%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,19 +237,21 @@ set(gca,'XTick',1:2,'XTickLabel',{'Low', 'High'},'XLim',[0 3],'YLim',[0 30])
 
 FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
 print([export_path 'fig3_ContrerasHuerta_simulatedLT_softmax_fixedbeta'],'-dsvg')
+print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_simulatedLT_softmax_fixedbeta'],'-dsvg')
 
 %% Panel: lapse fits are near to 0 and do not correlate with leaving times 
-load([dataPath 'fitting_results_separate_M4_contrerashuerta.mat'])
-
-figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-scatter(minNLLFitParams_rich.epsilon, meanLT_rich,'MarkerFaceColor',color.rich,'MarkerEdgeColor', color.rich, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
-scatter(minNLLFitParams_poor.epsilon, meanLT_poor,'MarkerFaceColor',color.poor,'MarkerEdgeColor', color.poor, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
-set(gca,'XScale', 'log')
-xlabel('Fit epsilon (higher = more lapses)')
-ylabel('Patch leaving time (s)')
-
-FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-print([export_path 'fig3_ContrerasHuerta_fit_lapse_LT_correlation'],'-dsvg')
+% load([dataPath 'fitting_results_separate_M4_contrerashuerta.mat'])
+% 
+% figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+% scatter(minNLLFitParams_rich.epsilon, meanLT_rich,'MarkerFaceColor',color.rich,'MarkerEdgeColor', color.rich, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+% scatter(minNLLFitParams_poor.epsilon, meanLT_poor,'MarkerFaceColor',color.poor,'MarkerEdgeColor', color.poor, 'MarkerFaceAlpha',M_alpha, 'MarkerEdgeAlpha',M_alpha); hold on
+% set(gca,'XScale', 'log')
+% xlabel('Fit epsilon (higher = more lapses)')
+% ylabel('Patch leaving time (s)')
+% 
+% FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+% print([export_path 'fig3_ContrerasHuerta_fit_lapse_LT_correlation'],'-dsvg')
+%print([overleaf_path, 'fig3/', 'fig3_ContrerasHuerta_fit_lapse_LT_correlation'],'-dsvg')
 
 %% STATISTICS %%%%%%%%%%%%%%%%%
 % statistics - mean LT - confirms dataset results

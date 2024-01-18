@@ -3,84 +3,64 @@ function [agentParams] = buildParams(task,modelOptions,funcOptions)
 switch funcOptions.type
     case 'simulate_new'
 
-        if strcmp(funcOptions.blockPresentation,'combined')
-            funcOptions.params.poor = funcOptions.params.rich; % only read in one set of parameters
-        end
-
         % convert rich parameters to table to index by name
-        T = array2table(repmat(funcOptions.params.rich,[funcOptions.nSim,1]));
-        T.Properties.VariableNames = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'};
-        tmp{1} = T;
+        T = array2table(repmat(funcOptions.params,[funcOptions.nSim,1]));
+        T.Properties.VariableNames = {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'};
+        tmp = T;
 
-        % convert poor parameters to table to index by name
-        T = array2table(repmat(funcOptions.params.poor,[funcOptions.nSim,1]));
-        T.Properties.VariableNames = {'beta', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias'};
-        tmp{2} = T; clear T
+        % set up action policy parameters
+        switch modelOptions.actionPolicy
 
-        for iE = 1:task.nEnviron
+            case 'softmax'
 
-            % set up action policy parameters
-            switch modelOptions.actionPolicy
+                switch modelOptions.betaFunction
+                    case 'single'
+                        agentParams.params.beta = tmp.beta;
+                    case 'separate'
+                        agentParams.params.beta_rich = tmp.beta_rich;
+                        agentParams.params.beta_poor = tmp.beta_poor; % only take single value of beta for both environments
+                    case {'scalar', 'exponential', 'hyperbolic'}
+                        agentParams.params.lambda = tmp.lambda;
+                    case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
+                        agentParams.params.lambda = tmp.lambda;
+                        agentParams.params.gamma = tmp.gamma;
+                end
 
-                case 'softmax'
+            case 'epsilon-greedy'
+                agentParams.params.epsilon = tmp.epsilon;
 
-                    switch modelOptions.betaFunction
-                        case 'separate'
-                            agentParams.params{iE}.beta = tmp{iE}.beta;
-                        case 'single'
-                            agentParams.params{iE}.beta = tmp{1}.beta; % only take single value of beta for both environments
-                        case {'scalar', 'exponential', 'hyperbolic'}
-                            agentParams.params{iE}.lambda = tmp{iE}.lambda;
-                        case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
-                            agentParams.params{iE}.lambda = tmp{iE}.lambda;
-                            agentParams.params{iE}.gamma = tmp{iE}.gamma;
-                    end
-
-                case 'epsilon-greedy'
-                    agentParams.params{iE}.epsilon = tmp{iE}.epsilon;
-
-                case 'epsilon-softmax'
-                    agentParams.params{iE}.beta = tmp{iE}.beta;
-                    agentParams.params{iE}.epsilon = tmp{iE}.epsilon;
-            end
-
-            % set up learning rates for average RR
-            if modelOptions.learnRho
-                agentParams.params{iE}.alphaRho = tmp{iE}.alphaRho;
-            end
-
-            % set up learning rates for patch RR
-            if modelOptions.learnPatchRR
-                agentParams.params{iE}.alphaPatch = tmp{iE}.alphaPatch;
-            end
-
-            % set up bias (intercept) parameter for softmax
-            switch modelOptions.bias
-                case 'separate'
-                    agentParams.params{iE}.bias = tmp{iE}.bias;
-                case 'single'
-                    agentParams.params{iE}.bias = tmp{1}.bias;
-            end
-
-            agentParams.params{iE} = struct2table(agentParams.params{iE});
-
+            case 'epsilon-softmax'
+                agentParams.params.beta = tmp.beta;
+                agentParams.params.epsilon = tmp.epsilon;
         end
-        agentParams.names = agentParams.params{1}.Properties.VariableNames;
+
+        % set up learning rates for average RR
+        if modelOptions.learnRho
+            agentParams.params.alphaRho = tmp.alphaRho;
+        end
+
+        % set up learning rates for patch RR
+        if modelOptions.learnPatchRR
+            agentParams.params.alphaPatch = tmp.alphaPatch;
+        end
+
+        % set up bias (intercept) parameter for softmax
+        switch modelOptions.bias
+            case 'single'
+                agentParams.params.bias = tmp.bias;
+            case 'separate'
+                agentParams.params.bias_rich = tmp.bias_rich;
+                agentParams.params.bias_poor = tmp.bias_poor;
+        end
+
+        agentParams.params = struct2table(agentParams.params);
+
+        agentParams.names = agentParams.params.Properties.VariableNames;
 
     case 'simulate_fit'
-
-        if contains(funcOptions.blockPresentation, 'separate')
-            load(sprintf('../data/fitting_data_240104/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, funcOptions.study), 'minNLLFitParams_rich', 'minNLLFitParams_poor');
-            agentParams.params{1} = minNLLFitParams_rich;
-            agentParams.params{2} = minNLLFitParams_poor;
-            agentParams.names = agentParams.params{1}.Properties.VariableNames;
-
-        elseif contains(funcOptions.blockPresentation, 'combined')
-            load(sprintf('../data/fitting_data_240104/fitting_results_%s_M%d_%s', funcOptions.blockPresentation, modelOptions.modelNumber, funcOptions.study), 'minNLLFitParams');
-            agentParams.params{1} = minNLLFitParams;
-            agentParams.params{2} = minNLLFitParams; % replicate for '2nd' simulation block
-            agentParams.names = agentParams.params{1}.Properties.VariableNames;
-        end
+        load(sprintf('../data/fitting_data_240117/fitting_results_M%d_%s', modelOptions.modelNumber, funcOptions.study), 'minNLLFitParams');
+        agentParams.params = minNLLFitParams;
+        agentParams.names = agentParams.params.Properties.VariableNames;
 
     case 'fit'
         % generate set of parameters to start fmincon search
@@ -91,11 +71,11 @@ switch funcOptions.type
             case 'softmax'
 
                 switch modelOptions.betaFunction
-                    case 'single' 
+                    case 'single'
                         agentParams.params.beta = exprnd(1,[funcOptions.nSim,1]);
                     case 'separate'
-                        agentParams.params.beta(1) = exprnd(1,[funcOptions.nSim,1]);
-                        agentParams.params.beta(2) = exprnd(1,[funcOptions.nSim,1]);
+                        agentParams.params.beta_rich = exprnd(1,[funcOptions.nSim,1]);
+                        agentParams.params.beta_poor = exprnd(1,[funcOptions.nSim,1]);
                     case {'scalar', 'exponential', 'hyperbolic'}
                         agentParams.params.lambda = rand([funcOptions.nSim,1]);
                     case {'twoScalar', 'twoExponential', 'twoHyperbolic'}
@@ -126,16 +106,16 @@ switch funcOptions.type
             case 'single'
                 agentParams.params.bias = rand([funcOptions.nSim,1]);
             case 'separate'
-                agentParams.params.bias{1} = rand([funcOptions.nSim,1]);
-                agentParams.params.bias{2} = rand([funcOptions.nSim,1]);
+                agentParams.params.bias_rich = rand([funcOptions.nSim,1]);
+                agentParams.params.bias_poor = rand([funcOptions.nSim,1]);
         end
 
         agentParams.params = struct2table(agentParams.params);
         agentParams.names = agentParams.params.Properties.VariableNames;
 
         % set lower and upper bounds for fmincon search
-        lb = array2table([0,0,0,0,0,0,0,-20,-20]); lb.Properties.VariableNames =  {'beta','beta_two', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_two'};
-        ub = array2table([50,50,50,1,1,50,50,20,20]); ub.Properties.VariableNames =  {'beta', 'beta_two', 'epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias','bias_two'};
+        lb = array2table([0,0,0,0,0,0,0,0,-20,-20,-20]); lb.Properties.VariableNames =  {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'};
+        ub = array2table([50,50,50,50,1,1,50,50,20,20,20]); ub.Properties.VariableNames =  {'beta', 'beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias','bias_rich','bias_poor'};
 
         agentParams.lb = table2array(lb(:,agentParams.names)); % only get the parameters we need for this model
         agentParams.ub = table2array(ub(:,agentParams.names));
