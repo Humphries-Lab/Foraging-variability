@@ -11,6 +11,8 @@ function p = BICposterior(BICs)
 % 
 % Mark Humphries 6/6/23
 
-expBICs = exp(-0.5*BICs);
+expBICs = exp(vpa(-0.5.*BICs));
 
-p = expBICs / sum(expBICs);
+p = expBICs ./ sum(expBICs,2);
+
+p = double(p);

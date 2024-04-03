@@ -11,7 +11,7 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-fitOptions.study = 'leheron'; % study to simulate/fit data to.
+fitOptions.study = 'kane'; % study to simulate/fit data to.
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx');
@@ -29,7 +29,7 @@ task = buildTask(fitOptions.study);
 allData = buildData(task,fitOptions);
 nSub = size(allData.data,2);
 
-for modelNum = 29 % for all models
+for modelNum = 1 % for all models
     % load model
     model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
@@ -62,7 +62,7 @@ for modelNum = 29 % for all models
         subj.env = allData.env{iS};
         subj.switchIndex = allData.switchIndex{iS};
 
-        NLLEval = zeros([fitOptions.nSim, 1]);
+                                     NLLEval = zeros([fitOptions.nSim, 1]);
         FitParams = zeros([fitOptions.nSim, allParams.nParams]);
 
         % Run fmincon

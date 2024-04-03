@@ -6,7 +6,7 @@
 % brewermap('demo') 
 
 fontsize = 11;
-fontname = 'Arial';
+fontname = 'Neue Helvetica';
 
 Units = 'centimeters';
 
@@ -18,12 +18,15 @@ widths.betaLines = 2;
 
 % panel sizes
 figsize.square = [20 20 7 7];
-figsize.rectangle = [20 20 14 7];
+figsize.vertical = [20 7 7 20];
+figsize.rectangle = [20 20 9 6];
 
 % colours for lines
 tmp_set1 = brewermap(9,'Set1');
 color.rich = tmp_set1(2,:); % green
-color.poor = tmp_set1(3,:); % purple
+color.poor = tmp_set1(3,:); % blue
+color.early = tmp_set1(4,:); % purple
+color.late = tmp_set1(5,:); % late
 tmp_oranges = brewermap(13,'Oranges');
 color.patch = tmp_oranges([4, 7, 11],:);
 color.general = tmp_set1(8,:); % pink

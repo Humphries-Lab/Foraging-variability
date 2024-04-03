@@ -104,18 +104,18 @@ switch funcOptions.type
         % set up bias (intercept) parameter
         switch modelOptions.bias
             case 'single'
-                agentParams.params.bias = rand([funcOptions.nSim,1]);
+                agentParams.params.bias = -1*rand([funcOptions.nSim,1]);
             case 'separate'
-                agentParams.params.bias_rich = rand([funcOptions.nSim,1]);
-                agentParams.params.bias_poor = rand([funcOptions.nSim,1]);
+                agentParams.params.bias_rich = -1*rand([funcOptions.nSim,1]);
+                agentParams.params.bias_poor = -1*rand([funcOptions.nSim,1]);
         end
 
         agentParams.params = struct2table(agentParams.params);
         agentParams.names = agentParams.params.Properties.VariableNames;
 
         % set lower and upper bounds for fmincon search
-        lb = array2table([0,0,0,0,0,0,0,0,-20,-20,-20]); lb.Properties.VariableNames =  {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'};
-        ub = array2table([50,50,50,50,1,1,50,50,20,20,20]); ub.Properties.VariableNames =  {'beta', 'beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias','bias_rich','bias_poor'};
+        lb = array2table([0,0,0,0,0,0,0,0,-50,-50,-50]); lb.Properties.VariableNames =  {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'};
+        ub = array2table([50,50,50,50,1,1,50,50,0,0,0]); ub.Properties.VariableNames =  {'beta', 'beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias','bias_rich','bias_poor'};
 
         agentParams.lb = table2array(lb(:,agentParams.names)); % only get the parameters we need for this model
         agentParams.ub = table2array(ub(:,agentParams.names));
