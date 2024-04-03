@@ -45,7 +45,7 @@ for ii = 1:agent.nStates % for each second in the task
                     case 'block'
                         rho(ii) = agent.experiencedAvgRR(currentEnv); % set rho to agents' estimate of experiencedAvgRR.
                     case 'none'
-                        rho(ii) = 0; % rho is not estimated, as softmax temperature directly controls leaving based on reward
+                        rho(ii) = 0; % rho is not estimated, as fitting softmax temperature directly
                 end
             end
         end
@@ -107,23 +107,8 @@ for ii = 1:agent.nStates % for each second in the task
                         bias = biases(currentEnv);
                 end
 
-                switch model.betaFunction
-                    case {'single', 'separate'}
-                        pLeave = p_leave_softmax(estPatchRR(ii+1), current_beta, bias, rho(ii+1)); % note that rho will only be non-zero for models that include bias term
-                        pAction = [pLeave, 1-pLeave];
-                    otherwise
-                        pLeave = p_leave_softmax(estPatchRR(ii+1), current_beta, bias, 0); % don't pass rho to the function - use instead to modulate beta
-                        pAction = [pLeave, 1-pLeave];
-                end
-
-            case 'epsilon-greedy'
-                pAction = [params.epsilon, 1-params.epsilon]; % is this correct when rho does not equal 0? i.e. not just a coin flip on the patch reward rate now
-            case 'epsilon-softmax'
-                if strcmp(model.betaFunction,'fit')
-                    pAction = epsilon_softmaxConstrain(estPatchRR(ii+1), rho(ii+1), params.beta, params.epsilon);
-                else
-                    pAction = epsilon_softmaxConstrain(estPatchRR(ii+1), 0, params.beta, params.epsilon); % don't pass rho to the function - use instead to modulate beta
-                end
+                pLeave = p_leave_softmax(estPatchRR(ii+1), current_beta, bias, 0); % don't pass rho to the function - use instead to modulate beta
+                pAction = [pLeave, 1-pLeave];
         end
 
         if strcmp(funcOptions.type, 'fit') % if fitting data

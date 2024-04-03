@@ -11,14 +11,14 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-fitOptions.study = 'kane'; % study to simulate/fit data to.
+fitOptions.study = 'leheron'; % study to simulate/fit data to.
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx');
 
 % fitting options
 fitOptions.type = 'fit'; % not simulating data here
-fitOptions.nSim = 1; % how many starts/iterations for fmincon search
+fitOptions.nSim = 8; % how many starts/iterations for fmincon search
 
 %% set up model and task
 
@@ -29,7 +29,7 @@ task = buildTask(fitOptions.study);
 allData = buildData(task,fitOptions);
 nSub = size(allData.data,2);
 
-for modelNum = 1 % for all models
+for modelNum = 6:8 % for all models
     % load model
     model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
@@ -62,11 +62,11 @@ for modelNum = 1 % for all models
         subj.env = allData.env{iS};
         subj.switchIndex = allData.switchIndex{iS};
 
-                                     NLLEval = zeros([fitOptions.nSim, 1]);
+        NLLEval = zeros([fitOptions.nSim, 1]);
         FitParams = zeros([fitOptions.nSim, allParams.nParams]);
 
         % Run fmincon
-        for ii = 1:fitOptions.nSim
+        parfor ii = 1:fitOptions.nSim
             params0 =  paramArray(ii,:);
 
             % test code (check negLL computed correctly)

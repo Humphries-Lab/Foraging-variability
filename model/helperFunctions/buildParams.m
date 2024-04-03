@@ -25,13 +25,6 @@ switch funcOptions.type
                         agentParams.params.lambda = tmp.lambda;
                         agentParams.params.gamma = tmp.gamma;
                 end
-
-            case 'epsilon-greedy'
-                agentParams.params.epsilon = tmp.epsilon;
-
-            case 'epsilon-softmax'
-                agentParams.params.beta = tmp.beta;
-                agentParams.params.epsilon = tmp.epsilon;
         end
 
         % set up learning rates for average RR
