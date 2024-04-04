@@ -11,18 +11,18 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
+simOptions.study = 'contrerashuerta'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx'); 
-modelNum = 27; % model type - choose from foragingModelTable 
+modelNum = 7; % model type - choose from foragingModelTable 
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
 
 % set parameters - options below will override if simulating already fit parameters
 simOptions.nSim = 50;
-simOptions.params = [0 0.11 0.16 0 0 0 0 0 0.61 0 0]; % {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'}
+simOptions.params = [0.4 0.41 0.45 0 0 0 4 0 -1 0 0]; % {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'}
 
 %% set up
 
@@ -40,7 +40,7 @@ allParams = buildParams(task,model,simOptions); clear params
 model.paramNames = allParams.names;
 
 %% run simulations
-for iS = 1:allData.nSubj
+for iS = 1%:allData.nSubj
     iS
     agent.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR
 
@@ -67,10 +67,13 @@ modelLT_mean_env = zeros([task.nEnviron,allData.nSubj]); % store leaving times
 modelLT_sd_env = zeros([task.nEnviron,allData.nSubj]); % store leaving times
 
 % Extract leaving times (LT) for each patch and block type
-for iS = 1:allData.nSubj
+for iS = 1%:allData.nSubj
     subjData = vertcat(simLT{iS,:});
     modelLT_mean_all(iS) = mean(subjData.leaveT);
     modelLT_sd_all(iS) = std(subjData.leaveT);
+
+    betas(:,:,iS) = [simData{iS,1}.beta,simData{iS,2}.beta];
+
     for iE = 1:task.nEnviron
         envData = vertcat(simLT{iS,allData.blockOrder(iS,:)==iE});
         modelLT_mean_env(iE,iS) = mean(envData.leaveT);
@@ -82,7 +85,8 @@ for iS = 1:allData.nSubj
     end
 end
 
-% save for paper figures
+
+% %save for paper figures
 % simulated_leave_times.mean = modelLT_mean;
 % simulated_leave_times.sd = modelLT_sd;
 % 
@@ -105,6 +109,12 @@ end
 % save_name = ['modelLT_env_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
 % save_path = '../data/simulation_data/';
 % save([save_path, save_name],'simulated_leave_times');
+
+% save the computed beta's for paper figures 
+save_name = ['model_betas_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
+save_path = '../data/simulation_data/';
+save([save_path, save_name],'betas');
+
 
 %% plot against participant data
 
@@ -144,15 +154,3 @@ set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim',
 title('Model', modelNum)
 ylabel('Mean SD of leaving time (s)')
 set(findall(gcf,'-property','FontSize'),'FontSize',18)
-
-
-%% plot avgRR and beta 
-% REQUIRES UPDATING NOW THAT MORE BLOCKS HAVE BEEN ADDED FOR CH/Kane
-% figure
-% plot(simData{6,1}.rho); ylim([0 30]); ylabel('avgRR'),xlabel('time in block'); hold on % rich
-% plot(simData{6,2}.rho); ylim([0 30]); ylabel('avgRR'),xlabel('time in block') % poor
-% legend({'rich', 'poor'})
-% figure
-% plot(simData{6,1}.beta); ylim([0 0.5]); ylabel('beta'),xlabel('time in block'); hold on % rich
-% plot(simData{6,2}.beta); ylim([0 0.5]); ylabel('beta'),xlabel('time in block') % poor
-% legend({'rich', 'poor'})

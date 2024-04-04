@@ -1,4 +1,5 @@
 %% le heron dataset 
+cd ~/Dropbox/foraging/stochastic-mvt-project/data/experiment_data/
 
 clear
 lt = readtable('leheron_trialbytrial.csv','ReadVariableNames',true);

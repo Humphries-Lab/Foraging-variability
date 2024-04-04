@@ -5,10 +5,10 @@ close all
 addpath('./helperFunctions')
 
 %% user options 
-study = 'kane'; % study to simulate/fit data to
+study = 'contrerashuerta'; % study to simulate/fit data to
 
 %model = [8, 9, 11, 12, 14, 15, 17, 18, 20, 21];
-model = [1, 26:29]; % model numbers to compare 
+model = [3,7]; % model numbers to compare 
 %model = [8:10]
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
@@ -50,6 +50,6 @@ bestModel = sum(subjectBestModelBIC)
 
 % save for paper figures 
  models_BIC = array2table(models_BIC); models_BIC.modelN = model';
- save_name = ['BIC_', study, '_',num2str(model), '.mat'];
- save_path = '../data/fig_data/fig3/';
- save([save_path, save_name],'models_BIC', 'posteriorProbabilities');
+%  save_name = ['BIC_', study, '_',num2str(model), '.mat'];
+%  save_path = '../data/fig_data/fig3/';
+%  save([save_path, save_name],'models_BIC', 'posteriorProbabilities');

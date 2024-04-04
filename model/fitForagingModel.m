@@ -11,7 +11,7 @@ addpath('./analyticalComputation')
 %% user options
 
 % study options
-fitOptions.study = 'leheron'; % study to simulate/fit data to.
+fitOptions.study = 'contrerashuerta'; % study to simulate/fit data to.
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx');
@@ -29,7 +29,7 @@ task = buildTask(fitOptions.study);
 allData = buildData(task,fitOptions);
 nSub = size(allData.data,2);
 
-for modelNum = 6:8 % for all models
+for modelNum = 7 % for all models
     % load model
     model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
@@ -50,7 +50,7 @@ for modelNum = 6:8 % for all models
 
     paramArray = table2array(allParams.params);
 
-    for iS = 1:nSub
+    for iS = 1%:nSub
 
         subj.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR
 
@@ -129,7 +129,7 @@ for modelNum = 6:8 % for all models
     %% save results
     m = median(minNLLFitParams);
 
-    minNLLFitParams = array2table(minNLLFitParams, "VariableNames",model.paramNames);
-    save_name = sprintf('../data/fitting_data_240117/fitting_results_M%d_%s', model.modelNumber,fitOptions.study);
-    save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
+%     minNLLFitParams = array2table(minNLLFitParams, "VariableNames",model.paramNames);
+%     save_name = sprintf('../data/fitting_data_240117/fitting_results_M%d_%s', model.modelNumber,fitOptions.study);
+%     save(save_name, 'AIC', 'BIC', 'minNLLFitParams')
 end
