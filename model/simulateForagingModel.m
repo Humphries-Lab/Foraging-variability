@@ -15,7 +15,7 @@ simOptions.study = 'contrerashuerta'; % study to simulate/fit data to. Options a
 
 % model options
 modelTable = readtable('./foragingModelTable.xlsx'); 
-modelNum = 7; % model type - choose from foragingModelTable 
+modelNum = 14; % model type - choose from foragingModelTable 
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
@@ -40,7 +40,7 @@ allParams = buildParams(task,model,simOptions); clear params
 model.paramNames = allParams.names;
 
 %% run simulations
-for iS = 1%:allData.nSubj
+for iS = 1:allData.nSubj
     iS
     agent.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR
 
@@ -67,7 +67,7 @@ modelLT_mean_env = zeros([task.nEnviron,allData.nSubj]); % store leaving times
 modelLT_sd_env = zeros([task.nEnviron,allData.nSubj]); % store leaving times
 
 % Extract leaving times (LT) for each patch and block type
-for iS = 1%:allData.nSubj
+for iS = 1:allData.nSubj
     subjData = vertcat(simLT{iS,:});
     modelLT_mean_all(iS) = mean(subjData.leaveT);
     modelLT_sd_all(iS) = std(subjData.leaveT);

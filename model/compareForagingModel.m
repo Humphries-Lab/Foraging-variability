@@ -8,7 +8,7 @@ addpath('./helperFunctions')
 study = 'contrerashuerta'; % study to simulate/fit data to
 
 %model = [8, 9, 11, 12, 14, 15, 17, 18, 20, 21];
-model = [3,7]; % model numbers to compare 
+model = [6:14]; % model numbers to compare 
 %model = [8:10]
 modelTable = readtable('./foragingModelTable.xlsx'); 
 
