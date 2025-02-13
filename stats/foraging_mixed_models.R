@@ -10,7 +10,7 @@ pacman::p_load(MASS, tidyverse, lme4, ggpubr, BayesFactor)
 study = 'contrerashuerta' # v1, v3 or mri. 
 
 #read data
-data <- read.csv(paste('/Users/exs165/Dropbox/foraging/foraging_variability/data/experiment_data/',study,'/',study,'_trialbytrial.csv', sep = ""))
+data <- read.csv(paste('../data/experiment_data/',study,'/',study,'_trialbytrial.csv', sep = ""))
 
 n_patch = 3
 
@@ -37,7 +37,7 @@ data$mean_lt <- data$leaveT
 data$patch <- factor(data$patch, ordered = T)
 data$env <- factor(data$env, ordered = T)
 
-contrasts(data$patch) <- contr.sdif(n_patch) # repeated contrasts ('sliding differences'). CHANGE to 2 for Contreras-Huerta
+contrasts(data$patch) <- contr.sdif(n_patch) # repeated contrasts ('sliding differences'). 
 contrasts(data$env) <- contr.sdif(2) # same as coding block type as 0.5 or -0.5
 
 # ##--------------------------- run main mixed model -----------------------
@@ -67,13 +67,7 @@ if (n_patch == 3){
 
 if (study == 'leheron'){
 # # LE HERON
-m_mean <- lmer(mean_lt ~ patch*env +
-             (patch2_1 + patch3_2 + env2_1 |sub), data = data,
-           control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-summary(m_mean)
 
-
-# get statistics for main effects 
 m_mean <- lmerTest::lmer(mean_lt ~ patch * env + 
                            (patch2_1 + patch3_2 + env2_1|sub), data = data,
                          control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
@@ -83,10 +77,6 @@ summary(m_mean)
 
 } else if (study == 'contrerashuerta'){
 # CONTRERAS-HUERTA
-m_mean <- lmer(mean_lt ~ patch*env +
-                 (patch*env|sub), data = data,
-               control = lmerControl(optimizer = c('bobyqa'), calc.derivs = TRUE, optCtrl=list(maxfun=20000)))
-summary(m_mean)
 
 m_mean <- lmerTest::lmer(mean_lt ~ patch*env +
                             (patch*env|sub), data = data,
@@ -97,10 +87,6 @@ summary(m_mean)
 
 } else if (study == 'kane'){
 # # KANE
-m_mean <- lmer(mean_lt ~ patch*env +
-             (patch2_1 + env2_1 + patch3_2_env + patch2_1_env||sub), data = data,
-           control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-summary(m_mean)
 
 m_mean <- lmerTest::lmer(mean_lt ~ patch*env +
                        (patch2_1 + env2_1 + patch3_2_env + patch2_1_env||sub), data = data,
@@ -160,10 +146,6 @@ if (n_patch == 3){
 ## LE HERON
 
 if (study=='leheron'){
-m_sd <- lmer(sd_lt ~ patch*env +
-             (0 + patch2_1 + patch3_2 + env + patch2_1_env + patch3_2_env||sub), data = data,
-           control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-summary(m_sd)
 
 m_sd <- lmerTest::lmer(sd_lt ~ patch*env +
                        (0 + patch2_1 + patch3_2 + env + patch2_1_env + patch3_2_env||sub), data = data,
@@ -188,11 +170,6 @@ bf_env
 } else if (study =='contrerashuerta'){
 ## CONTRERAS-HUERTA
 
-m_sd <- lmer(sd_lt ~ patch*env +
-               (patch2_1 + env2_1||sub), data = data,
-             control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-summary(m_sd)
-
 m_sd <- lmerTest::lmer(sd_lt ~ patch*env +
                          (patch2_1 + env2_1||sub), data = data,
                        control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
@@ -216,13 +193,9 @@ bf_env
 
 } else if (study=='kane'){
 ## KANE
-m_sd <- lmer(sd_lt ~ patch*env +
-               (env2_1 + patch2_1_env + patch3_2_env||sub), data = data,
-             control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-summary(m_sd)
 
 m_sd <- lmerTest::lmer(sd_lt ~ patch*env +
-                         (env2_1 + patch2_1_env + patch3_2_env||sub), data = data,
+                         (0+env2_1||sub), data = data,
                        control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
 anova(m_sd)
 summary(m_sd)
