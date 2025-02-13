@@ -44,7 +44,7 @@ for s = 1:numel(study)
     if strcmp(study{s},'contrerashuerta')
         leaveT = leaveT(leaveT.ben == 1,:); % exclude other condition
     end
-    load(sprintf('%s_blockSwitchIndex', study{s}), '-mat');
+    load(sprintf('%s_subj_var', study{s}), '-mat');
 
 
     nSub = numel(unique(leaveT.sub));
@@ -59,7 +59,7 @@ for s = 1:numel(study)
 
         % add block number to leaving times
         subj = leaveT(leaveT.sub == iS,:);
-        blockSwitch = blockSwitchIndex{iS};
+        blockSwitch = subj_var.blockSwitchIndex{iS};
         subj.blockSwitch = blockSwitch(1:length(subj.sub));
 
         subj.blockNumber = zeros(length(subj.blockSwitch), 1);
@@ -209,14 +209,14 @@ for s = 1:numel(study)
     if strcmp(study{s},'contrerashuerta')
         leaveT = leaveT(leaveT.ben == 1,:); % exclude other condition
     end
-    load(sprintf('%s_blockSwitchIndex', study{s}), '-mat');
+    load(sprintf('%s_subj_var', study{s}), '-mat');
 
     figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
     tl = tiledlayout(1,2);
 
     iS = example_subject(s);
     subj = leaveT(leaveT.sub == iS,:);
-    subjBlockSwitch = blockSwitchIndex{iS};
+    subjBlockSwitch = subj_var.blockSwitchIndex{iS};
     patchNumber = 1:size(subj,1);
 
     % example variability for one subject
