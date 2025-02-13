@@ -1,6 +1,6 @@
 # Foraging-variability
 
-This folder contains the scripts to run analysis for 'Random exploration drives variability in patch foraging decisions across species' [add link]. 
+This folder contains the scripts to run analysis for 'Random exploration drives variability in patch foraging decisions across species'. 
 
 **Datasets:**
 * Le Heron et al (2020): field-human data
