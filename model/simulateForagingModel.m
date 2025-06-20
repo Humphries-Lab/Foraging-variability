@@ -1,129 +1,150 @@
 %% ---- Wrapper script to simulate patch foraging task with stochastic models ---- %%
-% Emma Scholey
-% latest update 3 August 2023
+% Emma Scholey 9 Jun 2022
+% latest update 19 May 2025
+
 
 clear
-close all
+%close all
 
 addpath('./helperFunctions')
-addpath('./analyticalComputation')
+addpath(genpath('../../data/experiment_data/'))
 
 %% user options
 
-% study options
-simOptions.study = 'contrerashuerta'; % study to simulate/fit data to. Options are leheron, contrerashuerta, kane
+nRun = 50; % how many iterations to simulate for each agent
+modelNum = 3; % model number - choose from foragingModelTable 
 
-% model options
-modelTable = readtable('./foragingModelTable.xlsx'); 
-modelNum = 14; % model type - choose from foragingModelTable 
+% study options
+simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
 
 % set parameters - options below will override if simulating already fit parameters
-simOptions.nSim = 50;
-simOptions.params = [0.4 0.41 0.45 0 0 0 4 0 -1 0 0]; % {'beta','beta_rich', 'beta_poor','epsilon', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'}
+simOptions.nSim = 39;
+simOptions.params = [0 0 0 0.011705 0 31.021 -1.5274 -2.1147 -33, -9]; % {'beta','beta_rich', 'beta_poor', 'alphaRho', 'alphaPatch', 'lambda', 'gamma', 'bias', 'bias_rich','bias_poor'}
 
 %% set up
+
+% model options
+modelTable = readtable('./foragingModelTable.xlsx'); 
 
 % load task
 task = buildTask(simOptions.study); % set up task structure 
 
-% load dataframe container for simulations, according to 
+% load dataframe container for simulations
 allData = buildData(task,simOptions);
 
 % load model
 model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
 % load agent parameters
-allParams = buildParams(task,model,simOptions); clear params
+allParams = buildParams(model,simOptions); clear params
 model.paramNames = allParams.names;
 
 %% run simulations
-for iS = 1:allData.nSubj
-    iS
-    agent.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR
 
-    for iB = 1:task.nBlocks
+% empty containers
+run_modelLT_mean = zeros(task.nEnviron, task.nPatch, allData.nSubj, nRun);
+run_modelLT_SD = zeros(task.nEnviron, task.nPatch, allData.nSubj, nRun);
 
-        agent.nStates = allData.nStates;
-        agent.data = allData.data; % empty generic container
-        agent.currentEnv = allData.blockOrder(iS,iB);
+run_beta = zeros(task.blockTime, task.nEnviron, allData.nSubj, nRun);
+run_rho = zeros(task.blockTime+1, task.nEnviron, allData.nSubj, nRun);
 
-        agent.patchOrder = task.patchOrder{agent.currentEnv}'; % generic patch order for all participants
+run_early_SD = zeros(allData.nSubj, 2, nRun);
+run_late_SD = zeros(allData.nSubj, 2, nRun);
 
-        agentParams = allParams.params{iS,:}; % specific for the subject, depending on environment
-  
-        [NLL,simLT{iS,iB},simData{iS,iB}] = simulate_MVT_model(task,model,agent,agentParams,simOptions);
-    end
-end
+for iR = 1:nRun
 
-%% leaving times per environment x patch x subject
-modelLT_mean = zeros([task.nEnviron,task.nPatch,allData.nSubj]); % store leaving times
-modelLT_sd = zeros([task.nEnviron,task.nPatch,allData.nSubj]); % store leaving times
-modelLT_mean_all = zeros([1,allData.nSubj]); % store leaving times
-modelLT_sd_all = zeros([1,allData.nSubj]); % store leaving times
-modelLT_mean_env = zeros([task.nEnviron,allData.nSubj]); % store leaving times
-modelLT_sd_env = zeros([task.nEnviron,allData.nSubj]); % store leaving times
+    iR 
+    for iS = 1:allData.nSubj
 
-% Extract leaving times (LT) for each patch and block type
-for iS = 1:allData.nSubj
-    subjData = vertcat(simLT{iS,:});
-    modelLT_mean_all(iS) = mean(subjData.leaveT);
-    modelLT_sd_all(iS) = std(subjData.leaveT);
+        agent.experiencedAvgRR = allData.experiencedAvgRR(iS,:); % real experienced avgRR (calculated post-hoc)
 
-    betas(:,:,iS) = [simData{iS,1}.beta,simData{iS,2}.beta];
+        initialiseRho = mean(task.optAvgRR); % set up rho for block 1 (only needed for learning models)
 
-    for iE = 1:task.nEnviron
-        envData = vertcat(simLT{iS,allData.blockOrder(iS,:)==iE});
-        modelLT_mean_env(iE,iS) = mean(envData.leaveT);
-        modelLT_sd_env(iE,iS) = std(envData.leaveT);
-        for iP = 1:task.nPatch
-            modelLT_mean(iE,iP,iS) = mean(envData.leaveT(envData.patchOrder(1:end-1) == iP), 'omitnan');
-            modelLT_sd(iE,iP,iS) = std(envData.leaveT(envData.patchOrder(1:end-1) == iP), 'omitnan');
+        for iB = 1:task.nBlocks % why are we doing by block? because we don't know how many trials (patches) in each time-restricted block, so we need to simulate each block separately
+
+            agent.nStates = allData.nStates;
+            agent.data = allData.data; % empty generic container
+            agent.data.rho(1) = initialiseRho; % carry over rho from previous block
+
+            agent.currentEnv = allData.blockOrder(iS,iB);
+
+            agent.patchOrder = task.patchOrder{agent.currentEnv}'; % generic patch order for all participants
+
+            agentParams = allParams.params{iS,:}; % specific for the subject, depending on environment
+
+            [NLL,simLT{iS,iB},simData{iS,iB}] = simulate_MVT_model(task,model,agent,agentParams,simOptions); % run the simulation
+
+            initialiseRho = simData{iS,iB}.rho(end); % what was the last rho from previous block (to carry over)
         end
+
     end
+   
+
+    %% leaving times per environment x patch x subject
+    modelLT_mean = zeros([task.nEnviron,task.nPatch,allData.nSubj]); % store leaving times
+    modelLT_SD = zeros([task.nEnviron,task.nPatch,allData.nSubj]); % store leaving times
+    betas = zeros([task.blockTime,task.nEnviron,allData.nSubj]); % store leaving times
+    rho = zeros([task.blockTime+1,task.nEnviron,allData.nSubj]); % store leaving times
+
+    % Extract leaving times (LT) and trajectories for each patch and block type
+    for iS = 1:allData.nSubj
+        for iE = 1:task.nEnviron
+            envData = vertcat(simLT{iS,allData.blockOrder(iS,:)==iE});
+            for iP = 1:task.nPatch
+                modelLT_mean(iE,iP,iS) = mean(envData.leaveT(envData.patchOrder == iP), 'omitnan');
+                modelLT_SD(iE,iP,iS) = std(envData.leaveT(envData.patchOrder == iP), 'omitnan');
+            end
+        end
+
+        data_rich = [simData{iS,allData.blockOrder(iS,:)==1}]; 
+        data_poor = [simData{iS,allData.blockOrder(iS,:)==2}];
+
+        betas_rich = mean([data_rich.beta],2);
+        betas_poor = mean([data_poor.beta],2);
+
+        rho_rich = mean([data_rich.rho],2);
+        rho_poor = mean([data_poor.rho],2);
+
+        betas(:,:,iS) = [betas_rich, betas_poor];
+        rho(:,:,iS) = [rho_rich, rho_poor];
+
+    end
+        
+    run_modelLT_mean(:,:,:,iR) = modelLT_mean;
+    run_modelLT_SD(:,:,:,iR) = modelLT_SD;
+
+    run_beta(:,:,:,iR) = betas;
+    run_rho(:,:,:,iR) = rho;
+
+
 end
 
+% average across iterations 
+simulated_leave_times.mean = mean(run_modelLT_mean,4);
+simulated_leave_times.sd = mean(run_modelLT_SD,4);
 
-% %save for paper figures
-% simulated_leave_times.mean = modelLT_mean;
-% simulated_leave_times.sd = modelLT_sd;
-% 
-% save_name = ['modelLT_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
-% save_path = '../data/simulation_data/';
-% save([save_path, save_name],'simulated_leave_times');
-% 
-% % save for paper figures
-% simulated_leave_times.mean = modelLT_mean_all;
-% simulated_leave_times.sd = modelLT_sd_all;
-% 
-% save_name = ['modelLT_all_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
-% save_path = '../data/simulation_data/';
-% save([save_path, save_name],'simulated_leave_times');
-% 
-% % save for paper figures
-% simulated_leave_times.mean = modelLT_mean_env;
-% simulated_leave_times.sd = modelLT_sd_env;
-% 
-% save_name = ['modelLT_env_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
-% save_path = '../data/simulation_data/';
-% save([save_path, save_name],'simulated_leave_times');
+trajectories.beta = mean(run_beta,4);
+trajectories.rho = mean(run_rho,4);
 
-% save the computed beta's for paper figures 
-save_name = ['model_betas_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
-save_path = '../data/simulation_data/';
-save([save_path, save_name],'betas');
-
-
-%% plot against participant data
-
-[dataLT, dataLT_SD] = loadLeaveT(simOptions.study,task); % load mean leaving times for each subject x patch x env
+%save the simulated data for each model
+%  save_name = ['sim_LT_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
+%  save_path = '../data/simulation_data/';
+%  save([save_path, save_name],'simulated_leave_times', 'trajectories');
+% 
+% %% plot against participant data
+load(sprintf('../data/experiment_data/%s/subject_LT_%s', simOptions.study,simOptions.study), '-mat');
 
 % summarise model data
-modelMean = mean(modelLT_mean,3);
-subjectMean = mean(dataLT,3);
-subjectSD = mean(dataLT_SD,3);
+
+group_model_mean = mean(simulated_leave_times.mean,3);
+group_model_SD = mean(simulated_leave_times.sd,3);
+
+% summarise subject data
+group_subject_mean = mean(subject_leave_times.mean,3);
+group_subject_SD = mean(subject_leave_times.sd,3);
 
 figure
 
@@ -131,12 +152,12 @@ color.rich = [0.7 0.3 0.3];
 color.poor = [0.3 0.3 0.7];
 
 % plot the simulated data
-plot(modelMean(1,:),'.--', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15), hold on
-plot(modelMean(2,:),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(group_model_mean(1,:),'.--', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15), hold on
+plot(group_model_mean(2,:),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 
 % plot the actual experimental data
-plot(subjectMean(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
-plot(subjectMean(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(group_subject_mean(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
+plot(group_subject_mean(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 30])
 ylabel('Mean leaving time (s)')
@@ -146,11 +167,13 @@ set(findall(gcf,'-property','FontSize'),'FontSize',18)
 
 % SD figure 
 figure
-plot(mean(modelLT_sd(1,:,:),3),'.--', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15); hold on
-plot(mean(modelLT_sd(2,:,:),3),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
-plot(subjectSD(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
-plot(subjectSD(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(group_model_SD(1,:),'.--', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15); hold on
+plot(group_model_SD(2,:),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(group_subject_SD(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
+plot(group_subject_SD(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 10])
 title('Model', modelNum)
 ylabel('Mean SD of leaving time (s)')
 set(findall(gcf,'-property','FontSize'),'FontSize',18)
+
+

@@ -1,7 +1,9 @@
-% script to generate leave-time distributions for stochastic choice models
+%% script to generate leave-time distributions for stochastic choice models
 %
 % Sweep over range of exploration parameter, for different patch types (task.r0)
 
+% 11 June 2025 Emma Scholey: change bounds for bias (c) predictions
+% 16 January 2025 Emma Scholey: to remove unused lapse model
 % 13 Feb 2024 Emma Scholey: add bias parameter predictions
 % 6 August 2023 Emma Scholey: include contreras-huerta task
 % 31 July 2023 Mark Humphries: efficient code (removed loop over n time-steps)
@@ -13,7 +15,7 @@ close all;
 addpath('helperFunctions')
 
 % specify study
-study = 'example_linear'; % either 'leheron', 'contrerashuerta', or 'kane', OR 'example_exp' or 'example_linear' (for figure 1)
+study = 'kane'; % either 'leheron', 'contrerashuerta', or 'kane'
 
 switch study
     case 'leheron'
@@ -22,22 +24,6 @@ switch study
         task  = buildTask(study);
     case 'kane'
         task  = buildTask(study);
-    case 'example_exp'
-        task.r0 = [30 50 70];
-        task.decayRate = 0.1;
-        task.rewardFunction = 'exponential';
-        task.patchNames = {'Low', 'Mid', 'High'};
-    case 'example_linear'
-%         task.r0 = [30 50 70];
-%         task.decayRate = 4;
-%         task.rewardFunction = 'linear';
-%         task.patchNames = {'Low', 'Mid', 'High'};
-
-% Barack et al. ADHD human linear dataset (2024)
-        task.r0 = 7;
-         task.decayRate = 0.5;
-         task.rewardFunction = 'linear';
-         task.patchNames = {'Patch'};
 end
 
 color.rich = [0.10,0.62,0.47];
@@ -47,13 +33,12 @@ color.poor = [0.46,0.44,0.70];
 t_step = 1;  % time-step at which to calculate estimates of E and VAR; 1 = trials (discrete Bernoulli process); <1 = approximation to continuous time
 
 % parameters of choice model
-model = 'softmax'; % 'softmax', 'e-greedy', 'lapse'
+model = 'softmax'; % 'softmax', 'e-greedy'
 
 %% ---------------- Expected leave times for BETA parameter -----------------------------%%
 
-beta_parameter = logspace(-3,3,1000);
-%lapse_parameter = 0.04; % required for lapse model only
-bias_parameter = -5; % can also set to mean bias term from model fits. These are [-2.28 Le Heron, -2.55 CH, -2.04 Kane]
+beta_parameter = logspace(-3,1,1000);
+bias_parameter = -2.05; % can also set to mean bias term from model fits. These are [-2.22 Le Heron, -2.52 CH, -2.05 Kane]
 t_max = 1000;   % maximum time in patch (for explicit calculations)
 
 %% computes E and VAR as function of exploration parameter
@@ -80,8 +65,6 @@ for iR = 1:numel(task.r0)
                 p_leave_at_n = p_leave_softmax(reward_ts,beta_parameter(iB), bias_parameter,0);
             case 'e-greedy'
                 p_leave_at_n = beta_parameter(iB) * ones(size(reward_ts));
-            case 'lapse'
-                p_leave_at_n = p_leave_lapse(reward_ts,beta_parameter(iB), lapse_parameter);
             otherwise
                 error('Unrecognised model')
         end
@@ -114,9 +97,9 @@ data.E_leave = E_leave;
 data.SD_leave = SD_leave;
 data.explore = beta_parameter;
 
-% save_name = ['expectedLT_',study,'_rangebeta_','bias=',num2str(bias_parameter), '.mat'];
-% save_path = '../data/analytical_data/';
-% save([save_path, save_name],'data');
+save_name = ['expectedLT_',study,'_rangebeta_SD.mat'];
+save_path = '../data/analytical_data/';
+save([save_path, save_name],'data');
 
 %% plot results
 E_fig = figure;
@@ -128,10 +111,10 @@ beta_rich = data.explore(ixRich);
 beta_poor = data.explore(ixPoor);
 line([beta_rich beta_rich],[0 E_fig.Children.YLim(2)], 'Color', color.rich, 'LineStyle', '--')
 line([beta_poor beta_poor],[0 E_fig.Children.YLim(2)], 'Color', color.poor, 'LineStyle', '--')
-legend({'','beta rich', 'beta poor'})
+legend({'low','mid','high','beta rich', 'beta poor'})
 
 switch model
-    case {'softmax','lapse'}
+    case {'softmax'}
         xlabel('Beta (higher = exploit)')
     case 'e-greedy'
         xlabel('\epsilon (higher = explore)')
@@ -148,11 +131,11 @@ SD_fig = figure;
 semilogx(beta_parameter,SD_leave); hold on
 line([beta_rich beta_rich],[0 SD_fig.Children.YLim(2)], 'Color', color.rich, 'LineStyle', '--')
 line([beta_poor beta_poor],[0 SD_fig.Children.YLim(2)], 'Color', color.poor, 'LineStyle', '--')
-legend({'','beta rich', 'beta poor'})
+legend({'low','mid','high','beta rich', 'beta poor'})
 xlim([beta_parameter(1),beta_parameter(end)])
 
 switch model
-    case {'softmax','lapse'}
+    case 'softmax'
         xlabel('Beta (higher = exploit)')
     case 'e-greedy'
         xlabel('\epsilon (higher = explore)')
@@ -166,9 +149,11 @@ set(gca,'box','off')
 
 %% ---------------- Expected leave times for BIAS parameter -----------------------------%%
 
-beta_parameter = 1.2;
-%lapse_parameter = 0.4; % required for lapse model only
-bias_parameter = [-logspace(-3,2,100)];
+beta_parameter = 0.4;
+%bias_parameter = -[logspace(2,0,100)]; %when beta = 0.4
+%bias_parameter = [logspace(-1,1,100)];%when beta = 0
+bias_parameter = [-60:0.01:3]
+%bias_parameter = [0:0.01:3];
 t_max = 1000;   % maximum time in patch (for explicit calculations)
 
 %% computes E and VAR as function of exploration parameter
@@ -219,39 +204,33 @@ CV_leave = E_leave ./ SD_leave;
 data.E_leave = E_leave;
 data.SD_leave = SD_leave;
 data.explore = bias_parameter;
-% 
-% save_name = ['expectedLT_',study,'_rangebias_','beta=',num2str(beta_parameter), '.mat'];
-% save_path = '../data/analytical_data/';
-% save([save_path, save_name],'data');
+
+signedlog = @(x) sign(x) .* log10(1 + abs(x));
+bias_signedlog = signedlog(bias_parameter);
+
+
+save_name = ['expectedLT_',study,'_rangebias.mat'];
+save_path = '../data/analytical_data/';
+save([save_path, save_name],'data');
 
 %% plot results
 E_fig = figure;
-semilogx(bias_parameter,E_leave); hold on
-% for quick inspect of betas
-ixRich = find(data.E_leave >= 4.77,1,"last");
-ixPoor = find(data.E_leave >= 6.56,1,"last");
-bias_rich = data.explore(ixRich);
-bias_poor = data.explore(ixPoor);
-line([bias_rich bias_rich],[0 E_fig.Children.YLim(2)], 'Color', color.rich, 'LineStyle', '--')
-line([bias_poor bias_poor],[0 E_fig.Children.YLim(2)], 'Color', color.poor, 'LineStyle', '--')
-legend({'','bias rich', 'bias poor'})
-
+%semilogx(bias_signedlog,E_leave); hold on
+plot(bias_signedlog, E_leave); hold on
 xlabel('Bias (higher = exploit)')
 ylabel('Expected leaving time (s)')
 set(findall(gcf,'-property','FontSize'),'FontSize',18)
 set(findall(gcf,'-property','LineWidth'),'LineWidth',2)
 set(gca,'box','off')
-xlim([bias_parameter(end),bias_parameter(1)])
-
-SD_fig = figure;
-semilogx(bias_parameter,SD_leave); hold on
-line([bias_rich bias_rich],[0 SD_fig.Children.YLim(2)], 'Color', color.rich, 'LineStyle', '--', 'LineWidth', 2)
-line([bias_poor bias_poor],[0 SD_fig.Children.YLim(2)], 'Color', color.poor, 'LineStyle', '--', 'LineWidth', 2)
-legend({'','bias rich', 'bias poor'})
-
-xlabel('Bias (higher = exploit)')
-ylabel('SD of leaving time (s)')
-set(findall(gcf,'-property','FontSize'),'FontSize',18)
-set(findall(gcf,'-property','LineWidth'),'LineWidth',2)
-set(gca,'box','off')
-xlim([bias_parameter(end),bias_parameter(1)])
+xticks = [-60 -10 -1 0 1 3];  % Choose meaningful bias values
+set(gca, 'XTick', signedlog(xticks))
+set(gca, 'XTickLabel', arrayfun(@num2str, xticks, 'UniformOutput', false))
+% 
+% SD_fig = figure;
+% semilogx(bias_parameter,SD_leave); hold on
+% 
+% xlabel('Bias (higher = exploit)')
+% ylabel('SD of leaving time (s)')
+% set(findall(gcf,'-property','FontSize'),'FontSize',18)
+% set(findall(gcf,'-property','LineWidth'),'LineWidth',2)
+% set(gca,'box','off')

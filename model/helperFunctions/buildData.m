@@ -1,27 +1,37 @@
 function df = buildData(task,funcOptions)
 
-% build dataframe, df
-% funcOptions - simulate_new: simulate from scratch, simulate_fit: simulate best fit parameters; fit: use real data
+% Foraging variability project 
+% Emma Scholey, 16 January 2025 
+
+% BUILDDATA generates a container in the correct format for model fitting
+% and simulation
+
+% INPUTS:
+%   task: provides the task variables specific to each dataset, such as 
+%   optimal average reward rates and time in block
+%
+%   funcOptions: based on whether you are simulating (requiring an empty 
+%   container), or fitting (prepares actual subject leaving times to be in 
+%   the correct format for fitting per timestep rather than per patch.
 
 % specify actions
 leave = 1;
 stay = 2;
 
 % load real data to set up simulations
-blockOrder = readmatrix(sprintf('../data/experiment_data/%s_blockOrder.csv',funcOptions.study));
-experiencedAvgRR = readmatrix(sprintf('../data/experiment_data/%s_experiencedAvgRR.csv',funcOptions.study));
+load(sprintf('../data/experiment_data/%s/%s_subj_var',funcOptions.study,funcOptions.study));
 
 % get number of subjects to simulate, and their block orders/average reward rates
 switch funcOptions.type
     case 'simulate_new'
         df.nSubj = funcOptions.nSim;
-        df.blockOrder = blockOrder(randi(size(blockOrder,1),[df.nSubj 1]),:); % for each fake participant, create fake block order based on real participant data
+        df.blockOrder = [subj_var.blockOrder(randi(size(subj_var.blockOrder,1),[df.nSubj 1]),:)]; % for each fake participant, create fake block order based on real participant data
         df.experiencedAvgRR = repmat([task.optAvgRR], [df.nSubj,1]); % just assume experiencedAvgRR is the same as optimal, if simulating from scratch
 
     case {'simulate_fit','fit'}
-        df.nSubj = size(blockOrder,1);
-        df.blockOrder = blockOrder;
-        df.experiencedAvgRR = experiencedAvgRR;
+        df.nSubj = size(subj_var.blockOrder,1);
+        df.blockOrder = subj_var.blockOrder; % take actual block order and experienced average RR of real subjects
+        df.experiencedAvgRR = subj_var.experiencedAvgRR;
 end
 
 % build dataframe (for each second in the task)
@@ -33,13 +43,12 @@ switch funcOptions.type
         df.data.estPatchRR = zeros(task.blockTime+1,1); % estimated patchRR
         df.data = struct2table(df.data);
 
-        df.nStates = task.blockTime; % number of states in each block
+        df.nStates = task.blockTime; % number of timesteps in each block
 
     case 'fit'
 
-        trialLeaveT = readtable(sprintf('../data/experiment_data/%s_trialbytrial.csv',funcOptions.study));
+        trialLeaveT = readtable(sprintf('../data/experiment_data/%s/%s_trialbytrial.csv',funcOptions.study,funcOptions.study));
         % find the patch number where the block switches
-        load(sprintf('../data/experiment_data/%s_blockSwitchIndex.mat',funcOptions.study));
 
         if strcmp(funcOptions.study, 'contrerashuerta')
             trialLeaveT = trialLeaveT(trialLeaveT.ben == 1,:); % exclude other condition
@@ -52,12 +61,13 @@ switch funcOptions.type
             leaveT = subjTrialLeaveT.leaveT; % pull out leaving times - note that this will do it in the correct block order for the participant
             patchOrder = subjTrialLeaveT.patch; % pull out patch order
             env = subjTrialLeaveT.env; % pull out environment
-            switchIndex = blockSwitchIndex{iS}; % index informing which patch to re-initialise estimates (i.e. when new block starts)
+            switchIndex = subj_var.blockSwitchIndex{iS}; % index informing which patch to re-initialise estimates (i.e. when new block starts)
 
             leaveT = round(leaveT);
-
             a = cell([numel(leaveT),1]);
-            % transform leaving times into stay/leave actions for each state
+
+            % transform leaving times into stay/leave actions for each
+            % timestep
             for ii = 1:numel(leaveT)
                 a{ii} = repelem([stay leave], [leaveT(ii) task.travelTime(env(ii))]);
             end
@@ -68,7 +78,7 @@ switch funcOptions.type
             df.patchOrder{iS} = patchOrder;
             df.leaveT{iS} = leaveT;
             df.env{iS} = env;
-            df.nObservations(iS) = sum(A == 2); % only count stay states as an observation (they can't make choices whilst leaving)
+            df.nObservations(iS) = sum(A == 2); % only count stay timesteps as an observation (they can't make choices whilst leaving)
             df.switchIndex{iS} = switchIndex;
             df.data{iS}.action = [A;nan]; % what action taken
             df.data{iS}.rho = zeros(numel(A)+1,1); % estimated averageRR
