@@ -41,5 +41,5 @@ lines.exp = '-';
 lines.mvt = '-.';
 
 % exportpath
-export_path = '../';
+export_path = 'figures/';
 overleaf_path = '/Users/exs165/Dropbox/Apps/Overleaf/240521 - foraging variability paper/figs/';

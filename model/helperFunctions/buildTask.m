@@ -36,8 +36,8 @@ switch study
         % patch order in poor environment
         task.patchOrder{2} = repmat([1,1,2,1,3,2,2,1,3,1,1,2,3,1,2,1,1,2,3,1,1,1,2,3,1,2,3,2,1,1,3,1,1,2,2,1,2,3,1,1,1,2,3,1,1,2,1,3,1,2,3,2,2,1,2,1,1,1,3,1,1,1,2,1,2,1,1,2,3,3,1,3,1,3,2,2,2,1,1,1,2,3,1,3,1,2,1,2,1,1,2,1,2,3,2,3,1,1,1,1], [1,5]);
 
-        task.optAvgRR(1) = 21.8678; % optimal average RR in rich environment
-        task.optAvgRR(2) = 18.5632; % optimal average RR in poor environment
+        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime);
+        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime);
 
         % convert reward rates into optimal leaving times as defined by mvt
         for e=1:task.nEnviron %each env
@@ -70,8 +70,8 @@ switch study
         % patch order in poor environment
         task.patchOrder{2} = repmat([2,2,1,1,2,1,2,1,2,1], [1,40]);
 
-        task.optAvgRR(1) = 23.7388; % optimal average RR in rich environment
-        task.optAvgRR(2) = 19.2564; % optimal average RR in poor environment
+        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime);
+        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime);
 
         % convert reward rates into optimal leaving times as defined by mvt
         for e=1:task.nEnviron %each env
@@ -107,8 +107,8 @@ switch study
         % just take average across all subjects to keep consistent with other datasets for now
         % load("../data/experiment_data/kane_MVT_optimal_rates.mat");
 
-        task.optAvgRR(1) = 59.1433; % optimal average RR [rich]
-        task.optAvgRR(2) = 44.643; % optimal average RR [poor]
+        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime);
+        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime);
 
         % convert reward rates into optimal leaving times as defined by mvt
         for e=1:task.nEnviron %each env

@@ -4,17 +4,14 @@
 clearvars; close all
 
 addpath('./plotFunctions')
-addpath('../../data/fitting_data/')
-addpath('../../model/helperFunctions/')
-addpath(genpath('../../data/experiment_data/'))
-addpath('../../data/simulation_data/')
-addpath('../../data/analytical_data/')
+addpath(genpath('../data/'))
+addpath('../model/helperFunctions/')
 
 run figure_properties_foraging.m
 
 study = {'leheron', 'contrerashuerta', 'kane'};
 
-save_figs = 1; % whether to save figures
+save_figs = 0; % whether to save figures
 
 %% Panel: SD_leave predictions for range of beta 
 

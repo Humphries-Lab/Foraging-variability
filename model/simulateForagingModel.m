@@ -12,10 +12,10 @@ addpath(genpath('../../data/experiment_data/'))
 %% user options
 
 nRun = 50; % how many iterations to simulate for each agent
-modelNum = 3; % model number - choose from foragingModelTable 
+modelNum = 17; % model number - choose from foragingModelTable 
 
 % study options
-simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
+simOptions.study = 'kane'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
@@ -130,10 +130,10 @@ trajectories.beta = mean(run_beta,4);
 trajectories.rho = mean(run_rho,4);
 
 %save the simulated data for each model
-%  save_name = ['sim_LT_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
-%  save_path = '../data/simulation_data/';
-%  save([save_path, save_name],'simulated_leave_times', 'trajectories');
-% 
+ % save_name = ['sim_LT_', simOptions.study, '_M', sprintf('%d',modelNum), '.mat'];
+ % save_path = '../data/simulation_data/';
+ % save([save_path, save_name],'simulated_leave_times', 'trajectories');
+
 % %% plot against participant data
 load(sprintf('../data/experiment_data/%s/subject_LT_%s', simOptions.study,simOptions.study), '-mat');
 

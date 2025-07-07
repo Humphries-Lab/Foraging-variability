@@ -5,9 +5,8 @@
 clearvars; close all
 
 addpath('./plotFunctions')
-addpath('../../model/helperFunctions/')
-addpath(genpath('../../data/experiment_data/'))
-addpath('../../data/analytical_data/')
+addpath('../model/helperFunctions/')
+addpath(genpath('../data/experiment_data/'))
 
 run figure_properties_foraging.m
 
@@ -240,7 +239,7 @@ for s = 1:numel(study)
             case 'contrerashuerta'
                 ylim([-2 6])
             case 'kane'
-                ylim([-2 7.5])
+                ylim([-2 8])
         end
 
         xlabel('Patch')

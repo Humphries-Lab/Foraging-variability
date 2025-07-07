@@ -4,12 +4,8 @@
 clearvars; close all
 
 addpath('./plotFunctions')
-addpath('../../model/helperFunctions/')
-addpath('../../data/fitting_data/')
-addpath('../../model/helperFunctions/')
-addpath(genpath('../../data/experiment_data/'))
-addpath('../../data/simulation_data/')
-addpath('../../data/analytical_data/')
+addpath('../model/helperFunctions/')
+addpath(genpath('../data/'))
 
 run figure_properties_foraging.m
 

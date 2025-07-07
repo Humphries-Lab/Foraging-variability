@@ -5,12 +5,8 @@
 clearvars; close all
 
 addpath('./plotFunctions')
-addpath('../../model/helperFunctions/')
-addpath('../../data/fitting_data/')
-addpath('../../model/helperFunctions/')
-addpath(genpath('../../data/experiment_data/'))
-addpath('../../data/simulation_data/')
-addpath('../../data/analytical_data/')
+addpath('../model/helperFunctions/')
+addpath(genpath('../data/'))
 
 run figure_properties_foraging.m
 
@@ -285,6 +281,7 @@ for s = 1:numel(study)
     % get subject LT per environment
 
     figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square); hold on
+    l = yline(0, '--', 'LineWidth',1, 'Color','k');
 
     if strcmp(study{s}, 'kane')
         xlabel('Subject harvests per patch')
@@ -296,18 +293,18 @@ for s = 1:numel(study)
 
     scatter(subjMean, minNLLFitParams.bias, 50, "MarkerFaceColor",color.general, "MarkerEdgeColor",'w','MarkerFaceAlpha', 0.5,'MarkerEdgeAlpha',0.5)
 
-    [r p] = corr(subjMean',minNLLFitParams.bias, 'type', 'Spearman');
-
-    str=sprintf('r_s = %1.2f',r);
-    T = textbypos(0.6,0.4,str);
-
-    if p < .001
-        sig_val = textbypos(0.6,0.32,'p < .001');
-    elseif p >= .001 && p < .01
-        sig_val = textbypos(0.6,0.32,sprintf('p = %1.3f', p));
-    else
-        sig_val = textbypos(0.6,0.32,sprintf('p = %1.2f', p));
-    end
+    % [r p] = corr(subjMean',minNLLFitParams.bias, 'type', 'Spearman');
+    % 
+    % str=sprintf('r_s = %1.2f',r);
+    % T = textbypos(0.6,0.4,str);
+    % 
+    % if p < .001
+    %     sig_val = textbypos(0.6,0.32,'p < .001');
+    % elseif p >= .001 && p < .01
+    %     sig_val = textbypos(0.6,0.32,sprintf('p = %1.3f', p));
+    % else
+    %     sig_val = textbypos(0.6,0.32,sprintf('p = %1.2f', p));
+    % end
 
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
