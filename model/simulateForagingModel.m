@@ -15,7 +15,7 @@ nRun = 50; % how many iterations to simulate for each agent
 modelNum = 17; % model number - choose from foragingModelTable 
 
 % study options
-simOptions.study = 'kane'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
+simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject

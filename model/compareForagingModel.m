@@ -6,7 +6,7 @@ close all
 addpath('./helperFunctions')
 
 %% user options 
-study = 'contrerashuerta'; % Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
+study = 'kane'; % Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
 
 %model = [1, 2:5]; % initial models
 %model = [7 10 13 16]; % beta models

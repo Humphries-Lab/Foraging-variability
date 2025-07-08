@@ -71,6 +71,11 @@ for iter = 1:max_iter
         break;
     end
 
+    old_rho = rho;
+
     rho = new_rho;
+
+
 end
+
 end

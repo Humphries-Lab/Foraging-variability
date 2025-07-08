@@ -31,7 +31,7 @@ for s = 1:length(study)
     allData = buildData(task,fitOptions);
     nSub = size(allData.data,2);
 
-    for modelNum = [1:18] % for all models
+    for modelNum = [8, 11, 14, 17] % for all models
         % load model
         model = table2struct(modelTable(modelTable.modelNumber == modelNum,:));
 
