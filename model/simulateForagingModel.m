@@ -15,7 +15,7 @@ nRun = 50; % how many iterations to simulate for each agent
 modelNum = 17; % model number - choose from foragingModelTable 
 
 % study options
-simOptions.study = 'leheron'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
+simOptions.study = 'kane'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
 
 % simulation options
 simOptions.type = 'simulate_fit'; % 'simulate_new' if simulating from scratch, 'simulate_fit' if simulating pre-fit parameters for each subject
@@ -159,7 +159,11 @@ plot(group_model_mean(2,:),'.--', 'Color',color.poor,'LineWidth', 2, 'MarkerSize
 plot(group_subject_mean(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
 plot(group_subject_mean(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 
-set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames, 'YLim', [0 30])
+% plot the optimal leaving times 
+plot(task.optLT(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
+plot(task.optLT(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+
+set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames)
 ylabel('Mean leaving time (s)')
 title('Model', modelNum)
 legend({'model - rich', 'model - poor', 'data - rich', 'data - poor'})

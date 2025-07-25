@@ -36,8 +36,8 @@ switch study
         % patch order in poor environment
         task.patchOrder{2} = repmat([1,1,2,1,3,2,2,1,3,1,1,2,3,1,2,1,1,2,3,1,1,1,2,3,1,2,3,2,1,1,3,1,1,2,2,1,2,3,1,1,1,2,3,1,1,2,1,3,1,2,3,2,2,1,2,1,1,1,3,1,1,1,2,1,2,1,1,2,3,3,1,3,1,3,2,2,2,1,1,1,2,3,1,3,1,2,1,2,1,1,2,1,2,3,2,3,1,1,1,1], [1,5]);
 
-        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime);
-        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime);
+        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime); % 21.25 
+        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime); % 18.30
 
         % convert reward rates into optimal leaving times as defined by mvt
         for e=1:task.nEnviron %each env
@@ -70,8 +70,8 @@ switch study
         % patch order in poor environment
         task.patchOrder{2} = repmat([2,2,1,1,2,1,2,1,2,1], [1,40]);
 
-        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime);
-        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime);
+        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime); % 23.09
+        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime); % 19.10
 
         % convert reward rates into optimal leaving times as defined by mvt
         for e=1:task.nEnviron %each env
@@ -102,13 +102,8 @@ switch study
         % patch order in poor environment
         task.patchOrder{2} = repmat([2 3 1 2 1 3 1 2 3 1 3 2 1 2 3 3 1 2 1 3 2], [1,40]);
 
-        % each subject in Kane's dataset has a different optimal MVT, so
-        % calculate this from their data
-        % just take average across all subjects to keep consistent with other datasets for now
-        % load("../data/experiment_data/kane_MVT_optimal_rates.mat");
-
-        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime);
-        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime);
+        task.optAvgRR(1) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{1},task.travelTime(1), task.blockTime); % 66.5
+        task.optAvgRR(2) = simulateOptimalRho(task.decayRate, task.rewardFunction, task.r0, task.patchOrder{2},task.travelTime(2), task.blockTime); % 46.49
 
         % convert reward rates into optimal leaving times as defined by mvt
         for e=1:task.nEnviron %each env
@@ -116,5 +111,11 @@ switch study
                 task.optLT(e,p)=(task.optAvgRR(e)-task.r0(p))/-task.decayRate;
             end
         end
+
+        task.optLT(1,1) = 1; % replace optimal time for harvests for richest patch in richest environment to 1s - mouse needs to make one leverpress first 
+       
+        % since showing harvests per timestep, round optimal leave decision
+        % up to nearest time step 
+        task.optLT = round(task.optLT);
 
 end

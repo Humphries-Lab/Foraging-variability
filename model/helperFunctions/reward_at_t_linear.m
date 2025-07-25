@@ -13,4 +13,3 @@ function reward_in_patch_at_t = reward_at_t_linear(t,r0,alpha)
 reward_in_patch_at_t = r0 - alpha*t;
 
 reward_in_patch_at_t(reward_in_patch_at_t < 0) = 0;
-

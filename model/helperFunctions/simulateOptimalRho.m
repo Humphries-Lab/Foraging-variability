@@ -27,6 +27,7 @@ for iter = 1:max_iter
 
         patchType = patchOrder(i);
         r0 = r0_list(patchType);
+        %patchTotalReward = 0;
 
         % Compute optimal leaving time
         if rho <= 0 || rho >= r0
@@ -35,10 +36,11 @@ for iter = 1:max_iter
         else
             if strcmp(rewardFunction, 'exponential')
                 t_star = log(rho / r0) / -g;
-                reward = (r0 / g) * (1 - exp(-g * t_star));
+                reward = integral(@(x) r0 * exp(-g * x), 0, t_star);
             elseif strcmp(rewardFunction, 'linear')
-                t_star = (r0 - rho) / g;
-                reward = r0 * t_star - 0.5 * g * t_star^2;
+                t_star = (rho - r0) / -g;
+                reward = integral(@(x) max(0, r0 - g * x), 0, t_star); 
+
             end
         end
 
@@ -50,14 +52,14 @@ for iter = 1:max_iter
 
             % Time in patch (minus travel)
             t_patch = max(remainingTime - travelTime, 0);
+            %patchTotalReward = 0;
             if strcmp(rewardFunction, 'exponential')
-                reward = (r0 / g) * (1 - exp(-g * t_patch));
+                reward = integral(@(x) r0 * exp(-g * x), 0, t_patch);
             elseif strcmp(rewardFunction, 'linear')
-                reward = r0 * t_patch - 0.5 * g * t_patch^2;
+                reward = integral(@(x) max(0, r0 - g * x), 0, t_patch);
             end
 
             cumulativeTime = blockTime;
-            totalReward = totalReward + reward;
             break;
         else
             totalReward = totalReward + reward;
