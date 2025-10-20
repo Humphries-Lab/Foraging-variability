@@ -22,6 +22,7 @@ figsize.square = [20 20 6 6];
 figsize.vertical = [20 20 3 6];
 figsize.rectangle = [20 20 6 5];
 
+
 % colours for lines
 tmp_set1 = brewermap(8,'Set1');
 color.poor =  tmp_set1(3,:); %green '#3AAA36'; 

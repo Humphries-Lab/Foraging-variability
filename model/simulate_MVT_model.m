@@ -57,12 +57,10 @@ for ii = 1:agent.nStates % for each second in the task
             timeNow = task.timeStep; % time in patch
             n = 1; % index (separate to time step)
             patchN = patchN + 1; % patch number increases
-            if patchN > length(agent.patchOrder)
-                t
-            end
+
             patchType = agent.patchOrder(patchN); % select patch type
             arrive = 0; % no longer arriving
-
+            
             if strcmp(funcOptions.type, 'fit') % if fitting data, need to index current block within the script (e.g. if we're fitting the whole session)
                 currentEnv = agent.env(patchN);
             else

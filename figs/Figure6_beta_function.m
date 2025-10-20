@@ -1,4 +1,4 @@
-%%% Figure 5 foraging paper
+%%% Figure 6 foraging paper
 % Emma Scholey 7 Aug 2023
 
 clearvars; close all
@@ -16,7 +16,7 @@ save_figs = 1; % whether to save figures
 %% Panel: BIC comparison for model
 
 model = [7 10 13 16]; % compare experienced avgRR models
-modelNames = {'\beta M1','\beta M2','\beta M3','\beta M4'};
+modelNames = {'B M1','B M2','B M3','B M4'};
 
 nModels = size(model,2);
 
@@ -45,7 +45,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_BIC', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_BIC', study{s})],'-dsvg')
     end
 
     % show best model per participant
@@ -63,7 +63,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_BIC_subjects', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_BIC_subjects', study{s})],'-dsvg')
     end
 
     clear ppts_BIC models_BIC
@@ -102,7 +102,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_simulated_mean_LT_overlap', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_simulated_mean_LT_overlap', study{s})],'-dsvg')
     end
 
      %% Panels: simulated vs empirical SD leaving times
@@ -140,7 +140,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_simulated_SD_LT_overlap', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_simulated_SD_LT_overlap', study{s})],'-dsvg')
     end
 
      %% Panel: per-participant fit (simulated vs actual) for MEANS
@@ -194,7 +194,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_per_participant', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_per_participant', study{s})],'-dsvg')
     end
 
 %% Panel: per-participant fit (simulated vs actual) for VARIABILITY
@@ -244,7 +244,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_SD_per_participant', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_SD_per_participant', study{s})],'-dsvg')
     end
 
     %% Panel: gamma fit x subject LT
@@ -273,7 +273,7 @@ for s = 1:numel(study)
         ylabel('Poor - rich leaving times (s)');
     end
 
-    xlabel('Estimated \gamma fit');
+    xlabel('\gamma fit');
 
     envDiff = subjMean(2,:)-subjMean(1,:);
 
@@ -297,7 +297,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_gamma_LT_supplement', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_gamma_LT', study{s})],'-dsvg')
     end
 
     %% Panel: lambda fit x subject LT
@@ -315,22 +315,22 @@ for s = 1:numel(study)
 
     [r p] = corr(envDiff',log(minNLLFitParams.lambda), 'type','Spearman');
     str=sprintf('r_s = %1.2f',r);
-    T = textbypos(0.2,0.87,str);
+    T = textbypos(0.6,0.87,str);
 
     yline(0, '--')
 
         if p < .001
-            sig_val = textbypos(0.2,0.77,'p < .001');
+            sig_val = textbypos(0.6,0.77,'p < .001');
         elseif p >= .001 && p < .01
-            sig_val = textbypos(0.2,0.77,sprintf('p = %1.3f', p));
+            sig_val = textbypos(0.6,0.77,sprintf('p = %1.3f', p));
         else
-            sig_val = textbypos(0.2,0.77,sprintf('p = %1.2f', p));
+            sig_val = textbypos(0.6,0.77,sprintf('p = %1.2f', p));
         end
 
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig5_%s_lambda_LT_supplement', study{s})],'-dsvg')
+        print([export_path, sprintf('fig6_%s_lambda_LT', study{s})],'-dsvg')
     end
 
 end

@@ -12,10 +12,10 @@
 clearvars
 close all;
 
-addpath('helperFunctions')
+addpath('../model/helperFunctions')
 
 % specify study
-study = 'kane'; % either 'leheron', 'contrerashuerta', or 'kane'
+study = 'contrerashuerta'; % either 'leheron', 'contrerashuerta', or 'kane'
 
 switch study
     case 'leheron'
@@ -205,15 +205,15 @@ data.E_leave = E_leave;
 data.SD_leave = SD_leave;
 data.explore = bias_parameter;
 
-signedlog = @(x) sign(x) .* log10(1 + abs(x));
-bias_signedlog = signedlog(bias_parameter);
-
-
 save_name = ['expectedLT_',study,'_rangebias.mat'];
 save_path = '../data/analytical_data/';
 save([save_path, save_name],'data');
 
 %% plot results
+
+signedlog = @(x) sign(x) .* log10(1 + abs(x));
+bias_signedlog = signedlog(bias_parameter);
+
 E_fig = figure;
 %semilogx(bias_signedlog,E_leave); hold on
 plot(bias_signedlog, E_leave); hold on
@@ -225,12 +225,87 @@ set(gca,'box','off')
 xticks = [-60 -10 -1 0 1 3];  % Choose meaningful bias values
 set(gca, 'XTick', signedlog(xticks))
 set(gca, 'XTickLabel', arrayfun(@num2str, xticks, 'UniformOutput', false))
-% 
+%
 % SD_fig = figure;
 % semilogx(bias_parameter,SD_leave); hold on
-% 
+%
 % xlabel('Bias (higher = exploit)')
 % ylabel('SD of leaving time (s)')
 % set(findall(gcf,'-property','FontSize'),'FontSize',18)
 % set(findall(gcf,'-property','LineWidth'),'LineWidth',2)
 % set(gca,'box','off')
+
+
+
+
+%% GENERATE DATA FOR SD HEATMAP FIGURES
+
+% parameters of VAR calculation
+t_step = 1;  
+beta_parameter = logspace(-2,0,500);
+bias_parameter = -6:0.1:1;
+t_max = 1000;   % maximum time in patch (for explicit calculations)
+
+    %% computes VAR as function of both exploration parameters
+    n_steps = round(t_max / t_step);  % number of time-steps
+    t_series = (t_step* (1:n_steps))';  % the sequence of time-steps tested
+
+    E_leave = zeros(numel(bias_parameter),numel(beta_parameter),numel(task.r0));
+    VAR_leave = zeros(numel(bias_parameter),numel(beta_parameter),numel(task.r0));
+    f_leave_all = zeros(numel(bias_parameter),numel(beta_parameter), numel(task.r0),n_steps);
+
+    for iR = 1:numel(task.r0)
+        % calculate reward function for this task.r0
+        switch task.rewardFunction
+            case 'exponential'
+                reward_ts = reward_at_t_exp(t_series,task.r0(iR),task.decayRate);
+            case 'linear'
+                reward_ts = reward_at_t_linear(t_series,task.r0(iR),task.decayRate);
+            otherwise
+                error('Unrecognised reward function')
+        end
+
+        % calculate expected probability of leaving on each time-step
+        for iBias = 1:numel(bias_parameter)
+
+            for iBeta = 1:numel(beta_parameter)
+
+                p_leave_at_n = p_leave_softmax(reward_ts,beta_parameter(iBeta), bias_parameter(iBias),0);
+
+                % correct probability of leaving by time-step
+                p_leave_at_n = p_leave_at_n .* t_step;
+
+                % probability of staying up to time-step n
+                cumulative_p_of_staying_until_n = cumprod(1-p_leave_at_n);
+
+                % probability of staying up to time-step n-1 and leaving on time-step n
+                f_leave = [p_leave_at_n(1); cumulative_p_of_staying_until_n(1:end-1).*p_leave_at_n(2:end)];
+
+                % store
+                f_leave_all(iBias,iBeta,iR,:) = f_leave;
+
+                % calculate VAR
+                E_leave(iBias,iBeta,iR) = sum(t_series.*f_leave);
+                VAR_leave(iBias,iBeta,iR) = sum((t_series - E_leave(iBias,iBeta,iR)).^2 .* f_leave);
+
+            end
+        end
+    end
+
+    SD_leave = sqrt(VAR_leave);
+
+    if strcmp(study, 'contrerashuerta')
+        SD_diff = SD_leave(:,:,2) - SD_leave(:,:,1);
+    else
+        SD_diff = SD_leave(:,:,3) - SD_leave(:,:,1);
+    end
+
+
+%% save data for paper figures
+data.SD_leave_heatmap = SD_leave;
+data.SD_leave_heatmap_diff = SD_diff;
+data.beta = beta_parameter;
+data.bias = bias_parameter;
+save_name = ['expected_SD_',study,'.mat'];
+save_path = '../data/analytical_data/';
+save([save_path, save_name],'data');

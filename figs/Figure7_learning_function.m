@@ -1,4 +1,4 @@
-%%% Figure 6 foraging paper
+%%% Figure 7 foraging paper
 % Emma Scholey 9 April 2024
 
 clearvars; close all
@@ -16,7 +16,7 @@ save_figs = 1; % whether to save figures
 %% Panel: BIC comparison for model
 
 model = [8 11 14 17]; % compare MVT and Block models
-modelNames = {'learn \beta M1', 'learn \beta M2', 'learn \beta M3','learn \beta M4'};
+modelNames = {'learn B M1', 'learn B M2', 'learn B M3','learn B M4'};
 
 nModels = size(model,2);
 
@@ -45,7 +45,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_BIC', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_BIC', study{s})],'-dsvg')
     end
 
     % show best model per participant
@@ -63,7 +63,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_BIC_subjects', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_BIC_subjects', study{s})],'-dsvg')
     end
 
     clear ppts_BIC
@@ -100,7 +100,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_simulated_mean_LT_overlap', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_simulated_mean_LT_overlap', study{s})],'-dsvg')
     end
 
     %% Panels: simulated vs empirical SD leaving times
@@ -138,7 +138,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_simulated_SD_LT_overlap', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_simulated_SD_LT_overlap', study{s})],'-dsvg')
     end
 
     %% Panel: per-participant fit (simulated vs actual) for MEANS
@@ -193,7 +193,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_per_participant', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_per_participant', study{s})],'-dsvg')
     end
 
     %% Panel: per-participant fit (simulated vs actual) for VARIABILITY
@@ -243,7 +243,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_SD_per_participant', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_SD_per_participant', study{s})],'-dsvg')
     end
 
     %% Panel: learning rate fit vs subject LT
@@ -293,7 +293,7 @@ for s = 1:numel(study)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
-        print([export_path, sprintf('fig6_%s_alpha_LT_supplement', study{s})],'-dsvg')
+        print([export_path, sprintf('fig7_%s_alpha_LT_supplement', study{s})],'-dsvg')
     end
 
 end

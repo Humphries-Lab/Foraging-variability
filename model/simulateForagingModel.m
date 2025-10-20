@@ -4,7 +4,7 @@
 
 
 clear
-%close all
+close all
 
 addpath('./helperFunctions')
 addpath(genpath('../../data/experiment_data/'))
@@ -12,7 +12,7 @@ addpath(genpath('../../data/experiment_data/'))
 %% user options
 
 nRun = 50; % how many iterations to simulate for each agent
-modelNum = 17; % model number - choose from foragingModelTable 
+modelNum = 4; % model number - choose from foragingModelTable 
 
 % study options
 simOptions.study = 'kane'; % study to simulate/fit data to. Options are leheron (field-human), contrerashuerta (berry-human), or kane (rat)
@@ -160,8 +160,8 @@ plot(group_subject_mean(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSi
 plot(group_subject_mean(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 
 % plot the optimal leaving times 
-plot(task.optLT(1,:),'.-', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
-plot(task.optLT(2,:),'.-', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
+plot(task.optLT(1,:),':', 'Color',color.rich ,'LineWidth', 2, 'MarkerSize', 15)
+plot(task.optLT(2,:),':', 'Color',color.poor,'LineWidth', 2, 'MarkerSize', 15)
 
 set(gca,'XLim',[0 4],'XTick',1:task.nPatch,'XTickLabel',task.patchNames)
 ylabel('Mean leaving time (s)')
