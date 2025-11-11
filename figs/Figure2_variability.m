@@ -13,7 +13,7 @@ run figure_properties_foraging.m
 study = {'leheron', 'contrerashuerta', 'kane'};
 example_subject = [2 7 5]; % which subjects to plot for examples, for each study
 
-save_figs = 1; % whether to save figures
+save_figs = 0; % whether to save figures
 
 for s = 1:numel(study)
     task = buildTask(study{s});
@@ -135,8 +135,12 @@ for s = 1:numel(study)
 
         if p_sw < .05 | strcmp(study{s}, 'kane')
             [p, ~, stats] = signrank(CV_early_env(:,iE),CV_late_env(:,iE), 'method','exact')
+            meanEffectSize(CV_early_env(:,iE),CV_late_env(:,iE),Paired=true, Effect='robustcohen')
+
         else
             [~, p, ~, stats] = ttest(CV_early_env(:,iE),CV_late_env(:,iE))
+            meanEffectSize(CV_early_env(:,iE),CV_late_env(:,iE),Paired=true, Effect='cohen')
+
         end
 
         if p < .001
@@ -186,8 +190,11 @@ for s = 1:numel(study)
 
     if p_sw < .05 | strcmp(study{s}, 'kane')
         [p, ~, stats] = signrank(CV_early,CV_late, 'method','exact')
+        meanEffectSize(CV_early,CV_late,Paired=true, Effect='robustcohen')
     else
         [~, p, ~, stats] = ttest(CV_early,CV_late)
+        meanEffectSize(CV_early,CV_late,Paired=true, Effect='cohen')
+
     end
 
     if p < .001

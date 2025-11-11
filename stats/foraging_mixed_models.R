@@ -1,13 +1,13 @@
 #-- Mixed models for foraging variability paper - Figure 1 and 5 --# 
 # Emma Scholey, 4 Nov 2024
-# update 3 March 2025 - 
+# last updated November 2025: add effect size estimates
 
 rm(list = ls(all = TRUE)) # clear environment
 
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(MASS, tidyverse, lme4, ggpubr, BayesFactor)
+pacman::p_load(MASS, tidyverse, lme4, ggpubr, BayesFactor, emmeans, afex, effectsize)
 
-study = 'contrerashuerta'  
+study = 'leheron'  
 
 #read data
 data <- read.csv(paste('/Users/exs165/Dropbox/foraging/foraging_variability/data/experiment_data/',study,'/',study,'_trialbytrial.csv', sep = ""))
@@ -42,46 +42,47 @@ contrasts(data$env) <- contr.sdif(2) # same as coding block type as 0.5 or -0.5
 
 ##--------------------------- run main mixed model -----------------------
 ## Mean leaving times - Figure 1
-
-if (study == 'leheron'){
-# # LE HERON
-# get statistics for main effects
-m_mean <- lmerTest::lmer(mean_lt ~ patch * env +
-                           (patch+env|sub), data = data,
-                         control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-anova(m_mean)
-summary(m_mean)
-
-} else if (study == 'contrerashuerta'){
-# CONTRERAS-HUERTA
-m_mean <- lmerTest::lmer(mean_lt ~ patch*env +
-                            (patch*env|sub), data = data,
-                          control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-anova(m_mean)
-summary(m_mean)
-
-
-} else if (study == 'kane'){
-# # KANE
-  m_mean <- lmer(mean_lt ~ patch*env +
-                   (patch*env|sub), data = data,
-                 control = lmerControl(optimizer = c('bobyqa'), calc.derivs = TRUE, optCtrl=list(maxfun=20000)))
-  summary(m_mean)
-# full model not converging, simplified random effects structure. Requires specifying contrasts as individual predictors, since patch > 2 levels of factor
-  
-    patch2_1 <- model.matrix(m_mean)[,2]
-    patch3_2 <- model.matrix(m_mean)[,3]
-    env2_1 <- model.matrix(m_mean)[,4]
-    patch2_1_env <- model.matrix(m_mean)[,5]
-    patch3_2_env <- model.matrix(m_mean)[,6]
-  
-# patch preventing model from converging, remove from random effects
-m_mean <- lmerTest::lmer(mean_lt ~ patch*env +
-                       (env2_1 + patch2_1_env + patch3_2_env||sub), data = data,
-                     control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
-anova(m_mean)
-summary(m_mean)
-}
+# 
+# if (study == 'leheron'){
+# # # LE HERON
+# # get statistics for main effects
+# m_mean <- lmerTest::lmer(mean_lt ~ patch * env +
+#                            (patch+env|sub), data = data,
+#                          control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
+# anova(m_mean)
+# summary(m_mean)
+# 
+# } else if (study == 'contrerashuerta'){
+# # CONTRERAS-HUERTA
+# m_mean <- lmerTest::lmer(mean_lt ~ patch*env +
+#                             (patch*env|sub), data = data,
+#                           control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
+# anova(m_mean)
+# summary(m_mean)
+# 
+# 
+# } else if (study == 'kane'){
+# # # KANE
+#   m_mean <- lmer(mean_lt ~ patch*env +
+#                    (patch*env|sub), data = data,
+#                  control = lmerControl(optimizer = c('bobyqa'), calc.derivs = TRUE, optCtrl=list(maxfun=20000)))
+#   summary(m_mean)
+# # full model not converging, simplified random effects structure. Requires specifying contrasts as individual predictors, since patch > 2 levels of factor
+#   
+#     patch2_1 <- model.matrix(m_mean)[,2]
+#     patch3_2 <- model.matrix(m_mean)[,3]
+#     env2_1 <- model.matrix(m_mean)[,4]
+#     patch2_1_env <- model.matrix(m_mean)[,5]
+#     patch3_2_env <- model.matrix(m_mean)[,6]
+#   
+# # patch preventing model from converging, remove from random effects
+# m_mean <- lmerTest::lmer(mean_lt ~ patch*env +
+#                        (env2_1 + patch2_1_env + patch3_2_env||sub), data = data,
+#                      control = lmerControl(optimizer = c('bobyqa'), optCtrl=list(maxfun=20000)))
+# anova(m_mean)
+# summary(m_mean)
+# }
+#confint(m_mean)
 
 # ##--------------------------- run SD leave model ----------------------- 
 data <- data %>% group_by(sub, patch, env) %>% summarise(sd_lt = sd(leaveT))
@@ -90,8 +91,6 @@ data <- data %>% group_by(sub, patch, env) %>% summarise(sd_lt = sd(leaveT))
 data$patch <- factor(data$patch, ordered = T)
 data$env <- factor(data$env, ordered = T)
 
-contrasts(data$patch) <- contr.sum(n_patch) # repeated contrasts ('sliding differences')
-contrasts(data$env) <- contr.sum(2) # same as coding block type as 0.5 or -0.5
 data$sub <- factor(data$sub)
 
 #m_sd <- afex::aov_ez("sub", "sd_lt", data, within = c("patch", "env"))
@@ -99,15 +98,20 @@ data$sub <- factor(data$sub)
 #performance::check_sphericity(m_sd)
 #plot(performance::check_normality(m_sd))
 
-model <- aov(sd_lt ~ patch*env + Error(sub/(patch*env)), data=data)
-summary(model)
-emmeans::emmeans(model, pairwise ~ patch)
-emmeans::emmeans(model, pairwise ~ env)
+options(contrasts = c("contr.sum", "contr.sum"))
+
+a <- aov_ez(id = "sub",
+            dv = "sd_lt",
+            data = data,
+            within = c("patch","env"), type = 3)
+summary(a) 
+eta_squared(a)
+
+pairs(emmeans(a, "patch"), reverse = T)
+pairs(emmeans(a, "env"), reverse = T)
 
 # Bayes factors - for the null effect (no main effect of patch/environment)
 bf = anovaBF(sd_lt ~ patch*env + sub, data=data, whichModels="top", whichRandom = c('sub'))
 bf = recompute(bf, iterations = 500000) # reduce the proportional error on the BF to below 1
 bf
-
-# evidence FOR the effect (BF10)
-1/bf
+1/bf # evidence for the alternative hypothesis

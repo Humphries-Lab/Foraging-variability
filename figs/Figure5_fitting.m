@@ -12,7 +12,7 @@ run figure_properties_foraging.m
 
 study = {'leheron', 'contrerashuerta', 'kane'};
 
-save_figs = 1; % whether to save figures
+save_figs = 0; % whether to save figures
 
 %% Panel: BIC comparison for model
 
@@ -239,8 +239,12 @@ for s = 1:numel(study)
 
     if p_sw < .05 | strcmp(study{s}, 'kane')
         [p, ~, stats] = signrank(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich, 'method', 'exact');
+        meanEffectSize(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich,Paired=true, Effect='robustcohen')
+
     else
         [~, p, ~, stats] = ttest(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich)
+        meanEffectSize(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich,Paired=true, Effect='cohen')
+
     end
 
     if p < .001
