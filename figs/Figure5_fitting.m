@@ -12,7 +12,7 @@ run figure_properties_foraging.m
 
 study = {'leheron', 'contrerashuerta', 'kane'};
 
-save_figs = 0; % whether to save figures
+save_figs = 1; % whether to save figures
 
 %% Panel: BIC comparison for model
 
@@ -33,16 +33,19 @@ for s = 1:numel(study)
         models_BIC(m,:) = sum(BIC);
     end
 
-    figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-    bar(models_BIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
-
-    % find best model and highlight
+     % find best model and highlight
     minBIC = min(models_BIC);
     bestModel = find(models_BIC == minBIC);
-    bar(bestModel,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
 
-    ylabel('BIC (sum)')
-    set(gca,'XTickLabel',modelNames, 'XTickLabelRotation',50, 'YLim', [min(models_BIC)-200,max(models_BIC)+200])
+    diff_BIC = models_BIC - minBIC;
+    figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+    bar(diff_BIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
+
+   
+    %bar(bestModel,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
+
+    ylabel('Diff. from lowest BIC')
+    set(gca,'XTickLabel',modelNames, 'XTickLabelRotation',50)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
@@ -151,6 +154,10 @@ for s = 1:numel(study)
         sig_val = textbypos(0.25,0.77,sprintf('p = %1.3f', p));
     else
         sig_val = textbypos(0.25,0.77,sprintf('p = %1.2f', p));
+    end
+
+    if strcmp(study{s}, 'kane')
+        ylim([0 inf])
     end
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)

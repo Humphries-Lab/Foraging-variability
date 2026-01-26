@@ -12,7 +12,7 @@ run figure_properties_foraging.m
 study = {'leheron', 'contrerashuerta', 'kane'};
 save_figs = 1; % whether to save figures
 
-model = 4; 
+model = 3; 
 model_table = readtable("foragingModelTable.xlsx");
 model_params = model_table(model_table.modelNumber == model,:);
 
@@ -181,7 +181,7 @@ for s = 1:numel(study)
 
         xticks([0.01 0.1 1]);
         xticklabels({'0.01','0.1','1'});
-
+        ylim([0, 4])
 
         FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
         if save_figs == 1
@@ -331,13 +331,13 @@ for s = 1:numel(study)
         errorbar(modelSD(2,:),modelSEM(2,:),lines.model, 'Color',color.poor,'LineWidth', widths.plot)
 
         if strcmp(study{s},'kane') % set manually for Kane since subjects SD so similar
-            ylim([1 2.5])
+            ylim([0 3])
         elseif strcmp(study{s}, 'contrerashuerta')
-            ylim([1 4])
+            ylim([0 4])
         elseif strcmp(study{s}, 'leheron')
-            ylim([2 6])
+            ylim([0 6])
         end
-
+        % ylim([0,5])
         FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
         if save_figs == 1
             print([export_path, sprintf('fig4_%s_M%d_simulated_sd_LT_overlap', study{s}, model(m))],'-dsvg')

@@ -30,18 +30,15 @@ for s = 1:numel(study)
         models_BIC(m,:) = sum(BIC);
     end
 
-    figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
-    bar(models_BIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
-
     % find best model and highlight
     minBIC = min(models_BIC);
-    bestModelIndex = find(models_BIC == minBIC);
-    bestModel = model(bestModelIndex);
+    
+    diffBIC = models_BIC - minBIC;
+    figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
+    bar(diffBIC,'FaceColor',color.general, 'EdgeColor', color.general); hold on
 
-    bar(bestModelIndex,minBIC, 'FaceColor',color.highlight, 'EdgeColor', color.highlight)
-
-    ylabel('BIC (sum)')
-    set(gca, 'XLim', [0,nModels+1], 'XTickLabel',modelNames, 'XTickLabelRotation',50, 'YLim', [min(models_BIC)-200,max(models_BIC)+200])
+    ylabel('Diff. from lowest BIC')
+    set(gca, 'XLim', [0,nModels+1], 'XTickLabel',modelNames, 'XTickLabelRotation',50)
 
     FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     if save_figs == 1
@@ -128,11 +125,11 @@ for s = 1:numel(study)
    end
 
     if strcmp(study{s},'kane') 
-        ylim([1 3])
+        ylim([0 3])
     elseif strcmp(study{s}, 'contrerashuerta')
-        ylim([1 4])
+        ylim([0 4])
     elseif strcmp(study{s}, 'leheron')
-        ylim([2 6])
+        ylim([0 6])
     end
 
     errorbar(modelSD(1,:),modelSD_SEM(1,:),lines.model, 'Color',color.rich ,'LineWidth', widths.plot)

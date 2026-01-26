@@ -58,9 +58,7 @@ for s = 1:numel(study)
 
 
         %% Panel: per-participant fit (simulated vs actual)
-        % for winning model, M3
-
-        figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square); 
+        figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
         tl = tiledlayout(1,2,'TileSpacing','tight');
 
         plot_colour = [color.rich;color.poor];
@@ -111,9 +109,57 @@ for s = 1:numel(study)
         if save_figs == 1
             print([export_path, sprintf('fig_supp_%s_M%d_per_participant', study{s}, model(m))],'-dsvg')
         end
+
+        %% Panel: distribution of differences between predicted and observed leaving times
+        figure('Units', 'centimeters', 'PaperPositionMode', 'auto', 'Position', figsize.square);
+
+        hold on;
+
+        tmp_subject_rich = squeeze(subject_leave_times.mean(1,:,:));
+        tmp_model_rich = squeeze(simulated_leave_times.mean(1,:,:));
+        tmp_subject_poor = squeeze(subject_leave_times.mean(2,:,:));
+        tmp_model_poor = squeeze(simulated_leave_times.mean(2,:,:));
+
+        % Calculate differences
+        diff_rich = tmp_subject_rich - tmp_model_rich;
+        diff_poor = tmp_subject_poor - tmp_model_poor;
+
+        allX   = [diff_rich(:); diff_poor(:)];
+
+        switch study{s}
+            case 'leheron'
+                nbins = 10;
+            case 'contrerashuerta'
+                nbins = 8;
+            case 'kane'
+                nbins = 4;
+        end
+        
+        edges  = linspace(min(allX), max(allX), nbins+1);
+
+        histogram(diff_rich, edges, 'Normalization', 'pdf', 'FaceColor', color.rich, 'EdgeColor', 'w');
+        histogram(diff_poor, edges, 'Normalization', 'pdf', 'FaceColor', color.poor, 'EdgeColor', 'w');
+
+        xline(0, '--', 'LineWidth', 1.5)
+        xlabel({'Leaving times:'; 'Predicted - observed'});
+        ylabel('Density');
+
+        switch study{s}
+            case 'leheron'
+                xlim([-10, 10])
+            case 'contrerashuerta'
+                xlim([-5 5])
+            case 'kane'
+                xlim([-2 2])
+        end
+
+        FormatFig_For_Export(gcf, fontsize, fontname, widths.axis);
+        if save_figs == 1
+            print([export_path, sprintf('fig_supp_%s_M%d_differences', study{s}, model(m))], '-dsvg');
+        end
+
     end
 end
-
 
 
 %% Panel: expected leaving times
