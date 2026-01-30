@@ -4,7 +4,7 @@
 
 clearvars; close all
 
-addpath('./plotFunctions')
+addpath(genpath('./plotFunctions'))
 addpath('../model/helperFunctions/')
 addpath(genpath('../data/'))
 
@@ -12,7 +12,7 @@ run figure_properties_foraging.m
 
 study = {'leheron', 'contrerashuerta', 'kane'};
 
-save_figs = 1; % whether to save figures
+save_figs = 0; % whether to save figures
 
 %% Panel: BIC comparison for model
 
@@ -247,9 +247,12 @@ for s = 1:numel(study)
     if p_sw < .05 | strcmp(study{s}, 'kane')
         [p, ~, stats] = signrank(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich, 'method', 'exact');
         meanEffectSize(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich,Paired=true, Effect='robustcohen')
-
+        
+        d = minNLLFitParams.beta_poor - minNLLFitParams.beta_rich;
+        medFun = @(data) median(data);
+        ci = bootci(5000, medFun, d)   % 5000 bootstrap resamples
     else
-        [~, p, ~, stats] = ttest(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich)
+        [~, p, ci, stats] = ttest(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich)
         meanEffectSize(minNLLFitParams.beta_poor,minNLLFitParams.beta_rich,Paired=true, Effect='cohen')
 
     end

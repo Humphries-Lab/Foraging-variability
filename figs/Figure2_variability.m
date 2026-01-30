@@ -18,77 +18,92 @@ save_figs = 0; % whether to save figures
 for s = 1:numel(study)
     task = buildTask(study{s});
 
-    % %% Panel: Coefficient of variation (CV) in same patch and environment
-    %
+    %%% Panel: Coefficient of variation (CV) in same patch and environment
+    % 
     % load(sprintf('subject_LT_%s', study{s}), '-mat');
-    %
+    % 
     % subj_CV = subject_leave_times.sd./subject_leave_times.mean;
     % mean_CV = mean(subj_CV, 3);
     % CV_SEM = std(subj_CV, [], 3)./sqrt(size(subj_CV,3));
-    %
+    % 
     % figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',figsize.square);
     % errorbar(1:task.nPatch,mean_CV(1,:),CV_SEM(1,:),lines.exp,'Color',color.rich,'LineWidth',widths.plot); hold on
     % errorbar(1:task.nPatch,mean_CV(2,:),CV_SEM(2,:),lines.exp,'Color',color.poor,'LineWidth',widths.plot)
     % xlabel('Patch yield')
     % ylabel('CV_{leave} (s)')
     % set(gca,'XTick',1:task.nPatch,'XTickLabel',task.patchNames,'XLim',[0 task.nPatch+1],'YLim',[0 0.6])
-    %
+    % 
     % FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
     % if save_figs == 1
     %     print([export_path, sprintf('fig2_%s_subject_CV', study{s})],'-dsvg')
     % end
-    %
-    % %% Panel: SD distributions
-    %
-    % load(sprintf('subject_LT_%s', study{s}), '-mat');
-    %
-    % subj_SD = subject_leave_times.sd;
-    %
-    % figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',[20 20 5 10]);
-    % tl = tiledlayout(3,1);
-    %
-    % for iP = 1:task.nPatch
-    %     ax_handle(iP) = nexttile; hold on
-    %
-    %     x1 = squeeze(subj_SD(1,iP,:)); % rich
-    %     x2 = squeeze(subj_SD(2,iP,:)); % poor
-    %     % allX   = [x1(:); x2(:)];
-    %     % nbins  = 8;                           % or use a rule of thumb / sensitivity check
-    %     % edges  = linspace(min(allX), max(allX), nbins+1);
-    %
-    %     %histogram(x1,edges,'Normalization', 'pdf', 'EdgeColor', 'white', 'FaceColor',color.rich)
-    %     %histogram(x2,edges,'Normalization', 'pdf', 'EdgeColor', 'white', 'FaceColor',color.poor)
-    %
-    %     % Kernel density
-    %     [x1_dens, f1_dens] = ksdensity(x1);
-    %     [x2_dens, f2_dens] = ksdensity(x2);
-    %
-    %     plot(f1_dens, x1_dens, 'Color',color.rich, 'LineWidth',2);
-    %     plot(f2_dens, x2_dens, 'Color',color.poor, 'LineWidth',2);
-    %
-    %     y1_fill = [x1_dens(1)  x1_dens      x1_dens(end)];
-    %     x1_fill = [0          f1_dens(:).' 0];
-    %     fill(x1_fill, y1_fill, color.rich, ...
-    %         'FaceAlpha',0.3, 'EdgeColor','none');
-    %
-    %     y2_fill = [x2_dens(1)  x2_dens      x2_dens(end)];
-    %     x2_fill = [0          f2_dens(:).' 0];
-    %     fill(x2_fill, y2_fill, color.poor, ...
-    %         'FaceAlpha',0.3, 'EdgeColor','none');
-    %
-    % end
-    %
-    % linkaxes(ax_handle)
-    % ylabel(tl,'Density')
-    % xlabel(tl,'SD_{leave}')
-    % %set(gca,'XTick',1:task.nPatch,'XTickLabel',task.patchNames,'XLim',[0 task.nPatch+1],'YLim',[0 0.6])
-    %
-    % FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
-    % if save_figs == 1
-    %     print([export_path, sprintf('fig2_%s_SD_distribution', study{s})],'-dsvg')
-    % end
-    %
-    % clear ax_handle
+
+    %% Panel: SD distributions
+
+    load(sprintf('subject_LT_%s', study{s}), '-mat');
+
+    subj_SD = subject_leave_times.sd;
+
+    plot_colours = [color.rich; color.poor];
+    figure('Units', 'centimeters', 'PaperPositionMode', 'auto' ,'Position',[20 20 6 10]);
+    tl = tiledlayout(3, 2, 'TileSpacing', 'tight');
+
+    ix = 1;
+    n_panels = 1:task.nPatch*task.nEnviron;
+    for iP = 1:task.nPatch
+        for iE = 1:task.nEnviron
+           
+        ax_handle(iP,iE) = nexttile; hold on
+
+        % x1 = squeeze(subj_SD(1,iP,:)); % rich
+        % x2 = squeeze(subj_SD(2,iP,:)); % poor
+        % allX   = [x1(:); x2(:)];
+
+        x = squeeze(subj_SD(iE,iP,:));
+        % nbins  = 8;                          
+        % edges  = linspace(min(x), max(x), nbins+1);
+        %histogram(x,edges,'EdgeAlpha', 0.4, 'EdgeColor', 'white', 'FaceColor',plot_colours(iE,:))
+
+        % Kernel density
+        [x_dens, f_dens] = ksdensity(x);
+        plot(f_dens, x_dens, 'Color', plot_colours(iE,:), 'LineWidth', 2)
+
+        y_fill = [x_dens(1)  x_dens      x_dens(end)];
+        x_fill = [0          f_dens(:).' 0];
+        fill(x_fill, y_fill, plot_colours(iE,:), ...
+            'FaceAlpha',0.3, 'EdgeColor','none');
+        
+        ix = ix + 1;
+        % [x1_dens, f1_dens] = ksdensity(x1);
+        % [x2_dens, f2_dens] = ksdensity(x2);
+        % 
+        % plot(f1_dens, x1_dens, 'Color',color.rich, 'LineWidth',2);
+        % plot(f2_dens, x2_dens, 'Color',color.poor, 'LineWidth',2);
+
+        % y1_fill = [x1_dens(1)  x1_dens      x1_dens(end)];
+        % x1_fill = [0          f1_dens(:).' 0];
+        % fill(x1_fill, y1_fill, color.rich, ...
+        %     'FaceAlpha',0.3, 'EdgeColor','none');
+        % 
+        % y2_fill = [x2_dens(1)  x2_dens      x2_dens(end)];
+        % x2_fill = [0          f2_dens(:).' 0];
+        % fill(x2_fill, y2_fill, color.poor, ...
+        %     'FaceAlpha',0.3, 'EdgeColor','none');
+        end
+    end
+
+    linkaxes(ax_handle(:))
+
+    ylabel(tl,'Density')
+    xlabel(tl,'SD_{leave}')
+    %set(gca,'XTick',1:task.nPatch,'XTickLabel',task.patchNames,'XLim',[0 task.nPatch+1],'YLim',[0 0.6])
+
+    FormatFig_For_Export(gcf,fontsize,fontname,widths.axis)
+    if save_figs == 1
+        print([export_path, sprintf('fig2_%s_SD_distribution', study{s})],'-dsvg')
+    end
+
+    clear ax_handle
     %% Panel: SD in early vs late
 
     leaveT = readtable(sprintf('%s_trialbytrial.csv', study{s}));
@@ -291,8 +306,13 @@ for s = 1:numel(study)
     if p_sw < .05 | strcmp(study{s}, 'kane')
         [p, ~, stats] = signrank(SD_early,SD_late, 'method','exact')
         meanEffectSize(SD_early,SD_late,Paired=true, Effect='robustcohen')
+
+        d = SD_early - SD_late;
+        medFun = @(data) median(data);
+        ci = bootci(5000, medFun, d);   % 5000 bootstrap resamples
+
     else
-        [~, p, ~, stats] = ttest(SD_early,SD_late)
+        [~, p, ci, stats] = ttest(SD_early,SD_late)
         meanEffectSize(SD_early,SD_late,Paired=true, Effect='cohen')
 
     end
